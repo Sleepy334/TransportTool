@@ -139,6 +139,11 @@ namespace PublicTransportInfo
                             oList.Sort(LineInfo.ComparatorBusiest);
                             break;
                         }
+                    case ListViewRowComparer.Columns.COLUMN_BORED:
+                        {
+                            oList.Sort(LineInfo.ComparatorBored);
+                            break;
+                        }
                 }
 
                 if (bSortDesc)

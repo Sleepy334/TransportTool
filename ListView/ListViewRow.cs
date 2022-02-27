@@ -16,6 +16,7 @@ namespace PublicTransportInfo
         private UILabel m_lblPassengers;
         private UILabel m_lblWaiting;
         private UILabel m_lblBusiest;
+        private UILabel m_lblBored;
         private static ushort m_HighlightedLineId = 0;
 
         public ListViewRow() : base()
@@ -27,6 +28,7 @@ namespace PublicTransportInfo
             m_lblPassengers = null;
             m_lblWaiting = null;
             m_lblBusiest = null;
+            m_lblBored = null;
         }
 
         public static ListViewRow Create(ListView oParent, LineInfo oLineInfo)
@@ -48,76 +50,90 @@ namespace PublicTransportInfo
                 oRow.eventClick += new MouseEventHandler(oRow.OnItemClicked);
                 oRow.eventMouseEnter += new MouseEventHandler(oRow.OnItemEnter);
                 oRow.eventMouseLeave += new MouseEventHandler(oRow.OnItemLeave);
+                oRow.Setup(oLineInfo);
 
-                UIPanel oIconContainer = oRow.AddUIComponent<UIPanel>();
-                oIconContainer.name = "oIconContainer";
-                oIconContainer.width = iROW_HEIGHT - 4;
-                oIconContainer.height = iROW_HEIGHT - 4;
-
-                oRow.m_lblColor = oIconContainer.AddUIComponent<UIPanel>();
-                oRow.m_lblColor.name = "m_lblColor";
-                oRow.m_lblColor.backgroundSprite = "InfoviewPanel";
-                oRow.m_lblColor.color = oLineInfo.m_color;
-                oRow.m_lblColor.height = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
-                oRow.m_lblColor.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
-                oRow.m_lblColor.CenterToParent();
-
-                oRow.m_lblName = oRow.AddUIComponent<UILabel>();
-                oRow.m_lblName.name = "m_lblName";
-                oRow.m_lblName.text = oLineInfo.m_sName;
-                oRow.m_lblName.verticalAlignment = UIVerticalAlignment.Middle; 
-                oRow.m_lblName.autoSize = false;
-                oRow.m_lblName.height = iROW_HEIGHT;
-                oRow.m_lblName.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME;
-
-                oRow.m_lblStops = oRow.AddUIComponent<UILabel>();
-                oRow.m_lblStops.name = "m_lblStops";
-                oRow.m_lblStops.text = oLineInfo.m_iStops.ToString();
-                oRow.m_lblStops.textAlignment = UIHorizontalAlignment.Center;
-                oRow.m_lblStops.verticalAlignment = UIVerticalAlignment.Middle;
-                oRow.m_lblStops.autoSize = false;
-                oRow.m_lblStops.height = iROW_HEIGHT;
-                oRow.m_lblStops.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS;
-                oRow.m_lblStops.AlignTo(oRow, UIAlignAnchor.TopRight);
-
-                oRow.m_lblPassengers = oRow.AddUIComponent<UILabel>();
-                oRow.m_lblPassengers.name = "m_lblPassengers";
-                //m_lblPassengers.backgroundSprite = "MenuPanel2";
-                oRow.m_lblPassengers.text = oLineInfo.m_iPassengers.ToString() + " / " + oLineInfo.m_iCapacity;
-                oRow.m_lblPassengers.textAlignment = UIHorizontalAlignment.Center;
-                oRow.m_lblPassengers.verticalAlignment = UIVerticalAlignment.Middle;
-                oRow.m_lblPassengers.autoSize = false;
-                oRow.m_lblPassengers.height = iROW_HEIGHT;
-                oRow.m_lblPassengers.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER;
-                oRow.m_lblPassengers.AlignTo(oRow, UIAlignAnchor.TopRight);
-
-                oRow.m_lblWaiting = oRow.AddUIComponent<UILabel>();
-                oRow.m_lblWaiting.name = "m_lblWaiting";
-                //lblWaiting.backgroundSprite = "MenuPanel2";
-                oRow.m_lblWaiting.text = oLineInfo.m_iWaiting.ToString();
-                oRow.m_lblWaiting.textAlignment = UIHorizontalAlignment.Center;
-                oRow.m_lblWaiting.verticalAlignment = UIVerticalAlignment.Middle;
-                oRow.m_lblWaiting.autoSize = false;
-                oRow.m_lblWaiting.height = iROW_HEIGHT;
-                oRow.m_lblWaiting.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_WAITING;
-                oRow.m_lblWaiting.AlignTo(oRow, UIAlignAnchor.TopRight);
-
-                oRow.m_lblBusiest = oRow.AddUIComponent<UILabel>();
-                oRow.m_lblBusiest.name = "m_lblBusiest";
-                //lblBusiest.backgroundSprite = "MenuPanel2";
-                oRow.m_lblBusiest.text = oLineInfo.m_iBusiest.ToString();
-                oRow.m_lblBusiest.textAlignment = UIHorizontalAlignment.Center;
-                oRow.m_lblBusiest.verticalAlignment = UIVerticalAlignment.Middle;
-                oRow.m_lblBusiest.autoSize = false;
-                oRow.m_lblBusiest.height = iROW_HEIGHT;
-                oRow.m_lblBusiest.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_BUSIEST;
-                oRow.m_lblBusiest.AlignTo(oRow, UIAlignAnchor.TopRight);
-            
                 return oRow;
-            } else
-            {
-               return null;
             }
+            else
+            {
+                return null;
+            }
+        }
+
+        public void Setup(LineInfo oLineInfo)
+        {
+            UIPanel oIconContainer = AddUIComponent<UIPanel>();
+            oIconContainer.name = "oIconContainer";
+            oIconContainer.width = iROW_HEIGHT - 4;
+            oIconContainer.height = iROW_HEIGHT - 4;
+
+            m_lblColor = oIconContainer.AddUIComponent<UIPanel>();
+            m_lblColor.name = "m_lblColor";
+            m_lblColor.backgroundSprite = "InfoviewPanel";
+            m_lblColor.color = oLineInfo.m_color;
+            m_lblColor.height = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
+            m_lblColor.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
+            m_lblColor.CenterToParent();
+
+            m_lblName = AddUIComponent<UILabel>();
+            m_lblName.name = "m_lblName";
+            m_lblName.text = oLineInfo.m_sName;
+            m_lblName.verticalAlignment = UIVerticalAlignment.Middle; 
+            m_lblName.autoSize = false;
+            m_lblName.height = iROW_HEIGHT;
+            m_lblName.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME;
+
+            m_lblStops = AddUIComponent<UILabel>();
+            m_lblStops.name = "m_lblStops";
+            m_lblStops.text = oLineInfo.m_iStops.ToString();
+            m_lblStops.textAlignment = UIHorizontalAlignment.Center;
+            m_lblStops.verticalAlignment = UIVerticalAlignment.Middle;
+            m_lblStops.autoSize = false;
+            m_lblStops.height = iROW_HEIGHT;
+            m_lblStops.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS;
+            m_lblStops.AlignTo(this, UIAlignAnchor.TopRight);
+
+            m_lblPassengers = AddUIComponent<UILabel>();
+            m_lblPassengers.name = "m_lblPassengers";
+            m_lblPassengers.text = oLineInfo.m_iPassengers.ToString() + " / " + oLineInfo.m_iCapacity;
+            m_lblPassengers.tooltip = "Vehicles: " + m_oLineInfo.m_iVehicleCount;
+            m_lblPassengers.textAlignment = UIHorizontalAlignment.Center;
+            m_lblPassengers.verticalAlignment = UIVerticalAlignment.Middle;
+            m_lblPassengers.autoSize = false;
+            m_lblPassengers.height = iROW_HEIGHT;
+            m_lblPassengers.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER;
+            m_lblPassengers.AlignTo(this, UIAlignAnchor.TopRight);
+
+            m_lblWaiting = AddUIComponent<UILabel>();
+            m_lblWaiting.name = "m_lblWaiting";
+            m_lblWaiting.text = oLineInfo.m_iWaiting.ToString();
+            m_lblWaiting.textAlignment = UIHorizontalAlignment.Center;
+            m_lblWaiting.verticalAlignment = UIVerticalAlignment.Middle;
+            m_lblWaiting.autoSize = false;
+            m_lblWaiting.height = iROW_HEIGHT;
+            m_lblWaiting.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_WAITING;
+            m_lblWaiting.AlignTo(this, UIAlignAnchor.TopRight);
+
+            m_lblBusiest = AddUIComponent<UILabel>();
+            m_lblBusiest.name = "m_lblBusiest";
+            m_lblBusiest.text = oLineInfo.m_iBusiest.ToString();
+            m_lblBusiest.tooltip = "Stop: " + oLineInfo.m_iBusiestStopNumber;
+            m_lblBusiest.textAlignment = UIHorizontalAlignment.Center;
+            m_lblBusiest.verticalAlignment = UIVerticalAlignment.Middle;
+            m_lblBusiest.autoSize = false;
+            m_lblBusiest.height = iROW_HEIGHT;
+            m_lblBusiest.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_BUSIEST;
+            m_lblBusiest.AlignTo(this, UIAlignAnchor.TopRight);
+
+            m_lblBored = AddUIComponent<UILabel>();
+            m_lblBored.name = "m_lblBored";
+            m_lblBored.text = oLineInfo.m_iBored.ToString();
+            m_lblBored.textAlignment = UIHorizontalAlignment.Center;
+            m_lblBored.verticalAlignment = UIVerticalAlignment.Middle;
+            m_lblBored.autoSize = false;
+            m_lblBored.height = iROW_HEIGHT;
+            m_lblBored.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_BORED;
+            m_lblBored.AlignTo(this, UIAlignAnchor.TopRight);
         }
 
         private void OnItemClicked(UIComponent component, UIMouseEventParameter eventParam)
@@ -208,10 +224,19 @@ namespace PublicTransportInfo
             m_lblPassengers.text = m_oLineInfo.m_iPassengers.ToString() + " / " + m_oLineInfo.m_iCapacity;
             m_lblWaiting.text = m_oLineInfo.m_iWaiting.ToString();
             m_lblBusiest.text = m_oLineInfo.m_iBusiest.ToString();
+            m_lblBored.text = m_oLineInfo.m_iBored.ToString();
         }
 
         public override void OnDestroy()
         {
+            if (m_lblBusiest != null && m_lblBusiest.tooltipBox != null)
+            {
+                m_lblBusiest.tooltipBox.isVisible = false;
+            }
+            if (m_lblPassengers != null && m_lblPassengers.tooltipBox != null)
+            {
+                m_lblPassengers.tooltipBox.isVisible = false;
+            }
             ClearHighlight();
             if (m_lblColor != null)
             {
@@ -236,6 +261,10 @@ namespace PublicTransportInfo
             if (m_lblBusiest != null)
             {
                 UnityEngine.Object.Destroy(m_lblBusiest.gameObject);
+            }
+            if (m_lblBored != null)
+            {
+                UnityEngine.Object.Destroy(m_lblBored.gameObject);
             }
             base.OnDestroy();
         }

@@ -15,7 +15,7 @@ namespace PublicTransportInfo
         internal static bool s_isGameLoaded = false;
         internal static UIButton s_mToolbarButton;
         internal static int s_ToolbarIndex;
-        public static UITextureAtlas atlas = LoadResources();
+        public static UITextureAtlas atlas = null;
 
         public PublicTransportInstance() : base()
         {
@@ -38,7 +38,7 @@ namespace PublicTransportInfo
             }
         }
 
-        public static void Create()
+        public static void Create() 
         {
             if (s_isGameLoaded)
             {
@@ -149,11 +149,25 @@ namespace PublicTransportInfo
                 }
                 toolStrip.eventSelectedIndexChanged += OnSelectedIndexChanged;
 
+                // Add main toolbar button.
                 s_ToolbarIndex = toolStrip.tabCount;
                 Debug.Log("AddToolbarButton::s_ToolbarIndex: " + s_ToolbarIndex);
                 s_mToolbarButton = toolStrip.AddUIComponent<UIButton>();
-                s_mToolbarButton.atlas = atlas;
-                s_mToolbarButton.normalBgSprite = "BusImageInverted48x48";// "IconPolicyFreePublicTransport";
+
+                // Load icon.
+                if (atlas == null)
+                {
+                    atlas = LoadResources();
+                }
+                if (atlas != null)
+                {
+                    s_mToolbarButton.atlas = atlas;
+                    s_mToolbarButton.normalBgSprite = "BusImageInverted48x48";// "IconPolicyFreePublicTransport";
+                } else
+                {
+                    // Use old icon if load fails.
+                    s_mToolbarButton.normalBgSprite = "IconPolicyFreePublicTransport";
+                }
                 s_mToolbarButton.focusedFgSprite = "ToolbarIconGroup6Focused";
                 s_mToolbarButton.hoveredFgSprite = "ToolbarIconGroup6Hovered";
                 s_mToolbarButton.size = new Vector2(43f, 47f);
@@ -210,6 +224,7 @@ namespace PublicTransportInfo
         {
             if (atlas == null)
             {
+                Debug.Log("PublicTransportInstance.LoadResources");
                 string[] spriteNames = new string[]
                 {
                     "BusImageInverted48x48",
@@ -224,7 +239,7 @@ namespace PublicTransportInfo
                 UITextureAtlas defaultAtlas = ResourceLoader.GetAtlas("Ingame");
                 Texture2D[] textures = new Texture2D[]
                 {
-                    defaultAtlas["ToolbarIconGroup6Focused"].texture,
+                    defaultAtlas["ToolbarIconGroup6Focused"].texture, 
                     defaultAtlas["ToolbarIconGroup6Hovered"].texture,
                     defaultAtlas["ToolbarIconGroup6Normal"].texture,
                     defaultAtlas["ToolbarIconGroup6Pressed"].texture

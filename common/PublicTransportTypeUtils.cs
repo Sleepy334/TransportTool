@@ -44,22 +44,35 @@ namespace PublicTransportInfo
             }
         }
 
+        public static Color32 GetDefaultLineColor(PublicTransportType eTransportType) 
+        {
+            List<TransportInfo.TransportType> oTypes = Convert(eTransportType);
+            if (oTypes.Count > 0)
+            {
+                return GetDefaultLineColor(oTypes[0]);
+            }
+            else
+            {
+                return new Color32(255, 255, 255, 255);
+            }
+        }
+
         public static Color32 GetDefaultLineColor(TransportInfo.TransportType eTransportType)
         {
             switch (eTransportType)
             {
-                case TransportInfo.TransportType.Bus: return new Color32(53, 121, 188, 255);
-                case TransportInfo.TransportType.Trolleybus: return new Color(1, .517f, 0, 1);
-                case TransportInfo.TransportType.Tram: return new Color32(73, 27, 137, 255);
-                case TransportInfo.TransportType.Metro: return new Color32(58, 224, 50, 255);
-                case TransportInfo.TransportType.Train: return new Color32(250, 104, 0, 255);
-                case TransportInfo.TransportType.Ship: return new Color32(0xe3, 0xf0, 0, 255);
-                case TransportInfo.TransportType.Airplane: return new Color32(0xa8, 0x01, 0x7a, 255);
+                case TransportInfo.TransportType.Bus: return new Color32(42, 141, 190, 255);
+                case TransportInfo.TransportType.Trolleybus: return new Color32(255, 130, 0, 255);
+                case TransportInfo.TransportType.Tram: return new Color32(119, 0, 219, 255);
+                case TransportInfo.TransportType.Metro: return new Color32(0, 184, 0, 255);
+                case TransportInfo.TransportType.Train: return new Color32(219, 85, 0, 255);
+                case TransportInfo.TransportType.Ship: return new Color32(202, 184, 91, 255);
+                case TransportInfo.TransportType.Airplane: return new Color32(170, 85, 154, 255);
                 case TransportInfo.TransportType.Helicopter: return new Color(.671f, .333f, .604f, 1);
                 case TransportInfo.TransportType.HotAirBalloon: return new Color32(0xd8, 0x01, 0xaa, 255);
-                case TransportInfo.TransportType.Monorail: return new Color32(217, 51, 89, 255);
-                case TransportInfo.TransportType.CableCar: return new Color32(31, 96, 225, 255);
-                case TransportInfo.TransportType.Taxi: return new Color32(60, 184, 120, 255);
+                case TransportInfo.TransportType.Monorail: return new Color32(217, 50, 88, 255);
+                case TransportInfo.TransportType.CableCar: return new Color32(28, 95, 225, 255);
+                case TransportInfo.TransportType.Taxi: return new Color32(86, 186, 137, 255);
                 case TransportInfo.TransportType.Pedestrian: return new Color32(83, 157, 48, 255);
                 case TransportInfo.TransportType.TouristBus: return new Color32(110, 152, 251, 255);
                 default: return new Color32(53, 121, 188, 255);

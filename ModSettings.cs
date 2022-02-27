@@ -29,6 +29,9 @@ namespace PublicTransportInfo
         [XmlIgnore]
         public static bool s_bAddMainToolbarButton = true;
 
+        [XmlIgnore]
+        public static int s_iBoredThreshold = 200;
+
         [XmlElement("UnifiedUIButton")]
         public bool AddUnifiedUIButton
         {
@@ -43,6 +46,14 @@ namespace PublicTransportInfo
             get => s_bAddMainToolbarButton;
 
             set => s_bAddMainToolbarButton = value;
+        }
+
+        [XmlElement("BoredThreshold")]
+        public int BoredThreshold
+        {
+            get => s_iBoredThreshold;
+
+            set => s_iBoredThreshold = value;
         }
 
         static ModSettings()

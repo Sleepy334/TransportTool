@@ -15,6 +15,7 @@ namespace PublicTransportInfo
             COLUMN_PASSENGERS,
             COLUMN_WAITING,
             COLUMN_BUSIEST,
+			COLUMN_BORED,
         }
         
         public Columns m_eSortColumn;

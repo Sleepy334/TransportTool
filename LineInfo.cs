@@ -11,9 +11,12 @@ namespace PublicTransportInfo
         public int m_iStops;
         public int m_iPassengers;
         public int m_iCapacity;
+        public int m_iVehicleCount;
         public int m_iWaiting;
         public int m_iBusiest;
+        public int m_iBored;
         public ushort m_usBusiestStopId;
+        public int m_iBusiestStopNumber;
 
         public static int ComparatorBase(int iResult, LineInfo oLine1, LineInfo oLine2)
         {
@@ -49,15 +52,23 @@ namespace PublicTransportInfo
             return ComparatorBase(oLine1.m_iBusiest.CompareTo(oLine2.m_iBusiest), oLine1, oLine2);
         }
 
+        public static int ComparatorBored(LineInfo oLine1, LineInfo oLine2)
+        {
+            return ComparatorBase(oLine1.m_iBored.CompareTo(oLine2.m_iBored), oLine1, oLine2);
+        }
+
         public LineInfo()
         {
             m_sName = "";
             m_iStops = 0;
             m_iPassengers = 0;
             m_iCapacity = 0;
+            m_iVehicleCount = 0;
             m_iWaiting = 0;
             m_iBusiest = 0;
+            m_iBored = 0;
             m_usBusiestStopId = 0;
+            m_iBusiestStopNumber = 0;
         }
 
         public void LoadInfo(int iLineId, TransportLine oLine)
@@ -99,6 +110,12 @@ namespace PublicTransportInfo
                         iResult = ComparatorBusiest(oFirst, oSecond);
                         break;
                     }
+                case ListViewRowComparer.Columns.COLUMN_BORED:
+                    {
+                        iResult = ComparatorBored(oFirst, oSecond);
+                        break;
+                    }
+                    
             }
 
             return iResult;
@@ -110,19 +127,24 @@ namespace PublicTransportInfo
             m_iBusiest = 0;
             m_iWaiting = 0;
             m_usBusiestStopId = 0;
+            m_iBusiestStopNumber = 0;
 
             m_iStops = oLine.CountStops((ushort)iLineId);
             for (int i = 0; i < m_iStops; i++)
             {
                 ushort usStop = oLine.GetStop(i);
-                int iStopCount = oLine.CalculatePassengerCount(usStop);
-                if (iStopCount > m_iBusiest)
+                //int iStopCount = oLine.CalculatePassengerCount(usStop);
+                int iBored;
+                int iStopPassengerCount = TransportManagerUtils.CalculatePassengerCount(usStop, oLine, out iBored);
+                if (iStopPassengerCount > m_iBusiest)
                 {
-                    m_iBusiest = iStopCount;
+                    m_iBusiest = iStopPassengerCount;
                     m_usBusiestStopId = usStop;
+                    m_iBusiestStopNumber = i+1;
                 }
 
-                m_iWaiting += iStopCount;
+                m_iBored += iBored;
+                m_iWaiting += iStopPassengerCount;
             }
         }
 
@@ -157,10 +179,10 @@ namespace PublicTransportInfo
             m_iPassengers = 0;
             m_iCapacity = 0;
 
-            int iCapacity = 0;
+            int iCapacity;
             TransportLine oLine = TransportManager.instance.m_lines.m_buffer[iLineId];
-            int iVehicleCount = oLine.CountVehicles((ushort)iLineId);
-            for (int i = 0; i < iVehicleCount; ++i)
+            m_iVehicleCount = oLine.CountVehicles((ushort)iLineId);
+            for (int i = 0; i < m_iVehicleCount; ++i)
             {
                 ushort usVehicleId = oLine.GetVehicle(i);
                 int iPassengers = GetVehiclePassengerCount(usVehicleId, out iCapacity);

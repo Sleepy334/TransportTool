@@ -10,7 +10,7 @@ namespace PublicTransportInfo
 {
     public class PublicTransportInfoPanel : UIPanel
     {
-        private const float PanelWidth = 880; 
+        private const float PanelWidth = 950; 
         private const float PanelHeight = 600;
         private const float Margin = 10;
         private const int iHEADER_HEIGHT = 20;
@@ -19,8 +19,9 @@ namespace PublicTransportInfo
         public const int iCOLUMN_WIDTH_NAME = 380;
         public const int iCOLUMN_WIDTH_STOPS = 70;
         public const int iCOLUMN_WIDTH_PASSENGER = 150;
-        public const int iCOLUMN_WIDTH_WAITING = 100;
-        public const int iCOLUMN_WIDTH_BUSIEST = 100;
+        public const int iCOLUMN_WIDTH_WAITING = 85;
+        public const int iCOLUMN_WIDTH_BUSIEST = 80;
+        public const int iCOLUMN_WIDTH_BORED = 80;
 
         private TabStrip? m_tabStrip;
         private static ListView? s_ListView = null;
@@ -189,6 +190,17 @@ namespace PublicTransportInfo
                     lblBusiest.eventMouseEnter += OnMouseHover;
                     lblBusiest.eventMouseLeave += OnMouseLeave;
 
+                    UILabel lblBored = m_headingPanel.AddUIComponent<UILabel>();
+                    lblBored.text = "Bored";
+                    lblBored.tooltip = "Number of people who are waiting too long";
+                    lblBored.textAlignment = UIHorizontalAlignment.Center; 
+                    lblBored.autoSize = false;
+                    lblBored.height = iHEADER_HEIGHT;
+                    lblBored.width = iCOLUMN_WIDTH_BUSIEST;
+                    lblBored.AlignTo(m_headingPanel, UIAlignAnchor.TopRight);
+                    lblBored.eventMouseEnter += OnMouseHover;
+                    lblBored.eventMouseLeave += OnMouseLeave;
+
                     void OnMouseClick(UIComponent component, UIMouseEventParameter eventParam)
                     {
                         if (m_bLoadingLines)
@@ -225,6 +237,11 @@ namespace PublicTransportInfo
                                 eColumn = ListViewRowComparer.Columns.COLUMN_BUSIEST;
                                 txtSelectedColumn = lblBusiest;
                             }
+                            else if (txtLabel == lblBored)
+                            {
+                                eColumn = ListViewRowComparer.Columns.COLUMN_BORED;
+                                txtSelectedColumn = lblBored;
+                            }
 
                             if (m_eSortColumn == eColumn)
                             {
@@ -249,6 +266,7 @@ namespace PublicTransportInfo
                         lblPassengers.text = "Passengers";
                         lblWaiting.text = "Waiting";
                         lblBusiest.text = "Busiest";
+                        lblBored.text = "Bored";
 
                         string sSortCharacter = Utils.GetSortCharacter(m_bSortDesc);
                         if (txtSelectedColumn.textAlignment == UIHorizontalAlignment.Left)
@@ -266,6 +284,7 @@ namespace PublicTransportInfo
                     lblPassengers.eventClick += OnMouseClick;
                     lblWaiting.eventClick += OnMouseClick;
                     lblBusiest.eventClick += OnMouseClick;
+                    lblBored.eventClick += OnMouseClick;
 
                     AddSortCharacter(lblName);
                 }

@@ -67,15 +67,17 @@ namespace PublicTransportInfo
             oButtonPanel.autoLayoutPadding = new RectOffset(4, 4, 4, 4);
             oButtonPanel.autoLayout = true;
             oButtonPanel.name = eTransportType.ToString();
+            oButtonPanel.color = PublicTransportTypeUtils.GetDefaultLineColor(eTransportType); 
 
             UIButton btnImage = oButtonPanel.AddUIComponent<UIButton>();
-            btnImage.text = "";
+            btnImage.name = "tabStripButton" + eTransportType.ToString();
+            btnImage.tabStrip = true;
             btnImage.tooltip = eTransportType.ToString();
             List<TransportInfo.TransportType> oList = PublicTransportTypeUtils.Convert(eTransportType);
             string vehicleTypeIcon = "";
             if (oList.Count > 0)
             {
-                vehicleTypeIcon = PublicTransportWorldInfoPanel.GetVehicleTypeIcon(oList[0]);
+                vehicleTypeIcon = PublicTransportWorldInfoPanel.GetVehicleTypeIcon(oList[0]); 
             }
             btnImage.width = fBUITTON_WIDTH;
             btnImage.height = fBUITTON_HEIGHT;
