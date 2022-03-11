@@ -1,10 +1,5 @@
-﻿using ColossalFramework;
-using ColossalFramework.Globalization;
-using ColossalFramework.UI;
-using PublicTransportInfo.UnifiedUI;
+﻿using ColossalFramework.UI;
 using System;
-using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 namespace PublicTransportInfo 
@@ -13,13 +8,27 @@ namespace PublicTransportInfo
     {
         internal static PublicTransportInfoPanel? s_mainPanel = null;
         internal static bool s_isGameLoaded = false;
-        internal static UIButton s_mToolbarButton;
-        internal static int s_ToolbarIndex;
-        public static UITextureAtlas atlas = null;
 
+        internal static MainToolbarButton s_ToolbarButton = null;
+        internal static UITextureAtlas s_atlas = null;
+        internal static VehicleProgressManager m_vehicleProgress = null;
+
+        private static ModSettings m_settings = null;
+        
         public PublicTransportInstance() : base()
         {
             s_mainPanel = null;
+            m_vehicleProgress = new VehicleProgressManager();
+        }
+
+        public static ModSettings GetSettings()
+        {
+            if (m_settings == null)
+            {
+                m_settings = ModSettings.Load();
+                Debug.Log("Settings loaded." + m_settings.AddUnifiedUIButton + " " + m_settings.BoredThreshold);
+            }
+            return m_settings;
         }
 
         public void Start()
@@ -27,13 +36,10 @@ namespace PublicTransportInfo
             try
             {
                 s_isGameLoaded = true;
-                ModSettings.Load();
-
             }
             catch (Exception e)
             {
-                Debug.Log("UI initialization failed.");
-                Debug.LogException(e);
+                Debug.Log("UI initialization failed.", e);
                 GameObject.Destroy(gameObject);
             }
         }
@@ -45,13 +51,13 @@ namespace PublicTransportInfo
                 s_mainPanel = UIView.GetAView().AddUIComponent(typeof(PublicTransportInfoPanel)) as PublicTransportInfoPanel;
             }
 
-            if (ModSettings.s_bAddMainToolbarButton)
+            if (GetSettings().MainToolbarButton)
             {
-                AddToolbarButton();
+                ShowToolbarButton();
             }
 
             // Add UnifiedUI button if module found
-            if (ModSettings.s_bAddUnifiedUIButton)
+            if (PublicTransportInstance.GetSettings().AddUnifiedUIButton)
             {
                 UnifiedUITool.AddUnifiedUITool();
             }
@@ -63,6 +69,10 @@ namespace PublicTransportInfo
             if (s_mainPanel != null)
             {
                 GameObject.Destroy(s_mainPanel.gameObject);
+            }
+            if (s_ToolbarButton != null)
+            {
+                s_ToolbarButton.Destroy();
             }
             UnifiedUITool.RemoveUnifiedUITool();
         }
@@ -83,16 +93,16 @@ namespace PublicTransportInfo
                     if (!s_mainPanel.isVisible)
                     {
                         s_mainPanel.ShowPanel();
-                        if (s_mToolbarButton != null)
+                        if (s_ToolbarButton != null)
                         {
-                            s_mToolbarButton.Focus();
+                            s_ToolbarButton.Focus();
                         }
                     }
                   
                 } 
                 else
                 {
-                    Debug.Log("PublicTransportInstance::ShowPanel - m_mainPanel is null");
+                    Debug.Log("m_mainPanel is null");
                 }
             }
         }
@@ -101,16 +111,31 @@ namespace PublicTransportInfo
         {
             if (s_mainPanel != null && s_mainPanel.isVisible)
             {
-                if (s_mToolbarButton != null)
+                if (s_ToolbarButton != null)
                 {
                     UIView oView = UIView.GetAView();
                     UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip");
                     toolStrip.closeButton.SimulateClick();
-                    s_mToolbarButton.Unfocus();
+                    s_ToolbarButton.Unfocus();
                 }
 
                 // Removing GUI
                 s_mainPanel.HidePanel(bClearInfoPanel); 
+            }
+        }
+
+        public static void TogglePanel()
+        {
+            if (s_mainPanel != null)
+            {
+                if (s_mainPanel.isVisible)
+                {
+                    HidePanel();
+                }
+                else
+                {
+                    ShowPanel();
+                }
             }
         }
 
@@ -122,118 +147,48 @@ namespace PublicTransportInfo
             }
         }
 
-        public static void AddToolbarButton()
+        public static void ShowToolbarButton()
         {
             Debug.Log("AddToolbarButton");
-            if (!s_isGameLoaded || s_mainPanel == null)
+            if (s_ToolbarButton == null)
             {
-                return;
-            }
-
-            if (s_mToolbarButton == null)  
+                if (!s_isGameLoaded || s_mainPanel == null)
+                {
+                    return;
+                }
+                s_ToolbarButton = new MainToolbarButton();
+                s_ToolbarButton.AddToolbarButton();
+            } else
             {
-                // Adding main button
-                UIView oView = UIView.GetAView(); 
-                UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip"); 
-
-                // Add a handler to hide panel when toolbar changes
-                void OnSelectedIndexChanged(UIComponent oComponent, int iSelectedIndex)
-                {
-                    if (iSelectedIndex == s_ToolbarIndex)
-                    {
-                        ShowPanel();
-                    } else
-                    {
-                        HidePanel();
-                    }
-                }
-                toolStrip.eventSelectedIndexChanged += OnSelectedIndexChanged;
-
-                // Add main toolbar button.
-                s_ToolbarIndex = toolStrip.tabCount;
-                Debug.Log("AddToolbarButton::s_ToolbarIndex: " + s_ToolbarIndex);
-                s_mToolbarButton = toolStrip.AddUIComponent<UIButton>();
-
-                // Load icon.
-                if (atlas == null)
-                {
-                    atlas = LoadResources();
-                }
-                if (atlas != null)
-                {
-                    s_mToolbarButton.atlas = atlas;
-                    s_mToolbarButton.normalBgSprite = "BusImageInverted48x48";// "IconPolicyFreePublicTransport";
-                } else
-                {
-                    // Use old icon if load fails.
-                    s_mToolbarButton.normalBgSprite = "IconPolicyFreePublicTransport";
-                }
-                s_mToolbarButton.focusedFgSprite = "ToolbarIconGroup6Focused";
-                s_mToolbarButton.hoveredFgSprite = "ToolbarIconGroup6Hovered";
-                s_mToolbarButton.size = new Vector2(43f, 47f);
-                s_mToolbarButton.name = ITransportInfoMain.ModName;
-                s_mToolbarButton.tooltip = ITransportInfoMain.Title;
-                s_mToolbarButton.relativePosition = new Vector3(0, 5);
-                toolStrip.AddTab("Transport Tool", s_mToolbarButton.gameObject, null, null);
-
-                FieldInfo m_ObjectIndex = typeof(MainToolbar).GetField("m_ObjectIndex", BindingFlags.Instance | BindingFlags.NonPublic);
-                m_ObjectIndex.SetValue(ToolsModifierControl.mainToolbar, (int)m_ObjectIndex.GetValue(ToolsModifierControl.mainToolbar) + 1);
-
-                Locale locale = (Locale)typeof(LocaleManager).GetField("m_Locale", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(LocaleManager.instance);
-                Locale.Key key = new Locale.Key
-                {
-                    m_Identifier = "TUTORIAL_ADVISER_TITLE",
-                    m_Key = s_mToolbarButton.name
-                };
-                if (!locale.Exists(key))
-                {
-                    locale.AddLocalizedString(key, s_mToolbarButton.name);
-                }
-                key = new Locale.Key
-                {
-                    m_Identifier = "TUTORIAL_ADVISER",
-                    m_Key = s_mToolbarButton.name
-                };
-                if (!locale.Exists(key))
-                {
-                    locale.AddLocalizedString(key, "");
-                }
-
-                oView.FindUIComponent<UITabContainer>("TSContainer").AddUIComponent<UIPanel>().color = new Color32(0, 0, 0, 0);
+                s_ToolbarButton.Show();
             }
         }
 
         public static void HideMainToolbarButton()
         {
-            if (s_mToolbarButton != null)
+            if (s_ToolbarButton != null)
             {
-                // Adding main button
-                UIView oView = UIView.GetAView();
-                UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip");
-                if (toolStrip != null)
-                {
-                    //toolStrip.tabs[s_ToolbarIndex].Hide();
-                    toolStrip.tabs.RemoveAt(s_ToolbarIndex);
-                    Destroy(s_mToolbarButton);
-                    s_mToolbarButton = null;
-                }
+                s_ToolbarButton.Hide();
             }
         }
-
+        
         public static UITextureAtlas LoadResources()
         {
-            if (atlas == null)
+            if (s_atlas == null)
             {
-                Debug.Log("PublicTransportInstance.LoadResources");
                 string[] spriteNames = new string[]
                 {
                     "BusImageInverted48x48",
+                    "BusImageWarning",
+                    "BusInformationIcon",
+                    "Warning_icon48x48",
+                    "Information",
                 };
 
-                atlas = ResourceLoader.CreateTextureAtlas("TransportToolAtlas", spriteNames, "PublicTransportInfo.Resources.");
-                if (atlas == null)
+                s_atlas = ResourceLoader.CreateTextureAtlas("TransportToolAtlas", spriteNames, "PublicTransportInfo.Resources.");
+                if (s_atlas == null)
                 {
-                    Debug.Log("Loading of resources failed.");
+                    PublicTransportInfo.Debug.Log("Loading of resources failed.");
                 }
 
                 UITextureAtlas defaultAtlas = ResourceLoader.GetAtlas("Ingame");
@@ -245,10 +200,18 @@ namespace PublicTransportInfo
                     defaultAtlas["ToolbarIconGroup6Pressed"].texture
                 };
 
-                ResourceLoader.AddTexturesInAtlas(atlas, textures);
+                ResourceLoader.AddTexturesInAtlas(s_atlas, textures);
             }
 
-            return atlas;
+            return s_atlas;
+        }
+        
+        public static void UpdateVehicleProgress()
+        {
+            if (m_vehicleProgress != null)
+            {
+                m_vehicleProgress.UpdateVehicleProgress();
+            }
         }
     }
 }

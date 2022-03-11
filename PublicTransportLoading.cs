@@ -1,6 +1,4 @@
-﻿using ColossalFramework.UI;
-using ICities;
-using PublicTransportInfo.UnifiedUI;
+﻿using ICities;
 using System;
 using UnifiedUI.Helpers;
 using UnityEngine;
@@ -37,7 +35,7 @@ namespace PublicTransportInfo
         // called when unloading begins
         public void OnLevelUnloading()
         {
-            Debug.Log("PublicTransportLoading::OnLevelUnloading");  
+            Debug.Log("OnLevelUnloading");  
             isGameLoaded = false;
 
             try
@@ -49,7 +47,7 @@ namespace PublicTransportInfo
             }
             catch (Exception e)
             {
-                Debug.LogException(e);
+                PublicTransportInfo.Debug.Log(e);
             }
         }
 

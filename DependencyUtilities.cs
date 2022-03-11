@@ -12,7 +12,7 @@ namespace PublicTransportInfo
             {
                 sPlugins += oPlugin.name + " " + oPlugin.GetHashCode() + "\r\n";
             }
-            Debug.Log(sPlugins);
+            PublicTransportInfo.Debug.Log(sPlugins);
         }
 
         public static bool IsPluginRunning(string sPluginId)

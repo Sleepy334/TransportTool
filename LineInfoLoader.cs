@@ -14,7 +14,70 @@ namespace PublicTransportInfo
 
         public List<LineInfo> GetLineList(PublicTransportType eType)
         {
-            List<TransportInfo.TransportType> oTypes = PublicTransportTypeUtils.Convert(eType);
+            List<LineInfo> list = new List<LineInfo>(); 
+            
+            if (eType == PublicTransportType.CableCar)
+            {
+                // CableCar dont have lines so we need a separate method.
+                FastList<ushort> oServiceBuildings = BuildingManager.instance.GetServiceBuildings(ItemClass.Service.PublicTransport);
+                foreach (ushort usBuildingId in oServiceBuildings)
+                {
+                    Building oBuilding = BuildingManager.instance.m_buildings.m_buffer[usBuildingId];
+                    if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportCableCar &&
+                        oBuilding.Info.name == "Cable Car Station End" &&
+                        TransportManagerUtils.IsFirstStation(usBuildingId))
+                    {
+                        List<ushort> stops = TransportManagerUtils.GetStationStops(usBuildingId);
+                        LineInfo lineInfo = new LineInfo();
+                        lineInfo.m_eType = TransportInfo.TransportType.CableCar;
+                        lineInfo.m_iStops = stops.Count;
+                        lineInfo.m_sName = "CableCar Line " + (list.Count + 1);
+                        lineInfo.m_usCableCarStops = stops;
+                        lineInfo.m_color = PublicTransportTypeUtils.GetDefaultLineColor(eType);
+                        lineInfo.UpdateInfo();
+                        list.Add(lineInfo);
+                    }
+
+                    /*
+                    if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportTaxi)
+                    {
+                        string sBuildingInfo = "";
+                        int iPassengers = 0;
+                        //sBuildingInfo = oBuilding.Info.name + "\r\n";
+                        ushort usVehicleId = oBuilding.m_ownVehicles;
+                        while (usVehicleId != 0)
+                        {
+                            Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[usVehicleId];
+                            iPassengers += oVehicle.m_touristCount + oVehicle.m_transferSize;
+                            //sBuildingInfo += "Vehicle:" + usVehicleId + " Tourists:" + oVehicle.m_touristCount + " Transfer: " + oVehicle.m_transferSize + "\r\n";
+                            usVehicleId = oVehicle.m_nextOwnVehicle;
+                        }
+                        sBuildingInfo += oBuilding.Info.name + " Passengers: " + iPassengers + "\r\n";
+                        Debug.Log(sBuildingInfo);
+                    }
+                    */
+                }
+            } 
+            else
+            {
+                List<TransportInfo.TransportType> oTypes = PublicTransportTypeUtils.Convert(eType);
+                uint iSize = TransportManager.instance.m_lines.m_size;
+                for (int i = 0; i < iSize; i++)
+                {
+                    TransportLine oLine = TransportManager.instance.m_lines.m_buffer[i];
+                    TransportInfo oInfo = oLine.Info;
+                    if (oLine.Complete && oTypes.Contains(oInfo.m_transportType))
+                    {
+                        list.Add(GetLineInfo(i, oLine));
+                    }
+                }
+            }
+
+            return list;
+        }
+
+        public List<LineInfo> GetAllLinesList()
+        {
             List<LineInfo> list = new List<LineInfo>();
 
             uint iSize = TransportManager.instance.m_lines.m_size;
@@ -23,12 +86,16 @@ namespace PublicTransportInfo
                 TransportLine oLine = TransportManager.instance.m_lines.m_buffer[i];
                 TransportInfo oInfo = oLine.Info;
 
-                if (oLine.Complete && oTypes.Contains(oInfo.m_transportType))
+                if (oLine.Complete)
                 {
                     list.Add(GetLineInfo(i, oLine));
                 }
             }
 
+            // Add cable car lines
+            List<LineInfo> oCableCarLines = GetLineList(PublicTransportType.CableCar);
+            list.AddRange(oCableCarLines);
+            
             return list;
         }
 
@@ -51,6 +118,23 @@ namespace PublicTransportInfo
                     }
                 }
             }
+
+
+            // See if we have any cable car lines
+            FastList<ushort> oServiceBuildings = BuildingManager.instance.GetServiceBuildings(ItemClass.Service.PublicTransport);
+            foreach (ushort usBuildingId in oServiceBuildings)
+            {
+                Building oBuilding = BuildingManager.instance.m_buildings.m_buffer[usBuildingId];
+                if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportCableCar &&
+                    oBuilding.Info.name == "Cable Car Station End" &&
+                    TransportManagerUtils.IsFirstStation(usBuildingId))
+                {
+                    list.Add(PublicTransportType.CableCar);
+                    break;
+                }
+            }
+            
+
             list.Sort();
             return list;
         }
@@ -112,39 +196,8 @@ namespace PublicTransportInfo
         {
             if (oList != null)
             {
-                switch (eSortColumn)
-                {
-                    case ListViewRowComparer.Columns.COLUMN_NAME:
-                        {
-                            oList.Sort(LineInfo.ComparatorName);
-                            break;
-                        }
-                    case ListViewRowComparer.Columns.COLUMN_STOPS:
-                        {
-                            oList.Sort(LineInfo.ComparatorStops);
-                            break;
-                        }
-                    case ListViewRowComparer.Columns.COLUMN_PASSENGERS:
-                        {
-                            oList.Sort(LineInfo.ComparatorPassengers);
-                            break;
-                        }
-                    case ListViewRowComparer.Columns.COLUMN_WAITING:
-                        {
-                            oList.Sort(LineInfo.ComparatorWaiting);
-                            break;
-                        }
-                    case ListViewRowComparer.Columns.COLUMN_BUSIEST:
-                        {
-                            oList.Sort(LineInfo.ComparatorBusiest);
-                            break;
-                        }
-                    case ListViewRowComparer.Columns.COLUMN_BORED:
-                        {
-                            oList.Sort(LineInfo.ComparatorBored);
-                            break;
-                        }
-                }
+                Comparison<LineInfo> SortComparison = LineInfo.GetComparator(eSortColumn);
+                oList.Sort(SortComparison);
 
                 if (bSortDesc)
                 {

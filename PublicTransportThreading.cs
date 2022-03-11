@@ -1,13 +1,16 @@
 ﻿using ICities;
-using PublicTransportInfo.UnifiedUI;
+using System.Diagnostics;
 using UnityEngine;
 
 namespace PublicTransportInfo
 {
     public class PublicTransportThreading : ThreadingExtensionBase
     {
+        const int iUPDATE_RATE = 2000;
+
         private bool _processed = false;
-        private int m_SimulationTicks = 0;
+        private long m_LastElapsedTime = 0;
+        private Stopwatch m_watch = null;
 
         public override void OnUpdate(float realTimeDelta, float simulationTimeDelta)
         {
@@ -16,19 +19,24 @@ namespace PublicTransportInfo
                 PublicTransportInstance.Create();
             }
 
+            if (m_watch == null)
+            {
+                m_watch = new Stopwatch();
+            }
+
             // Unified UI also handles the Keyboard shortcut for us so don't respond here if we are using it.
             if (!UnifiedUITool.HasButtonBeenAdded())
             {
-                if ((Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)) && Input.GetKey(KeyCode.I))
+                if (ModSettings.Hotkey.IsPressed())
                 {
-                    Debug.Log("PublicTransportInfo::OnUpdate");
+                    Debug.Log("OnUpdate");
 
                     // cancel if they key input was already processed in a previous frame
                     if (_processed) return;
 
                     _processed = true;
 
-                    PublicTransportInstance.ShowPanel();
+                    PublicTransportInstance.TogglePanel();
                 }
                 else
                 {
@@ -36,17 +44,43 @@ namespace PublicTransportInfo
                     _processed = false;
                 }
             }
-        }
 
-        public override void OnAfterSimulationTick()
-        {
-            if (PublicTransportInstance.s_mainPanel != null && PublicTransportInstance.s_mainPanel.isVisible)
+            // Update panel
+            if (SimulationManager.instance.SimulationPaused)
             {
-                m_SimulationTicks++;
-                if (m_SimulationTicks > 200)
+                if (m_watch.IsRunning)
                 {
-                    m_SimulationTicks = 0;
-                    PublicTransportInstance.UpdatePanel();
+                    Debug.Log("Simulation stopped");
+                    m_watch.Stop();
+                    m_LastElapsedTime = 0;
+                }
+            } 
+            else 
+            {    
+                if (!m_watch.IsRunning)
+                {
+                    Debug.Log("Simulation started");
+                    m_watch.Start();
+                    m_LastElapsedTime = m_watch.ElapsedMilliseconds;
+                }
+
+                if (m_watch.ElapsedMilliseconds - m_LastElapsedTime > iUPDATE_RATE)
+                {
+                    long lStartTime = m_watch.ElapsedMilliseconds;
+
+                    // Need to update vehicle progress every time.
+                    PublicTransportInstance.UpdateVehicleProgress();
+                    
+                    // Only update panel if visible
+                    if (PublicTransportInstance.s_mainPanel != null && PublicTransportInstance.s_mainPanel.isVisible)
+                    {
+                        PublicTransportInstance.UpdatePanel();
+                    }
+                    
+                    m_LastElapsedTime = m_watch.ElapsedMilliseconds;
+
+                    long lStopTime = m_watch.ElapsedMilliseconds;
+                    //Debug.Log("Execution Time: " + (lStopTime - lStartTime) + "ms");
                 }
             }
         }

@@ -11,10 +11,18 @@
 
   <ItemGroup>
     <None Remove="Resources\BusImageInverted48x48.png" />
+    <None Remove="Resources\BusImageWarning.png" />
+    <None Remove="Resources\BusInformationIcon.png" />
+    <None Remove="Resources\Information.png" />
+    <None Remove="Resources\Warning_icon48x48.png" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Resources\BusImageInverted48x48.png" />
+    <EmbeddedResource Include="Resources\BusImageWarning.png" />
+    <EmbeddedResource Include="Resources\BusInformationIcon.png" />
+    <EmbeddedResource Include="Resources\Information.png" />
+    <EmbeddedResource Include="Resources\Warning_icon48x48.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,6 +71,10 @@
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="VehicleProgress\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
