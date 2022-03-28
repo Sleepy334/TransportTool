@@ -5,21 +5,35 @@ using UnityEngine;
 
 namespace PublicTransportInfo
 {
-    public class PublicTransportLoading : ILoadingExtension
+    public class PublicTransportLoading : LoadingExtensionBase
     {
         private static PublicTransportInstance? instance = null;
         public static bool isGameLoaded = false;
 
-        // called when level loading begins
-        public void OnCreated(ILoading loading)
+        private static bool ActiveInMode(LoadMode mode)
         {
+            switch (mode)
+            {
+                case LoadMode.NewGame:
+                case LoadMode.NewGameFromScenario:
+                case LoadMode.LoadGame:
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         // called when level is loaded
-        public void OnLevelLoaded(LoadMode mode)
+        public override void OnLevelLoaded(LoadMode mode)
         {
-            Debug.Log("OnLevelLoaded"); 
-            
+            Debug.Log("OnLevelLoaded");
+            base.OnLevelLoaded(mode);
+            if (!ActiveInMode(mode))
+            {
+                return;
+            }
+
             isGameLoaded = true;
 
             if (instance != null)
@@ -30,12 +44,15 @@ namespace PublicTransportInfo
             }
 
             instance = new GameObject("PublicTransportInfo").AddComponent<PublicTransportInstance>();
+
+            HarmonyPatches.VehicleManagerPatch.Apply();
         }
 
         // called when unloading begins
-        public void OnLevelUnloading()
+        public override void OnLevelUnloading()
         {
-            Debug.Log("OnLevelUnloading");  
+            Debug.Log("OnLevelUnloading");
+            base.OnLevelUnloading();
             isGameLoaded = false;
 
             try
@@ -52,9 +69,11 @@ namespace PublicTransportInfo
         }
 
         // called when unloading finished
-        public void OnReleased()
+        public override void OnReleased()
         {
+            base.OnReleased();
             PublicTransportInstance.Destroy();
+            HarmonyPatches.VehicleManagerPatch.Undo();
         }
     }
 }

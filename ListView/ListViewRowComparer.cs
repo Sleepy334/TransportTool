@@ -12,6 +12,7 @@ namespace PublicTransportInfo
         {
             COLUMN_NAME,
             COLUMN_STOPS,
+			COLUMN_VEHICLES,
             COLUMN_PASSENGERS,
             COLUMN_WAITING,
             COLUMN_BUSIEST,
@@ -29,13 +30,13 @@ namespace PublicTransportInfo
 
 		public int Compare(UIComponent o1, UIComponent o2)
 		{
-			ListViewRow oRow1 = o1 as ListViewRow;
-			ListViewRow oRow2 = o2 as ListViewRow;
+			ListViewRow? oRow1 = o1 as ListViewRow;
+			ListViewRow? oRow2 = o2 as ListViewRow;
 
 			int iResult = 1;
 			if (oRow1 != null && oRow2 != null)
             {
-                iResult = LineInfo.CompareTo(m_eSortColumn, oRow1.m_oLineInfo, oRow2.m_oLineInfo);
+                iResult = LineInfoBase.CompareTo(m_eSortColumn, oRow1.m_oLineInfo, oRow2.m_oLineInfo);
 				if (m_bSortDesc)
                 {
 					iResult = -iResult;

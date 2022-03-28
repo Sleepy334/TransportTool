@@ -2,16 +2,16 @@ using ColossalFramework;
 using ColossalFramework.UI;
 using UnityEngine;
 
-namespace PublicTransportInfo.UnifiedUI {
+namespace PublicTransportInfo {
     internal static class UIKeyMappingsExtensions {
         internal static UIKeymappingsPanel AddKeymappingsPanel(this UIHelper helper) {
-            return (helper.self as UIComponent).gameObject.AddComponent<UIKeymappingsPanel>();
+            return ((UIComponent) helper.self).gameObject.AddComponent<UIKeymappingsPanel>();
         }
     }
 
     public class UIKeymappingsPanel : UICustomControl {
         internal UIComponent AddKeymapping(string label, SavedInputKey savedInputKey) {
-            UIPanel uipanel = base.component.AttachUIComponent(UITemplateManager.GetAsGameObject(kKeyBindingTemplate)) as UIPanel;
+            UIPanel uipanel = (UIPanel) base.component.AttachUIComponent(UITemplateManager.GetAsGameObject(kKeyBindingTemplate));
             int num = this.count;
             this.count = num + 1;
             if (num % 2 == 1) {
@@ -76,7 +76,7 @@ namespace PublicTransportInfo.UnifiedUI {
 
         private static void ButtonVisibilityChanged(UIComponent component, bool isVisible) {
             if (isVisible && component.objectUserData is SavedInputKey savedInputKey) {
-                (component as UIButton).text = savedInputKey.ToLocalizedString("KEYNAME");
+                ((UIButton)component).text = savedInputKey.ToLocalizedString("KEYNAME");
             }
         }
 
@@ -90,7 +90,7 @@ namespace PublicTransportInfo.UnifiedUI {
                     value = SavedInputKey.Empty;
                 }
                 this.m_EditingBinding.value = value;
-                (p.source as UITextComponent).text = this.m_EditingBinding.ToLocalizedString("KEYNAME");
+                ((UITextComponent)p.source).text = this.m_EditingBinding.ToLocalizedString("KEYNAME");
                 this.m_EditingBinding = null;
             }
         }
@@ -99,9 +99,12 @@ namespace PublicTransportInfo.UnifiedUI {
             if (this.m_EditingBinding == null) {
                 p.Use();
                 this.m_EditingBinding = (SavedInputKey)p.source.objectUserData;
-                UIButton uibutton = p.source as UIButton;
-                uibutton.buttonsMask = (UIMouseButton.Left | UIMouseButton.Right | UIMouseButton.Middle | UIMouseButton.Special0 | UIMouseButton.Special1 | UIMouseButton.Special2 | UIMouseButton.Special3);
-                uibutton.text = "Press any key";
+                UIButton uibutton = (UIButton) p.source;
+                if (uibutton != null)
+                {
+                    uibutton.buttonsMask = (UIMouseButton.Left | UIMouseButton.Right | UIMouseButton.Middle | UIMouseButton.Special0 | UIMouseButton.Special1 | UIMouseButton.Special2 | UIMouseButton.Special3);
+                    uibutton.text = "Press any key";
+                }
                 p.source.Focus();
                 UIView.PushModal(p.source);
                 return;
@@ -111,16 +114,19 @@ namespace PublicTransportInfo.UnifiedUI {
                 UIView.PopModal();
                 InputKey value = SavedInputKey.Encode(ButtonToKeycode(p.buttons), IsControlDown(), IsShiftDown(), IsAltDown());
                 this.m_EditingBinding.value = value;
-                UIButton uibutton2 = p.source as UIButton;
-                uibutton2.text = this.m_EditingBinding.ToLocalizedString("KEYNAME");
-                uibutton2.buttonsMask = UIMouseButton.Left;
+                UIButton uibutton2 = (UIButton) p.source;
+                if (uibutton2 != null)
+                {
+                    uibutton2.text = this.m_EditingBinding.ToLocalizedString("KEYNAME");
+                    uibutton2.buttonsMask = UIMouseButton.Left;
+                }
                 this.m_EditingBinding = null;
             }
         }
 
         private static readonly string kKeyBindingTemplate = "KeyBindingTemplate";
 
-        private SavedInputKey m_EditingBinding;
+        private SavedInputKey? m_EditingBinding = null;
 
         private int count;
     }

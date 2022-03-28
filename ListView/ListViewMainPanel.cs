@@ -10,7 +10,7 @@ namespace PublicTransportInfo
         {
         }
 
-        public void Start()
+        public override void Start()
         {
             backgroundSprite = "GenericPanelWhite";
             autoLayoutDirection = LayoutDirection.Vertical;

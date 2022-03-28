@@ -1,6 +1,7 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -9,29 +10,19 @@ namespace PublicTransportInfo
     {
         public const int iROW_HEIGHT = 30;
         public const int iROW_MARGIN = 10;
-        public LineInfo m_oLineInfo;
-        private UIPanel m_lblColor;
-        private UILabel m_lblName;
-        private UILabel m_lblStops;
-        private UILabel m_lblPassengers;
-        private UILabel m_lblWaiting;
-        private UILabel m_lblBusiest;
-        private UILabel m_lblBored;
+        public LineInfoBase? m_oLineInfo = null;
+        private UIPanel? m_lblColor = null;
+        private UISprite? m_spriteToolbar = null;
+        private List<ListViewRowColumn> m_columns;
         private static ushort m_HighlightedLineId = 0;
+        private static UITextureAtlas? m_atlas = null;
 
         public ListViewRow() : base()
         {
-            m_oLineInfo = null;
-            m_lblColor = null;
-            m_lblName = null;
-            m_lblName = null;
-            m_lblPassengers = null;
-            m_lblWaiting = null;
-            m_lblBusiest = null;
-            m_lblBored = null;
+            m_columns = new List<ListViewRowColumn>();
         }
 
-        public static ListViewRow Create(ListView oParent, LineInfo oLineInfo)
+        public static ListViewRow? Create(ListView oParent, LineInfoBase oLineInfo)
         {
             if (oParent != null && oParent.m_listPanel != null)
             {
@@ -47,7 +38,7 @@ namespace PublicTransportInfo
                 oRow.autoLayoutStart = LayoutStart.TopLeft;
                 oRow.autoLayoutPadding = new RectOffset(2, 2, 2, 2);
                 oRow.autoLayout = true;
-                oRow.eventClick += new MouseEventHandler(oRow.OnItemClicked);
+                oRow.clipChildren = true;
                 oRow.eventMouseEnter += new MouseEventHandler(oRow.OnItemEnter);
                 oRow.eventMouseLeave += new MouseEventHandler(oRow.OnItemLeave);
                 oRow.Setup(oLineInfo);
@@ -60,91 +51,120 @@ namespace PublicTransportInfo
             }
         }
 
-        public void Setup(LineInfo oLineInfo)
+        public void Setup(LineInfoBase oLineInfo)
         {
             UIPanel oIconContainer = AddUIComponent<UIPanel>();
-            oIconContainer.name = "oIconContainer";
-            oIconContainer.width = iROW_HEIGHT - 4;
-            oIconContainer.height = iROW_HEIGHT - 4;
+            if (oIconContainer != null)
+            {
+                oIconContainer.name = "oIconContainer";
+                oIconContainer.width = iROW_HEIGHT - 4;
+                oIconContainer.height = iROW_HEIGHT - 4;
 
-            m_lblColor = oIconContainer.AddUIComponent<UIPanel>();
-            m_lblColor.name = "m_lblColor";
-            m_lblColor.backgroundSprite = "InfoviewPanel";
-            m_lblColor.color = oLineInfo.m_color;
-            m_lblColor.height = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
-            m_lblColor.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
-            m_lblColor.CenterToParent();
+                m_lblColor = oIconContainer.AddUIComponent<UIPanel>();
+                if (m_lblColor != null)
+                {
+                    m_lblColor.name = "m_lblColor";
+                    m_lblColor.backgroundSprite = "InfoviewPanel";
+                    m_lblColor.color = oLineInfo.m_color;
+                    m_lblColor.height = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
+                    m_lblColor.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
+                    m_lblColor.CenterToParent();
+                    m_lblColor.eventClick += new MouseEventHandler(OnItemClicked);
+                }
+            }
 
-            m_lblName = AddUIComponent<UILabel>();
-            m_lblName.name = "m_lblName";
-            m_lblName.text = oLineInfo.m_sName;
-            m_lblName.verticalAlignment = UIVerticalAlignment.Middle; 
-            m_lblName.autoSize = false;
-            m_lblName.height = iROW_HEIGHT;
-            m_lblName.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME;
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_NAME, this, oLineInfo.m_sName, "", PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME, iROW_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, OnItemClicked, OnGetColumnTooltip));
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_STOPS, this, oLineInfo.GetStopCount().ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_VEHICLES, this, oLineInfo.m_iVehicleCount.ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_VEHICLES, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_PASSENGERS, this, oLineInfo.m_iPassengers.ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_WAITING, this, oLineInfo.m_iWaiting.ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_WAITING, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_BUSIEST, this, oLineInfo.m_iBusiest.ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_BUSIEST, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_BORED, this, oLineInfo.m_iBored.ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_BORED, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
 
-            m_lblStops = AddUIComponent<UILabel>();
-            m_lblStops.name = "m_lblStops";
-            m_lblStops.text = oLineInfo.m_iStops.ToString();
-            m_lblStops.textAlignment = UIHorizontalAlignment.Center;
-            m_lblStops.verticalAlignment = UIVerticalAlignment.Middle;
-            m_lblStops.autoSize = false;
-            m_lblStops.height = iROW_HEIGHT;
-            m_lblStops.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS;
-            m_lblStops.AlignTo(this, UIAlignAnchor.TopRight);
+            m_spriteToolbar = AddUIComponent<UISprite>();
+            if (m_spriteToolbar != null)
+            {
+                if (m_atlas == null)
+                {
+                    m_atlas = PublicTransportInstance.LoadResources();
+                }
+                m_spriteToolbar.name = "spriteToolbar";
+                m_spriteToolbar.autoSize = false;
+                m_spriteToolbar.width = 24;
+                m_spriteToolbar.height = 24;
+                m_spriteToolbar.atlas = m_atlas;
+                m_spriteToolbar.AlignTo(this, UIAlignAnchor.TopRight);
+                m_spriteToolbar.eventClick += new MouseEventHandler(OnWarningItemClicked);
+                UpdateWarningIconSprite();
+            }
 
-            m_lblPassengers = AddUIComponent<UILabel>();
-            m_lblPassengers.name = "m_lblPassengers";
-            m_lblPassengers.text = oLineInfo.m_iPassengers.ToString() + " / " + oLineInfo.m_iCapacity;
-            m_lblPassengers.tooltip = "Vehicles: " + m_oLineInfo.m_iVehicleCount;
-            m_lblPassengers.textAlignment = UIHorizontalAlignment.Center;
-            m_lblPassengers.verticalAlignment = UIVerticalAlignment.Middle;
-            m_lblPassengers.autoSize = false;
-            m_lblPassengers.height = iROW_HEIGHT;
-            m_lblPassengers.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER;
-            m_lblPassengers.AlignTo(this, UIAlignAnchor.TopRight);
+            UpdateLineData();
+        }
 
-            m_lblWaiting = AddUIComponent<UILabel>();
-            m_lblWaiting.name = "m_lblWaiting";
-            m_lblWaiting.text = oLineInfo.m_iWaiting.ToString();
-            m_lblWaiting.textAlignment = UIHorizontalAlignment.Center;
-            m_lblWaiting.verticalAlignment = UIVerticalAlignment.Middle;
-            m_lblWaiting.autoSize = false;
-            m_lblWaiting.height = iROW_HEIGHT;
-            m_lblWaiting.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_WAITING;
-            m_lblWaiting.AlignTo(this, UIAlignAnchor.TopRight);
+        private void UpdateWarningIconSprite()
+        {
+            string sTooltip = "";
+            LineIssue.IssueLevel eLevel = LineIssue.IssueLevel.ISSUE_NONE;
 
-            m_lblBusiest = AddUIComponent<UILabel>();
-            m_lblBusiest.name = "m_lblBusiest";
-            m_lblBusiest.text = oLineInfo.m_iBusiest.ToString();
-            m_lblBusiest.tooltip = "Stop: " + oLineInfo.m_iBusiestStopNumber;
-            m_lblBusiest.textAlignment = UIHorizontalAlignment.Center;
-            m_lblBusiest.verticalAlignment = UIVerticalAlignment.Middle;
-            m_lblBusiest.autoSize = false;
-            m_lblBusiest.height = iROW_HEIGHT;
-            m_lblBusiest.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_BUSIEST;
-            m_lblBusiest.AlignTo(this, UIAlignAnchor.TopRight);
+            if (m_oLineInfo != null)
+            {
+                eLevel = PublicTransportInstance.GetLineIssueManager().GetLineWarningLevel((ushort)m_oLineInfo.m_iLineId, out sTooltip);
+            }
 
-            m_lblBored = AddUIComponent<UILabel>();
-            m_lblBored.name = "m_lblBored";
-            m_lblBored.text = oLineInfo.m_iBored.ToString();
-            m_lblBored.textAlignment = UIHorizontalAlignment.Center;
-            m_lblBored.verticalAlignment = UIVerticalAlignment.Middle;
-            m_lblBored.autoSize = false;
-            m_lblBored.height = iROW_HEIGHT;
-            m_lblBored.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_BORED;
-            m_lblBored.AlignTo(this, UIAlignAnchor.TopRight);
+            if (m_spriteToolbar != null)
+            {
+                if (eLevel == LineIssue.IssueLevel.ISSUE_WARNING)
+                {
+                    m_spriteToolbar.spriteName = "Warning_icon48x48";
+                }
+                else if (eLevel == LineIssue.IssueLevel.ISSUE_INFORMATION)
+                {
+                    m_spriteToolbar.spriteName = "Information";
+                }
+                else
+                {
+                    m_spriteToolbar.spriteName = "";
+                }
+                m_spriteToolbar.tooltip = sTooltip;
+            }
         }
 
         private void OnItemClicked(UIComponent component, UIMouseEventParameter eventParam)
         {
-            Debug.Log("ListViewRow.OnItemClicked."); 
             ShowWorldInfoPanel();
+        }
+
+        public string OnGetColumnTooltip(ListViewRowColumn oColumn) 
+        {
+            string sTooltip = GetColumnTooltip(oColumn.GetColumn());
+            return sTooltip;
+        }
+
+        private void OnWarningItemClicked(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            if (m_oLineInfo != null && m_oLineInfo.GetVehicleProgress() != null)
+            {
+                PublicTransportInstance.GetLineIssueManager().UpdateLineIssues();
+                if (PublicTransportInstance.GetLineIssueManager().HasVisibleLineIssues())
+                {
+                    PublicTransportInstance.HideMainPanel();
+                    PublicTransportInstance.ShowLineIssuePanel(m_oLineInfo.m_iLineId);
+                }
+            } 
+            else
+            {
+                ShowWorldInfoPanel();
+            }
+
+            if (PublicTransportInstance.GetLineIssueManager() != null)
+            {
+                PublicTransportInstance.GetLineIssueManager().UpdateWarningIcons();
+            }
         }
 
         private void OnItemEnter(UIComponent component, UIMouseEventParameter eventParam)
         {        
-            ListViewRow oRow = component as ListViewRow;
+            ListViewRow oRow = (ListViewRow) component;
             if (oRow != null)
             {
                 if (m_HighlightedLineId != 0 && m_HighlightedLineId != (ushort)m_oLineInfo.m_iLineId)
@@ -156,7 +176,6 @@ namespace PublicTransportInfo
                 backgroundSprite = "ListItemHighlight";
                 TransportManagerUtils.HighlightLine(m_HighlightedLineId);
             }
-
         }
 
         private void OnItemLeave(UIComponent component, UIMouseEventParameter eventParam)
@@ -164,7 +183,7 @@ namespace PublicTransportInfo
             ClearHighlight();
             ClearRowHighlight();
 
-            ListViewRow oRow = component as ListViewRow;
+            ListViewRow oRow = (ListViewRow) component;
             if (oRow != null && m_HighlightedLineId != 0)
             {
                 TransportManagerUtils.ClearLineHighlight(m_HighlightedLineId);
@@ -185,86 +204,157 @@ namespace PublicTransportInfo
                 m_HighlightedLineId = 0;
             }
         }
-
+ 
         public void ShowWorldInfoPanel()
         {
             try
             {
                 // Hide the main panel before showing PTWI panel.
-                PublicTransportInstance.HidePanel(false);
-
-                // Turn on public transport mode so you can see the lines
-                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
-                UIView.library.Hide("PublicTransportInfoViewPanel");
+                PublicTransportInstance.HideMainPanel(false);
 
                 // Shift camera to busiest stop
-                InstanceID oInstanceId = new InstanceID { TransportLine = (ushort)m_oLineInfo.m_iLineId };
-                Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_oLineInfo.m_usBusiestStopId].m_position;
-                PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, true);
-
-                // Open transport line panel
-                WorldInfoPanel.Show<PublicTransportWorldInfoPanel>(oStopPosition, oInstanceId);
+                if (m_oLineInfo != null)
+                {
+                    m_oLineInfo.ShowBusiestStop();
+                }
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
-                if (ex.InnerException != null)
+                Debug.Log(ex);
+            }
+        }
+
+        private string GetColumnText(ListViewRowComparer.Columns eColumn)
+        {
+            if (m_oLineInfo != null)
+            {
+                switch (eColumn)
                 {
-                    Debug.LogException(ex.InnerException); 
+                    case ListViewRowComparer.Columns.COLUMN_NAME: return m_oLineInfo.m_sName;
+                    case ListViewRowComparer.Columns.COLUMN_STOPS: return m_oLineInfo.GetStopCount().ToString();
+                    case ListViewRowComparer.Columns.COLUMN_VEHICLES: return m_oLineInfo.m_iVehicleCount.ToString();
+                    case ListViewRowComparer.Columns.COLUMN_PASSENGERS: return m_oLineInfo.m_iPassengers + "/" + m_oLineInfo.m_iCapacity;
+                    case ListViewRowComparer.Columns.COLUMN_WAITING: return m_oLineInfo.m_iWaiting.ToString();
+                    case ListViewRowComparer.Columns.COLUMN_BUSIEST: return m_oLineInfo.m_iBusiest.ToString();
+                    case ListViewRowComparer.Columns.COLUMN_BORED: return m_oLineInfo.m_iBored.ToString();
                 }
             }
+            
+            return "";
+        }
+
+        private string GetColumnTooltip(ListViewRowComparer.Columns eColumn)
+        {
+            switch (eColumn)
+            {
+                case ListViewRowComparer.Columns.COLUMN_VEHICLES:
+                    {
+                        string sTooltip = "";
+                        if (m_oLineInfo != null && m_columns != null && m_columns.Count > 0)
+                        {
+                            sTooltip = m_oLineInfo.GetVehicleTooltip(m_columns[0].GetLabel());
+                        }
+                        return sTooltip;
+                    }
+                case ListViewRowComparer.Columns.COLUMN_PASSENGERS:
+                    {
+                        if (m_oLineInfo != null)
+                        {
+                            return m_oLineInfo.GetPassengersTooltip();
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                case ListViewRowComparer.Columns.COLUMN_WAITING:
+                    {
+                        string sTooltip = "";
+                        if (m_oLineInfo != null && m_columns != null && m_columns.Count > 0)
+                        {
+                            sTooltip = m_oLineInfo.GetWaitingTooltip(m_columns[0].GetLabel());
+                        }
+                        return sTooltip;
+                    }
+                case ListViewRowComparer.Columns.COLUMN_BUSIEST:
+                    {
+                        if (m_oLineInfo != null)
+                        {
+                            return "Stop: " + m_oLineInfo.m_iBusiestStopNumber;
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+
+            }
+            return "";
         }
 
         public void UpdateLineData()
         {
-            m_oLineInfo = LineInfoLoader.GetLineInfo(m_oLineInfo.m_iLineId);
-            m_lblColor.color = m_oLineInfo.m_color;
-            m_lblName.text = m_oLineInfo.m_sName;
-            m_lblStops.text = m_oLineInfo.m_iStops.ToString();
-            m_lblPassengers.text = m_oLineInfo.m_iPassengers.ToString() + " / " + m_oLineInfo.m_iCapacity;
-            m_lblWaiting.text = m_oLineInfo.m_iWaiting.ToString();
-            m_lblBusiest.text = m_oLineInfo.m_iBusiest.ToString();
-            m_lblBored.text = m_oLineInfo.m_iBored.ToString();
+            if (m_oLineInfo != null)
+            {
+                m_oLineInfo.UpdateInfo();
+
+                if (m_oLineInfo.GetVehicleProgress() != null)
+                {
+                    UpdateWarningIconSprite();
+                }
+
+                if (m_lblColor != null)
+                {
+                    m_lblColor.color = m_oLineInfo.m_color;
+                }
+            }
+
+            if (m_columns != null)
+            {
+                foreach (ListViewRowColumn oColumn in m_columns)
+                {
+                    if (oColumn != null)
+                    {
+                        ListViewRowComparer.Columns eColumn = oColumn.GetColumn();
+                        oColumn.SetText(GetColumnText(eColumn));
+
+                        // Update tooltip, but only if visible as the OnEnter event handler will load the tooltip normally.
+                        if (oColumn.IsTooltipVisible())
+                        {
+                            oColumn.SetTooltip(GetColumnTooltip(eColumn));
+                        }
+                    }
+                }
+            }
+        }
+
+        private void HideTooltipBox(UIComponent? uiComponent)
+        {
+            if (uiComponent != null && uiComponent.tooltipBox != null)
+            {
+                uiComponent.tooltipBox.isVisible = false;
+            }
         }
 
         public override void OnDestroy()
         {
-            if (m_lblBusiest != null && m_lblBusiest.tooltipBox != null)
-            {
-                m_lblBusiest.tooltipBox.isVisible = false;
+            ClearHighlight(); 
+            
+            foreach (ListViewRowColumn oColumn in m_columns)
+            { 
+                oColumn.HideTooltipBox();
+                oColumn.Destroy();
             }
-            if (m_lblPassengers != null && m_lblPassengers.tooltipBox != null)
-            {
-                m_lblPassengers.tooltipBox.isVisible = false;
-            }
-            ClearHighlight();
+            m_columns.Clear();
+            HideTooltipBox(m_spriteToolbar);  
+            
             if (m_lblColor != null)
             {
-                UnityEngine.Object.Destroy(m_lblColor.gameObject);
+                Destroy(m_lblColor.gameObject);
             }
-            if (m_lblName != null)
+            if (m_spriteToolbar != null)
             {
-                UnityEngine.Object.Destroy(m_lblName.gameObject);
-            }
-            if (m_lblStops != null)
-            {
-                UnityEngine.Object.Destroy(m_lblStops.gameObject);
-            }
-            if (m_lblPassengers != null)
-            {
-                UnityEngine.Object.Destroy(m_lblPassengers.gameObject);
-            }
-            if (m_lblWaiting != null)
-            {
-                UnityEngine.Object.Destroy(m_lblWaiting.gameObject);
-            }
-            if (m_lblBusiest != null)
-            {
-                UnityEngine.Object.Destroy(m_lblBusiest.gameObject);
-            }
-            if (m_lblBored != null)
-            {
-                UnityEngine.Object.Destroy(m_lblBored.gameObject);
+                Destroy(m_spriteToolbar.gameObject);
             }
             base.OnDestroy();
         }

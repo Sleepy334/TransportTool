@@ -10,10 +10,15 @@ namespace PublicTransportInfo
 
         private bool _processed = false;
         private long m_LastElapsedTime = 0;
-        private Stopwatch m_watch = null;
+        private Stopwatch? m_watch = null;
 
         public override void OnUpdate(float realTimeDelta, float simulationTimeDelta)
         {
+            if (!PublicTransportInstance.s_isGameLoaded)
+            {
+                return;
+            }
+
             if (PublicTransportInstance.s_mainPanel == null)
             {
                 PublicTransportInstance.Create();
@@ -36,7 +41,7 @@ namespace PublicTransportInfo
 
                     _processed = true;
 
-                    PublicTransportInstance.TogglePanel();
+                    PublicTransportInstance.ToggleMainPanel();
                 }
                 else
                 {
@@ -74,9 +79,12 @@ namespace PublicTransportInfo
                     // Only update panel if visible
                     if (PublicTransportInstance.s_mainPanel != null && PublicTransportInstance.s_mainPanel.isVisible)
                     {
-                        PublicTransportInstance.UpdatePanel();
+                        PublicTransportInstance.UpdateMainPanel();
                     }
-                    
+                    if (PublicTransportInstance.s_LineIssuePanel != null && PublicTransportInstance.s_LineIssuePanel.isVisible)
+                    {
+                        PublicTransportInstance.s_LineIssuePanel.UpdatePanel();
+                    }
                     m_LastElapsedTime = m_watch.ElapsedMilliseconds;
 
                     long lStopTime = m_watch.ElapsedMilliseconds;

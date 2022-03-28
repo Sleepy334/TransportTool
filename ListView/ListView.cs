@@ -11,10 +11,9 @@ namespace PublicTransportInfo
     {
         public const int iSCROLL_BAR_WIDTH = 20;
 
-        public ListViewMainPanel m_listPanel;
-        public UIPanel m_scrollbarPanel;
-        public UIScrollbar m_scrollbar;
-        public UIPanel m_headingPanel;
+        public ListViewMainPanel? m_listPanel;
+        public UIPanel? m_scrollbarPanel;
+        public UIScrollbar? m_scrollbar;
 
         public ListView() : base() {
             m_scrollbar = null;
@@ -22,11 +21,10 @@ namespace PublicTransportInfo
             m_scrollbarPanel = null;
         }
 
-        public static ListView Create(UIComponent oParent)
+        public static ListView? Create(UIComponent oParent)
         {
             try
             {
-                Debug.Log("ListView::Create");
                 ListView listView = oParent.AddUIComponent<ListView>();
                 if (listView != null)
                 {
@@ -41,11 +39,7 @@ namespace PublicTransportInfo
             }
             catch (Exception ex)
             {
-                Debug.LogException(ex);
-                if (ex.InnerException != null)
-                {
-                    Debug.LogException(ex.InnerException);
-                }
+                Debug.Log(ex);
             }
 
             return null;
@@ -58,8 +52,8 @@ namespace PublicTransportInfo
             {
                 m_listPanel.Start();
             } else
-            { 
-                Debug.Log("m_listPanel is null");
+            {
+                PublicTransportInfo.Debug.Log("m_listPanel is null");
                 return;
             }
 
@@ -73,55 +67,66 @@ namespace PublicTransportInfo
             }
             else
             {
-                Debug.Log("m_scrollbarPanel is null");
+                PublicTransportInfo.Debug.Log("m_scrollbarPanel is null");
                 return;
             }
 
-            m_listPanel.verticalScrollbar = m_scrollbar;
-            m_listPanel.eventMouseWheel += (MouseEventHandler)((component, param) => this.m_listPanel.scrollPosition += new Vector2(0.0f, Mathf.Sign(param.wheelDelta) * -1f * m_scrollbar.incrementAmount));
+            if (m_scrollbar != null)
+            {
+                m_listPanel.verticalScrollbar = m_scrollbar;
+                m_listPanel.eventMouseWheel += (MouseEventHandler)((component, param) => this.m_listPanel.scrollPosition += new Vector2(0.0f, Mathf.Sign(param.wheelDelta) * -1f * m_scrollbar.incrementAmount));
+            }
         }
 
-        public UIScrollbar SetUpScrollbar()
+        public UIScrollbar? SetUpScrollbar()
         {
-            m_scrollbar = m_scrollbarPanel.AddUIComponent<UIScrollbar>();
-            m_scrollbar.name = "Scrollbar";
-            m_scrollbar.width = iSCROLL_BAR_WIDTH;
-            m_scrollbar.height = 495; // m_scrollbarPanel.height - 5; // Seem to have to hard code this, not sure why yet...
-            m_scrollbar.orientation = UIOrientation.Vertical;
-            m_scrollbar.pivot = UIPivotPoint.BottomLeft;
-            m_scrollbar.relativePosition = Vector2.zero;
-            m_scrollbar.minValue = 0;
-            m_scrollbar.value = 0;
-            m_scrollbar.incrementAmount = 50;
+            if (m_scrollbarPanel != null) 
+            {
+                m_scrollbar = m_scrollbarPanel.AddUIComponent<UIScrollbar>();
+                m_scrollbar.name = "Scrollbar";
+                m_scrollbar.width = iSCROLL_BAR_WIDTH;
+                m_scrollbar.height = 495; // m_scrollbarPanel.height - 5; // Seem to have to hard code this, not sure why yet...
+                m_scrollbar.orientation = UIOrientation.Vertical;
+                m_scrollbar.pivot = UIPivotPoint.BottomLeft;
+                m_scrollbar.relativePosition = Vector2.zero;
+                m_scrollbar.minValue = 0;
+                m_scrollbar.value = 0;
+                m_scrollbar.incrementAmount = 50;
 
-            UISlicedSprite tracSprite = m_scrollbar.AddUIComponent<UISlicedSprite>();
-            tracSprite.relativePosition = Vector2.zero;
-            tracSprite.autoSize = true;
-            tracSprite.size = tracSprite.parent.size;
-            tracSprite.fillDirection = UIFillDirection.Vertical;
-            tracSprite.spriteName = "ScrollbarTrack";
-            tracSprite.name = "Track";
-            m_scrollbar.trackObject = tracSprite;
-            m_scrollbar.trackObject.height = m_scrollbar.height;
+                UISlicedSprite tracSprite = m_scrollbar.AddUIComponent<UISlicedSprite>();
+                tracSprite.relativePosition = Vector2.zero;
+                tracSprite.autoSize = true;
+                tracSprite.size = tracSprite.parent.size;
+                tracSprite.fillDirection = UIFillDirection.Vertical;
+                tracSprite.spriteName = "ScrollbarTrack";
+                tracSprite.name = "Track";
+                m_scrollbar.trackObject = tracSprite;
+                m_scrollbar.trackObject.height = m_scrollbar.height;
 
-            UISlicedSprite thumbSprite = tracSprite.AddUIComponent<UISlicedSprite>();
-            thumbSprite.relativePosition = Vector2.zero;
-            thumbSprite.fillDirection = UIFillDirection.Vertical;
-            thumbSprite.autoSize = true;
-            thumbSprite.width = thumbSprite.parent.width - 8;
-            thumbSprite.spriteName = "ScrollbarThumb";
-            thumbSprite.name = "Thumb";
+                UISlicedSprite thumbSprite = tracSprite.AddUIComponent<UISlicedSprite>();
+                thumbSprite.relativePosition = Vector2.zero;
+                thumbSprite.fillDirection = UIFillDirection.Vertical;
+                thumbSprite.autoSize = true;
+                thumbSprite.width = thumbSprite.parent.width - 8;
+                thumbSprite.spriteName = "ScrollbarThumb";
+                thumbSprite.name = "Thumb";
 
-            m_scrollbar.thumbObject = thumbSprite;
-            m_scrollbar.isVisible = true;
-            m_scrollbar.isEnabled = true;
-            return m_scrollbar;
+                m_scrollbar.thumbObject = thumbSprite;
+                m_scrollbar.isVisible = true;
+                m_scrollbar.isEnabled = true;
+
+                return m_scrollbar;
+            }
+            else
+            {
+                return null;
+            }
+            
         }
 
-        public ListViewRow AddItem(LineInfo oLineInfo)
+        public ListViewRow? AddItem(LineInfoBase oLineInfo)
         {
-            ListViewRow poRow = ListViewRow.Create(this, oLineInfo);
-            return poRow;
+            return ListViewRow.Create(this, oLineInfo);
         }
 
         public void Clear()
@@ -134,8 +139,7 @@ namespace PublicTransportInfo
         }
 
         protected override void OnSizeChanged()
-        {
-            Debug.Log("ListView::OnSizeChanged - Width" + width + " height: " + height); 
+        { 
             base.OnSizeChanged();
 
             if (m_listPanel != null)
@@ -157,9 +161,12 @@ namespace PublicTransportInfo
 
         public void UpdateLineData(ListViewRowComparer.Columns eSortColumn, bool bDesc)
         {
-            foreach (ListViewRow oRow in m_listPanel.components)
+            if (m_listPanel != null)
             {
-                oRow.UpdateLineData();
+                foreach (ListViewRow oRow in m_listPanel.components)
+                {
+                    oRow.UpdateLineData();
+                }
             }
 
             Sort(eSortColumn, bDesc);

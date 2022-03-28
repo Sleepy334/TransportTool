@@ -16,8 +16,7 @@ namespace PublicTransportInfo
         Monorail,
         CableCar,
         Taxi,
-        Pedestrian,
-        TouristBus,
+        Tours,
     }
 
     public class PublicTransportTypeUtils
@@ -38,8 +37,8 @@ namespace PublicTransportInfo
                 case TransportInfo.TransportType.Monorail: return PublicTransportType.Monorail;
                 case TransportInfo.TransportType.CableCar: return PublicTransportType.CableCar;
                 case TransportInfo.TransportType.Taxi: return PublicTransportType.Taxi;
-                case TransportInfo.TransportType.Pedestrian: return PublicTransportType.Pedestrian;
-                case TransportInfo.TransportType.TouristBus: return PublicTransportType.TouristBus;
+                case TransportInfo.TransportType.Pedestrian: return PublicTransportType.Tours;
+                case TransportInfo.TransportType.TouristBus: return PublicTransportType.Tours;
                 default: return PublicTransportType.Bus;
             }
         }
@@ -109,12 +108,48 @@ namespace PublicTransportInfo
                 case PublicTransportType.Monorail: oList.Add(TransportInfo.TransportType.Monorail); break;
                 case PublicTransportType.CableCar: oList.Add(TransportInfo.TransportType.CableCar); break;
                 case PublicTransportType.Taxi: oList.Add(TransportInfo.TransportType.Taxi); break;
-                case PublicTransportType.Pedestrian: oList.Add(TransportInfo.TransportType.Pedestrian); break;
-                case PublicTransportType.TouristBus: oList.Add(TransportInfo.TransportType.TouristBus); break;
+                case PublicTransportType.Tours:
+                    {
+                        oList.Add(TransportInfo.TransportType.TouristBus); 
+                        oList.Add(TransportInfo.TransportType.Pedestrian);
+                        break;
+                    }
                 default: break;
             }
 
             return oList;
+        }
+
+        public static string GetVehicleTypeIcon(TransportInfo.TransportType type)
+        {
+            switch (type)
+            {
+                case TransportInfo.TransportType.Bus:
+                    return "SubBarPublicTransportBus";
+                case TransportInfo.TransportType.Trolleybus:
+                    return "SubBarPublicTransportTrolleybus";
+                case TransportInfo.TransportType.Tram:
+                    return "SubBarPublicTransportTram";
+                case TransportInfo.TransportType.Metro:
+                    return "SubBarPublicTransportMetro";
+                case TransportInfo.TransportType.Train:
+                    return "SubBarPublicTransportTrain";
+                case TransportInfo.TransportType.Ship:
+                    return "SubBarPublicTransportShip";
+                case TransportInfo.TransportType.Airplane:
+                case TransportInfo.TransportType.Helicopter:
+                    return "SubBarPublicTransportPlane";
+                case TransportInfo.TransportType.CableCar:
+                    return "SubBarPublicTransportCableCar";
+                case TransportInfo.TransportType.Monorail:
+                    return "SubBarPublicTransportMonorail";
+                case TransportInfo.TransportType.Taxi:
+                    return "SubBarPublicTransportTaxi";
+                case TransportInfo.TransportType.TouristBus:
+                    return "InfoIconTours";
+                default:
+                    return "ToolbarIconPublicTransportFocused";
+            }
         }
     }
 }

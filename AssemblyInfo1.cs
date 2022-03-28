@@ -13,7 +13,7 @@ using System.Runtime.InteropServices;
 
 [assembly: ComVisible(false)]
 
-[assembly: System.Reflection.AssemblyVersion("1.6.0.*")]
+[assembly: System.Reflection.AssemblyVersion("1.8.0.*")]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM.
 

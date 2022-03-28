@@ -9,16 +9,12 @@ namespace PublicTransportInfo
     {
 		public static string ModName => "TransportTool " + Version;
 
-		private static string Version = "v1.6.0";
+		private static string Version = "v1.8";
 		public static string Title => "Transport Tool" + " " + Version;
 
-		private UISlider m_sliderBored = null;
-		private UILabel m_lblBored = null;
+		public static bool Debug = false;
 
-		private UISlider m_sliderStuck = null;
-		private UILabel m_lblStuck = null;
-
-		SettingsUI m_oSettingsUI = null;
+		SettingsUI? m_oSettingsUI = null;
 
 		public string Name
 		{

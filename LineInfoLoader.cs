@@ -12,9 +12,9 @@ namespace PublicTransportInfo
         {
         }
 
-        public List<LineInfo> GetLineList(PublicTransportType eType)
+        public List<LineInfoBase> GetLineList(PublicTransportType eType)
         {
-            List<LineInfo> list = new List<LineInfo>(); 
+            List<LineInfoBase> list = new List<LineInfoBase>(); 
             
             if (eType == PublicTransportType.CableCar)
             {
@@ -27,12 +27,8 @@ namespace PublicTransportInfo
                         oBuilding.Info.name == "Cable Car Station End" &&
                         TransportManagerUtils.IsFirstStation(usBuildingId))
                     {
-                        List<ushort> stops = TransportManagerUtils.GetStationStops(usBuildingId);
-                        LineInfo lineInfo = new LineInfo();
-                        lineInfo.m_eType = TransportInfo.TransportType.CableCar;
-                        lineInfo.m_iStops = stops.Count;
+                        LineInfoCableCar lineInfo = new LineInfoCableCar(usBuildingId);
                         lineInfo.m_sName = "CableCar Line " + (list.Count + 1);
-                        lineInfo.m_usCableCarStops = stops;
                         lineInfo.m_color = PublicTransportTypeUtils.GetDefaultLineColor(eType);
                         lineInfo.UpdateInfo();
                         list.Add(lineInfo);
@@ -76,9 +72,9 @@ namespace PublicTransportInfo
             return list;
         }
 
-        public List<LineInfo> GetAllLinesList()
+        public List<LineInfoBase> GetAllLinesList()
         {
-            List<LineInfo> list = new List<LineInfo>();
+            List<LineInfoBase> list = new List<LineInfoBase>();
 
             uint iSize = TransportManager.instance.m_lines.m_size;
             for (int i = 0; i < iSize; i++)
@@ -93,7 +89,7 @@ namespace PublicTransportInfo
             }
 
             // Add cable car lines
-            List<LineInfo> oCableCarLines = GetLineList(PublicTransportType.CableCar);
+            List<LineInfoBase> oCableCarLines = GetLineList(PublicTransportType.CableCar);
             list.AddRange(oCableCarLines);
             
             return list;
@@ -165,15 +161,16 @@ namespace PublicTransportInfo
             }
         }
 
-        public static LineInfo GetLineInfo(int iLineId, TransportLine oLine)
+        public static LineInfoBase GetLineInfo(int iLineId, TransportLine oLine)
         {
-            LineInfo oInfo = new LineInfo();
-            oInfo.LoadInfo(iLineId, oLine);
+            LineInfoTransportLine oInfo = new LineInfoTransportLine(oLine.Info.m_transportType);
+            oInfo.m_iLineId = iLineId;
+            oInfo.UpdateInfo();
 
             return oInfo;
         }
 
-        public static LineInfo GetLineInfo(int iLineId)
+        public static LineInfoBase GetLineInfo(int iLineId)
         {
             TransportLine oLine = TransportManager.instance.m_lines.m_buffer[iLineId];
             return GetLineInfo(iLineId, oLine);
@@ -192,19 +189,24 @@ namespace PublicTransportInfo
             return text + "|";
         }
 
-        public static List<LineInfo> SortList(List<LineInfo> oList, ListViewRowComparer.Columns eSortColumn, bool bSortDesc)
+        public static List<LineInfoBase> SortList(List<LineInfoBase> oList, ListViewRowComparer.Columns eSortColumn, bool bSortDesc)
         {
             if (oList != null)
             {
-                Comparison<LineInfo> SortComparison = LineInfo.GetComparator(eSortColumn);
+                Comparison<LineInfoBase> SortComparison = LineInfoBase.GetComparator(eSortColumn);
                 oList.Sort(SortComparison);
 
                 if (bSortDesc)
                 {
                     oList.Reverse();
                 }
+
+                return oList;
             }
-            return oList;
+            else
+            {
+                return new List<LineInfoBase>();
+            }
         }
     }
 }

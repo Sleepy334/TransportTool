@@ -11,9 +11,9 @@ namespace PublicTransportInfo
 {
     class ResourceLoader
     {
-        public static UITextureAtlas CreateTextureAtlas(string atlasName, string[] spriteNames, string assemblyPath)
+        public static UITextureAtlas? CreateTextureAtlas(string atlasName, string[] spriteNames, string assemblyPath)
         {
-            Debug.Log("CreateTextureAtlas");
+            PublicTransportInfo.Debug.Log("CreateTextureAtlas");
             try
             {
                 int maxSize = 1024;
@@ -47,7 +47,7 @@ namespace PublicTransportInfo
                 return textureAtlas;
             } catch (Exception e)
             {
-                Debug.LogException(e);
+                Debug.Log("CreateTextureAtlas", e);
             }
             return null;
         }
@@ -104,11 +104,14 @@ namespace PublicTransportInfo
 
         public static UITextureAtlas GetAtlas(string name)
         {
-            UITextureAtlas[] atlases = Resources.FindObjectsOfTypeAll(typeof(UITextureAtlas)) as UITextureAtlas[];
-            for (int i = 0; i < atlases.Length; i++)
+            UITextureAtlas[] atlases = (UITextureAtlas[]) Resources.FindObjectsOfTypeAll(typeof(UITextureAtlas));
+            if (atlases != null)
             {
-                if (atlases[i].name == name)
-                    return atlases[i];
+                for (int i = 0; i < atlases.Length; i++)
+                {
+                    if (atlases[i].name == name)
+                        return atlases[i];
+                }
             }
 
             return UIView.GetAView().defaultAtlas;

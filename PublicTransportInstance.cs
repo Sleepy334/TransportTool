@@ -1,5 +1,6 @@
 ﻿using ColossalFramework.UI;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PublicTransportInfo 
@@ -7,18 +8,18 @@ namespace PublicTransportInfo
     public class PublicTransportInstance : MonoBehaviour
     {
         internal static PublicTransportInfoPanel? s_mainPanel = null;
+        internal static LineIssuePanel? s_LineIssuePanel = null;
         internal static bool s_isGameLoaded = false;
 
-        internal static MainToolbarButton s_ToolbarButton = null;
-        internal static UITextureAtlas s_atlas = null;
-        internal static VehicleProgressManager m_vehicleProgress = null;
+        internal static MainToolbarButton? s_ToolbarButton = null;
+        internal static UITextureAtlas? s_atlas = null;
+        private static LineIssueManager m_lineIssueManager = new LineIssueManager();
 
-        private static ModSettings m_settings = null;
+        private static ModSettings? m_settings = null;
         
         public PublicTransportInstance() : base()
         {
             s_mainPanel = null;
-            m_vehicleProgress = new VehicleProgressManager();
         }
 
         public static ModSettings GetSettings()
@@ -29,6 +30,11 @@ namespace PublicTransportInfo
                 Debug.Log("Settings loaded." + m_settings.AddUnifiedUIButton + " " + m_settings.BoredThreshold);
             }
             return m_settings;
+        }
+
+        public static LineIssueManager GetLineIssueManager()
+        {
+            return m_lineIssueManager;
         }
 
         public void Start()
@@ -49,6 +55,7 @@ namespace PublicTransportInfo
             if (s_isGameLoaded)
             {
                 s_mainPanel = UIView.GetAView().AddUIComponent(typeof(PublicTransportInfoPanel)) as PublicTransportInfoPanel;
+                s_LineIssuePanel = UIView.GetAView().AddUIComponent(typeof(LineIssuePanel)) as LineIssuePanel;
             }
 
             if (GetSettings().MainToolbarButton)
@@ -77,7 +84,7 @@ namespace PublicTransportInfo
             UnifiedUITool.RemoveUnifiedUITool();
         }
 
-        public static void ShowPanel()
+        public static void ShowMainPanel()
         {
             if (s_isGameLoaded)
             {
@@ -92,11 +99,18 @@ namespace PublicTransportInfo
 
                     if (!s_mainPanel.isVisible)
                     {
-                        s_mainPanel.ShowPanel();
+                        
+                        // Keep buttons in sync
                         if (s_ToolbarButton != null)
                         {
-                            s_ToolbarButton.Focus();
+                            s_ToolbarButton.Enable();
                         }
+                        if (UnifiedUITool.Instance != null)
+                        {
+                            UnifiedUITool.Instance.Enable();
+                        }
+
+                        s_mainPanel.ShowPanel();
                     }
                   
                 } 
@@ -107,16 +121,19 @@ namespace PublicTransportInfo
             }
         }
 
-        public static void HidePanel(bool bClearInfoPanel = true)
+        public static void HideMainPanel(bool bClearInfoPanel = true)
         {
             if (s_mainPanel != null && s_mainPanel.isVisible)
             {
+                // Keep buttons in sync
                 if (s_ToolbarButton != null)
                 {
-                    UIView oView = UIView.GetAView();
-                    UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip");
-                    toolStrip.closeButton.SimulateClick();
-                    s_ToolbarButton.Unfocus();
+                    s_ToolbarButton.Disable();
+                }
+
+                if (UnifiedUITool.Instance != null)
+                {
+                    UnifiedUITool.Instance.Disable();
                 }
 
                 // Removing GUI
@@ -124,26 +141,49 @@ namespace PublicTransportInfo
             }
         }
 
-        public static void TogglePanel()
+        public static void ToggleMainPanel()
         {
             if (s_mainPanel != null)
             {
                 if (s_mainPanel.isVisible)
                 {
-                    HidePanel();
+                    HideMainPanel();
                 }
                 else
                 {
-                    ShowPanel();
+                    ShowMainPanel();
                 }
             }
         }
 
-        public static void UpdatePanel()
+        public static void UpdateMainPanel()
         {
-            if  (s_mainPanel != null && s_mainPanel.isVisible)
+            if (s_mainPanel != null && s_mainPanel.isVisible)
             {
                 s_mainPanel.UpdateLineData();
+            }
+        }
+
+        public static void ShowLineIssuePanel(int iInitialLineId)
+        {
+            if (s_LineIssuePanel != null)
+            {
+                GetLineIssueManager().UpdateLineIssues();
+                s_LineIssuePanel.SetInitialLineId(iInitialLineId);
+                s_LineIssuePanel.Show();
+            }
+        }
+
+        public static void HideLineIssuePanel()
+        {
+            if (s_LineIssuePanel != null && s_LineIssuePanel.isVisible)
+            {
+                s_LineIssuePanel.isVisible = false;
+
+                if (PublicTransportInstance.GetSettings().DeleteLineIssuesOnClosing)
+                {
+                    GetLineIssueManager().ClearIssuesWhenClosingPanel();
+                }
             }
         }
 
@@ -172,7 +212,7 @@ namespace PublicTransportInfo
             }
         }
         
-        public static UITextureAtlas LoadResources()
+        public static UITextureAtlas? LoadResources()
         {
             if (s_atlas == null)
             {
@@ -183,6 +223,7 @@ namespace PublicTransportInfo
                     "BusInformationIcon",
                     "Warning_icon48x48",
                     "Information",
+                    "clear"
                 };
 
                 s_atlas = ResourceLoader.CreateTextureAtlas("TransportToolAtlas", spriteNames, "PublicTransportInfo.Resources.");
@@ -200,7 +241,10 @@ namespace PublicTransportInfo
                     defaultAtlas["ToolbarIconGroup6Pressed"].texture
                 };
 
-                ResourceLoader.AddTexturesInAtlas(s_atlas, textures);
+                if (s_atlas != null)
+                {
+                    ResourceLoader.AddTexturesInAtlas(s_atlas, textures);
+                }
             }
 
             return s_atlas;
@@ -208,9 +252,9 @@ namespace PublicTransportInfo
         
         public static void UpdateVehicleProgress()
         {
-            if (m_vehicleProgress != null)
+            if (m_lineIssueManager != null)
             {
-                m_vehicleProgress.UpdateVehicleProgress();
+                m_lineIssueManager.UpdateVehicleProgress();
             }
         }
     }

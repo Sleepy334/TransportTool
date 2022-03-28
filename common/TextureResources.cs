@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace PublicTransportInfo {
     public static class TextureResources {
-        internal static Texture2D LoadDllResource(string resourceName,
+        internal static Texture2D? LoadDllResource(string resourceName,
                                                   int iWidth,
                                                   int iHeight,
                                                   bool mip = false,
@@ -14,14 +14,13 @@ namespace PublicTransportInfo {
             try {
                 Assembly myAssembly = Assembly.GetExecutingAssembly();
                 string sFullResourceName = myAssembly.GetManifestResourceNames().Single(str => str.EndsWith(resourceName));
-                Debug.Log(sFullResourceName);
                 Stream myStream = myAssembly.GetManifestResourceStream(sFullResourceName);
                 if (myStream == null) {
                     if (failIfNotFound) {
                         throw new Exception($"Resource stream {resourceName} not found!");
                     }
 
-                    Debug.Log("Resource " + resourceName + " not found (not an error)");
+                    PublicTransportInfo.Debug.LogError("Resource " + resourceName + " not found (not an error)");
                     return null;
                 }
 
@@ -36,12 +35,12 @@ namespace PublicTransportInfo {
                 return texture;
             }
             catch (Exception e) {
-                Debug.LogException(e);
+                Debug.Log("Failed to load resources", e);
                 return null;
             }
         }
 
-        static byte[] ReadToEnd(Stream stream) {
+        static byte[]? ReadToEnd(Stream stream) {
             var originalPosition = stream.Position;
             stream.Position = 0;
 
@@ -80,7 +79,7 @@ namespace PublicTransportInfo {
                 return buffer;
             }
             catch (Exception e) {
-                Debug.LogException(e);
+                PublicTransportInfo.Debug.Log(e);
                 return null;
             }
             finally {

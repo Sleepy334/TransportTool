@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -30,7 +31,7 @@ namespace PublicTransportInfo
 
         public static void ChangeLineVisibility(int m_lineID, bool r)
         {
-            Debug.Log("ChangeLineVisibility" + m_lineID);
+            PublicTransportInfo.Debug.Log("ChangeLineVisibility" + m_lineID);
             if (m_lineID < Singleton<TransportManager>.instance.m_lines.m_buffer.Length && m_lineID != 0)
             {
                 Singleton<SimulationManager>.instance.AddAction(() =>
@@ -61,12 +62,12 @@ namespace PublicTransportInfo
             }
         }
 
-        public static int CalculatePassengerCount(ushort stop, TransportLine oLine, out int iBored)
+        public static int CalculatePassengerCount(ushort stop, TransportInfo.TransportType transportType, out int iBored)
         {
-            int iBoredThreshold = ModSettings.s_iBoredThreshold;
+            int iBoredThreshold = PublicTransportInstance.GetSettings().BoredThreshold;
             iBored = 0;
-                
-            if(stop == 0)
+
+            if (stop == 0)
             {
                 return 0;
             }
@@ -77,8 +78,6 @@ namespace PublicTransportInfo
                 return 0;
             }
 
-            TransportInfo info = oLine.Info;
-            TransportInfo.TransportType transportType = info.m_transportType;
             float num = (transportType != 0 && transportType != TransportInfo.TransportType.EvacuationBus && transportType != TransportInfo.TransportType.TouristBus) ? 64f : 32f;
             CitizenManager instance = Singleton<CitizenManager>.instance;
             NetManager instance2 = Singleton<NetManager>.instance;
@@ -121,7 +120,7 @@ namespace PublicTransportInfo
                         num7 = nextGridInstance;
                         if (++num8 > 65536)
                         {
-                           Debug.Log("Invalid list detected!\n" + Environment.StackTrace);
+                            Debug.Log("Invalid list detected!\n" + Environment.StackTrace);
                             break;
                         }
                     }
@@ -129,6 +128,220 @@ namespace PublicTransportInfo
             }
 
             return num6;
+        }
+
+        public static ushort FindNextCableCarStop(NetNode oNode, ushort prevStop)
+        {
+            NetManager instance = Singleton<NetManager>.instance;
+            for (int i = 0; i < 8; i++)
+            {
+                ushort segment = instance.m_nodes.m_buffer[prevStop].GetSegment(i);
+                if (segment != 0 && instance.m_segments.m_buffer[segment].m_startNode == prevStop)
+                {
+                    return instance.m_segments.m_buffer[segment].m_endNode;
+                }
+            }
+
+            ushort num = NetNode.FindOwnerBuilding(prevStop, 64f);
+            if (num != 0)
+            {
+                ushort num2 = Singleton<BuildingManager>.instance.m_buildings.m_buffer[num].m_netNode;
+                int num3 = 0;
+                while (num2 != 0)
+                {
+                    if (num2 != prevStop)
+                    {
+                        NetInfo info = instance.m_nodes.m_buffer[num2].Info;
+                        if (info.m_class.m_layer == ItemClass.Layer.PublicTransport && 
+                            info.m_class.m_service == ItemClass.Service.PublicTransport && 
+                            info.m_class.m_subService == ItemClass.SubService.PublicTransportCableCar)
+                        {
+                            for (int j = 0; j < 8; j++)
+                            {
+                                ushort segment2 = instance.m_nodes.m_buffer[num2].GetSegment(j);
+                                if (segment2 != 0 && instance.m_segments.m_buffer[segment2].m_startNode == num2)
+                                {
+                                    return num2;
+                                }
+                            }
+                        }
+                    }
+
+                    num2 = instance.m_nodes.m_buffer[num2].m_nextBuildingNode;
+                    if (++num3 > 32768)
+                    {
+                        CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                        break;
+                    }
+                }
+            }
+
+            return 0;
+        }
+
+        public static List<ushort> GetStationStops(ushort usBuildingId)
+        {
+            List<ushort> stops = new List<ushort>();
+
+            NetManager instance = Singleton<NetManager>.instance;
+            ushort usStationStop = Singleton<BuildingManager>.instance.m_buildings.m_buffer[(int)usBuildingId].m_netNode;
+            ushort usOrigninalStop = usStationStop;
+            int iLoop = 0;
+
+            while (usStationStop != 0 && iLoop < 100)
+            {
+                stops.Add(usStationStop);
+                NetNode oStationNode = instance.m_nodes.m_buffer[(int)usStationStop];
+                usStationStop = TransportManagerUtils.FindNextCableCarStop(oStationNode, usStationStop);
+                iLoop++;
+
+                // If we loop back to the starting stop then stop looking.
+                if (usStationStop == usOrigninalStop)
+                {
+                    break;
+                }
+            }
+
+            return stops;
+        }
+
+        public static bool IsFirstStation(ushort usBuildingId)
+        {
+            NetManager instance = Singleton<NetManager>.instance;
+            ushort usStationStop = Singleton<BuildingManager>.instance.m_buildings.m_buffer[(int)usBuildingId].m_netNode;
+            NetNode oStationNode = instance.m_nodes.m_buffer[(int)usStationStop];
+
+            for (int i = 0; i < 8; ++i)
+            {
+                ushort usSegment = oStationNode.GetSegment(i);
+                if (usSegment != 0)
+                {
+                    NetSegment oSegment = instance.m_segments.m_buffer[usSegment];
+                    if (oSegment.m_startNode == usStationStop)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public static void GetStopProgress(ushort targetID, ushort usFirstStop, out float min, out float max, out float total)
+        {
+            min = 0f;
+            max = 0f;
+            total = 0f;
+            if (usFirstStop == 0)
+            {
+                return;
+            }
+
+            NetManager instance = Singleton<NetManager>.instance;
+            ushort num = usFirstStop;
+            int num2 = 0;
+            while (num != 0)
+            {
+                ushort num3 = 0;
+                for (int i = 0; i < 8; i++)
+                {
+                    ushort segment = instance.m_nodes.m_buffer[num].GetSegment(i);
+                    if (segment != 0 && instance.m_segments.m_buffer[segment].m_startNode == num)
+                    {
+                        num3 = instance.m_segments.m_buffer[segment].m_endNode;
+                        if (num3 == targetID)
+                        {
+                            min = total;
+                        }
+
+                        total += instance.m_segments.m_buffer[segment].m_averageLength;
+                        if (num3 == targetID)
+                        {
+                            max = total;
+                        }
+
+                        break;
+                    }
+                }
+
+                num = num3;
+                if (num == usFirstStop)
+                {
+                    break;
+                }
+
+                if (++num2 >= 32768)
+                {
+                    CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                    break;
+                }
+            }
+        }
+
+        public static bool GetProgressStatus(ushort vehicleID, ushort usFirstStop, ref Vehicle data, out float current, out float max)
+        {
+            ushort transportLine = data.m_transportLine;
+            ushort targetBuilding = data.m_targetBuilding;
+            if ((int)transportLine != 0 && (int)targetBuilding != 0)
+            {
+                float min;
+                float max1;
+                float total;
+                Singleton<TransportManager>.instance.m_lines.m_buffer[(int)transportLine]
+                    .GetStopProgress(targetBuilding, out min, out max1, out total);
+                uint path = data.m_path;
+                bool valid;
+                if ((int)path == 0 || (data.m_flags & Vehicle.Flags.WaitingPath) !=
+                    ~(Vehicle.Flags.Created | Vehicle.Flags.Deleted | Vehicle.Flags.Spawned | Vehicle.Flags.Inverted |
+                        Vehicle.Flags.TransferToTarget | Vehicle.Flags.TransferToSource | Vehicle.Flags.Emergency1 |
+                        Vehicle.Flags.Emergency2 | Vehicle.Flags.WaitingPath | Vehicle.Flags.Stopped |
+                        Vehicle.Flags.Leaving | Vehicle.Flags.Arriving | Vehicle.Flags.Reversed |
+                        Vehicle.Flags.TakingOff | Vehicle.Flags.Flying | Vehicle.Flags.Landing |
+                        Vehicle.Flags.WaitingSpace | Vehicle.Flags.WaitingCargo | Vehicle.Flags.GoingBack |
+                        Vehicle.Flags.WaitingTarget | Vehicle.Flags.Importing | Vehicle.Flags.Exporting |
+                        Vehicle.Flags.Parking | Vehicle.Flags.CustomName | Vehicle.Flags.OnGravel |
+                        Vehicle.Flags.WaitingLoading | Vehicle.Flags.Congestion | Vehicle.Flags.DummyTraffic |
+                        Vehicle.Flags.Underground | Vehicle.Flags.Transition | Vehicle.Flags.InsideBuilding |
+                        Vehicle.Flags.LeftHandDrive))
+                {
+                    current = min;
+                    valid = false;
+                }
+                else
+                {
+                    current = BusAI.GetPathProgress(path, (int)data.m_pathPositionIndex, min, max1, out valid);
+                }
+
+                max = total;
+                return valid;
+            }
+            current = 0.0f;
+            max = 0.0f;
+            return true;
+        }
+
+        public static List<ushort> GetCompleteTransportLines()
+        {
+            uint iSize = TransportManager.instance.m_lines.m_size;
+
+            // Build a list of lin id's
+            List<ushort> aLines = new List<ushort>();
+            for (ushort i = 0; i < iSize; i++)
+            {
+                TransportLine oLine = TransportManager.instance.m_lines.m_buffer[i];
+                if (oLine.Complete)
+                {
+                    aLines.Add(i);
+                }
+            }
+
+            return aLines;
+        }
+
+        public static string GetSlowOrStuckTooltipText(ushort usVehicleId, int iDays)
+        {
+            string sName = Singleton<VehicleManager>.instance.GetVehicleName(usVehicleId);
+            return "Vehicle " + sName + " (id:" + usVehicleId + ") has not moved for " + iDays + " in-game days.";
         }
     }
 }
