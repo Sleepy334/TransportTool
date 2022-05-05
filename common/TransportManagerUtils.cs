@@ -7,6 +7,33 @@ namespace PublicTransportInfo
 {
     public class TransportManagerUtils
     {
+        public static string GetSafeLineName(int iLineId)
+        {
+            TransportLine oLine = TransportManager.instance.m_lines.m_buffer[iLineId];
+            if ((oLine.m_flags & TransportLine.Flags.CustomName) == TransportLine.Flags.CustomName)
+            {
+                InstanceID oInstanceId = new InstanceID { TransportLine = (ushort)iLineId };
+                return InstanceManager.instance.GetName(oInstanceId);
+            }
+            else
+            {
+                return PublicTransportTypeUtils.GetDefaultLineTypeName(oLine.Info.m_transportType) + " Line " + oLine.m_lineNumber;
+            }
+        }
+
+        public static Color32 GetSafeLineColor(int iLineId)
+        {
+            TransportLine oLine = TransportManager.instance.m_lines.m_buffer[iLineId];
+            if ((oLine.m_flags & TransportLine.Flags.CustomColor) == TransportLine.Flags.CustomColor)
+            {
+                return oLine.m_color;
+            }
+            else
+            {
+                return PublicTransportTypeUtils.GetDefaultLineColor(oLine.Info.m_transportType);
+            }
+        }
+
         public static void HighlightLine(ushort m_lineID)
         {
             if (m_lineID < Singleton<TransportManager>.instance.m_lines.m_buffer.Length && m_lineID != 0)

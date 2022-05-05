@@ -11,6 +11,9 @@ namespace PublicTransportInfo
         private static bool s_bHasUnifiedUIBeenCheckedRunning = false;
         private static bool s_bIsUnifiedUIRunning = false;
 
+        private static bool s_bHasCommuterDestinationsBeenCheckedRunning = false;
+        private static bool s_bIsCommuterDestinationsRunning = false;
+
         public static void SearchPlugins()
         {
             string sPlugins = "";
@@ -74,6 +77,27 @@ namespace PublicTransportInfo
             else
             {
                 return IsPluginRunning(sUNIFIED_UI_ID);
+            }
+        }
+
+        public static bool IsCommuterDestinationsRunning()
+        {
+            const string sCOMMUTER_DESTINATIONS_ID = "2475986859";
+
+            // Only cache result once map is loaded
+            if (PublicTransportLoading.isGameLoaded)
+            {
+                if (!s_bHasCommuterDestinationsBeenCheckedRunning)
+                {
+                    s_bIsCommuterDestinationsRunning = IsPluginRunning(sCOMMUTER_DESTINATIONS_ID);
+                    s_bHasCommuterDestinationsBeenCheckedRunning = true;
+                }
+
+                return s_bIsCommuterDestinationsRunning;
+            }
+            else
+            {
+                return IsPluginRunning(sCOMMUTER_DESTINATIONS_ID);
             }
         }
     }

@@ -70,20 +70,26 @@ namespace PublicTransportInfo
             get;
             set;
         } = true;
-
-        public int WarnVehicleStuckDays
+        
+        public int WarnVehicleMovingSlowlyThreshold
         {
             get;
             set;
-        } = 20;
+        } = 150;
 
-        public int WarnVehicleMovingSlowlyDays
+        public int WarnVehicleBlockedThreshold
         {
             get;
             set;
-        } = 10;
+        } = 220;
 
         public bool WarnLineIssues
+        {
+            get;
+            set;
+        } = true;
+
+        public bool DeleteResolvedIssuesAutomatically
         {
             get;
             set;
@@ -95,7 +101,35 @@ namespace PublicTransportInfo
             set;
         } = true;
 
-        
+        public int TooltipRowLimit
+        {
+            get;
+            set;
+        } = 20;
+
+        public int TooltipFontSize
+        {
+            get;
+            set;
+        } = 16;
+        public bool LineIssueLocationSaved
+        {
+            get;
+            set;
+        } = false;
+
+        public Vector3 LineIssueLocation
+        {
+            get;
+            set;
+        }
+
+        public bool ZoomInOnTarget
+        {
+            get;
+            set;
+        } = false;
+
         static ModSettings()
         {
             if (GameSettings.FindSettingsFileByName(SETTINGS_FILE_NAME) == null)
@@ -108,6 +142,10 @@ namespace PublicTransportInfo
         public static SavedInputKey Hotkey = new SavedInputKey(
             "TransportTool_Hotkey", SETTINGS_FILE_NAME,
             key: KeyCode.I, control: true, shift: false, alt: false, true);
+
+        public static SavedInputKey LineIssueHotkey = new SavedInputKey(
+            "TransportTool_LineIssue_Hotkey", SETTINGS_FILE_NAME,
+            key: KeyCode.Alpha1, control: true, shift: false, alt: false, true);
 
         public static ModSettings Load()
         {
@@ -165,6 +203,20 @@ namespace PublicTransportInfo
         public bool TrackVehicles()
         {
             return WarnVehicleMovesSlowly || WarnVehicleStopsMoving || WarnVehicleDespawed;
+        }
+
+        public int GetBlockedVehicleMinThreshold()
+        {
+            int iWarnValue = 255;
+            if (WarnVehicleStopsMoving)
+            {
+                iWarnValue = WarnVehicleBlockedThreshold;
+            }
+            if (WarnVehicleMovesSlowly)
+            {
+                iWarnValue = Math.Min(iWarnValue, WarnVehicleMovingSlowlyThreshold);
+            }
+            return iWarnValue;
         }
     }
 }

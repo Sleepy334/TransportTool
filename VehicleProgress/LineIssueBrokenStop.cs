@@ -13,11 +13,16 @@ namespace PublicTransportInfo
         public int m_iStopNumber;
         Notification.Problem m_eProblem;
 
-        public LineIssueBrokenStop(int iStopNumber, ushort usStop, Notification.Problem eProblem) : base()
+        public LineIssueBrokenStop(ushort iLineId, TransportInfo.TransportType eType, int iStopNumber, ushort usStop, Notification.Problem eProblem) : base(iLineId, eType)
         {
             m_usStop = usStop;
             m_iStopNumber = iStopNumber;
             m_eProblem = eProblem;
+        }
+
+        public override IssueType GetIssueType()
+        {
+            return IssueType.ISSUE_TYPE_BROKEN_STOP;
         }
 
         public override IssueLevel GetLevel()
@@ -30,6 +35,11 @@ namespace PublicTransportInfo
             {
                 return IssueLevel.ISSUE_NONE;
             }
+        }
+
+        public override ushort GetVehcileId()
+        {
+            return 0;
         }
 
         public override string GetIssueLocation()
@@ -55,10 +65,42 @@ namespace PublicTransportInfo
             return "Stop " + m_iStopNumber + " has a problem (" + m_eProblem.ToString() + ")";
         }
 
+        public List<ushort> GetStopList()
+        {
+            List<ushort> oList = new List<ushort>();
+            TransportLine oLine = TransportManager.instance.m_lines.m_buffer[m_iLineId];
+            int iStopCount = oLine.CountStops(m_iLineId);
+            for (int i = 0; i < iStopCount; i++)
+            {
+                oList.Add(oLine.GetStop(i));
+            }
+
+            return oList;
+        }
+
         public override void Update()
         {
-            NetNode netNode = NetManager.instance.m_nodes.m_buffer[m_usStop];
-            m_eProblem = netNode.m_problems;
+            IssueLevel eLevel = GetLevel();
+            
+            // Check node is still part of line
+            List<ushort> oList = GetStopList();
+            if (oList.Contains(m_usStop))
+            {
+                // Does it still have an issue
+                NetNode netNode = NetManager.instance.m_nodes.m_buffer[m_usStop];
+                m_eProblem = netNode.m_problems;
+            }
+            else
+            {
+                m_eProblem = Notification.Problem.None;
+            }
+            
+            // Issue has changed restart deletion time stamp
+            if (eLevel != GetLevel())
+            {
+                UpdateTimeStamp();
+            }
+
         }
 
         public override void ShowIssue()
@@ -69,7 +111,8 @@ namespace PublicTransportInfo
 
             InstanceID oInstanceId = new InstanceID { TransportLine = (ushort)m_iLineId };
             Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_usStop].m_position;
-            PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, true);
+            ModSettings oSettings = PublicTransportInstance.GetSettings();
+            PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, oSettings.ZoomInOnTarget);
 
             // Open transport line panel
             WorldInfoPanel.Show<PublicTransportWorldInfoPanel>(oStopPosition, oInstanceId);
@@ -78,11 +121,6 @@ namespace PublicTransportInfo
         public virtual bool Equals(LineIssueBrokenStop oSecond)
         {
             return base.Equals(oSecond) && m_usStop == oSecond.m_usStop;
-        }
-
-        public override bool IsDespawned()
-        {
-            return false;
         }
 
         public override bool CanDelete()

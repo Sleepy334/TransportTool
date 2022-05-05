@@ -9,7 +9,7 @@ namespace PublicTransportInfo
     {
 		public static string ModName => "TransportTool " + Version;
 
-		private static string Version = "v1.8";
+		private static string Version = "v1.9.5";
 		public static string Title => "Transport Tool" + " " + Version;
 
 		public static bool Debug = false;

@@ -2,6 +2,7 @@
 using ColossalFramework.UI;
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using static TransportInfo;
 
@@ -14,10 +15,19 @@ namespace PublicTransportInfo
             public int m_iPassengers;
             public int m_iCapacity;
             public int m_iNextStop;
+            public float fProgress;
+            public float m_fDistance;
+        }
+
+        public struct LineData
+        {
+            public ushort m_usStop; 
+            public int m_iStopNumber;
+            public int m_iWaitingCount;
+            public int m_iBoredCount;
         }
 
         public int m_iLineId;
-        public string m_sName;
         public Color32 m_color;
         public int m_iPassengers;
         public int m_iCapacity;
@@ -27,12 +37,11 @@ namespace PublicTransportInfo
         public int m_iBored;
         public ushort m_usBusiestStopId;
         public int m_iBusiestStopNumber;
-        protected List<KeyValuePair<int, int>> m_stopPassengerCount;
+        protected List<LineData> m_stopPassengerCount;
         protected List<VehicleData> m_vehicleDatas;
 
         public LineInfoBase()
         {
-            m_sName = "";
             m_iPassengers = 0;
             m_iCapacity = 0;
             m_iVehicleCount = 0;
@@ -41,15 +50,17 @@ namespace PublicTransportInfo
             m_iBored = 0;
             m_usBusiestStopId = 0;
             m_iBusiestStopNumber = 0;
-            m_stopPassengerCount = new List<KeyValuePair<int, int>>();
+            m_stopPassengerCount = new List<LineData>();
             m_vehicleDatas = new List<VehicleData>();
         }
 
         public abstract TransportType GetTransportType();
         public abstract int GetStopCount();
         public abstract List<ushort> GetStops();
-        public abstract VehicleProgressLine? GetVehicleProgress();
+        public abstract LineIssueDetector? GetLineIssueDetector();
         public abstract void ShowBusiestStop();
+        public abstract string GetLineName();
+
         protected abstract void LoadVehicleInfo();
 
         public static int ComparatorBase(int iResult, LineInfoBase oLine1, LineInfoBase oLine2)
@@ -63,7 +74,7 @@ namespace PublicTransportInfo
 
         public static int ComparatorName(LineInfoBase oLine1, LineInfoBase oLine2)
         {
-            return ComparatorBase(oLine1.m_sName.CompareTo(oLine2.m_sName), oLine1, oLine2);
+            return ComparatorBase(oLine1.GetLineName().CompareTo(oLine2.GetLineName()), oLine1, oLine2);
         }
 
         public static int ComparatorStops(LineInfoBase oLine1, LineInfoBase oLine2)
@@ -130,32 +141,6 @@ namespace PublicTransportInfo
             return ComparatorName(this, obj);
         }
 
-        public static string GetSafeLineName(int iLineId, TransportLine oLine)
-        {
-            if ((oLine.m_flags & TransportLine.Flags.CustomName) == TransportLine.Flags.CustomName)
-            {
-                InstanceID oInstanceId = new InstanceID { TransportLine = (ushort)iLineId };
-                return InstanceManager.instance.GetName(oInstanceId);
-            }
-            else
-            {
-                TransportInfo.TransportType oType = oLine.Info.m_transportType;
-                return PublicTransportTypeUtils.GetDefaultLineTypeName(oType) + " Line " + oLine.m_lineNumber;
-            }
-        }
-
-        public static Color32 GetSafeLineColor(int iLineId, TransportLine oLine)
-        {
-            if ((oLine.m_flags & TransportLine.Flags.CustomColor) == TransportLine.Flags.CustomColor)
-            {
-                return oLine.m_color;
-            }
-            else
-            {
-                return PublicTransportTypeUtils.GetDefaultLineColor(oLine.Info.m_transportType);
-            }
-        }
-
         protected static int GetVehiclePassengerCount(ushort usVehicleId, out int iCapacity)
         {
             int iPassengers = 0;
@@ -200,151 +185,328 @@ namespace PublicTransportInfo
             {
                 int iBored;
                 int iStopPassengerCount = TransportManagerUtils.CalculatePassengerCount(usStop, GetTransportType(), out iBored);
-                if (iStopPassengerCount > m_iBusiest)
+                if (iStopPassengerCount >= m_iBusiest)
                 {
                     m_iBusiest = iStopPassengerCount;
                     m_usBusiestStopId = usStop;
                     m_iBusiestStopNumber = i + 1;
                 }
 
-                m_stopPassengerCount.Add(new KeyValuePair<int, int>(i + 1, iStopPassengerCount));
+                LineData oData = new LineData();
+                oData.m_usStop = usStop;
+                oData.m_iStopNumber = i + 1;
+                oData.m_iWaitingCount = iStopPassengerCount;
+                oData.m_iBoredCount = iBored;
+                m_stopPassengerCount.Add(oData);
+
                 m_iBored += iBored;
                 m_iWaiting += iStopPassengerCount;
                 i++;
             }
         }
 
-        public string GetWaitingTooltip(UILabel lblColumn)
+        
+
+        public delegate int GetLineDataValue(LineData oData);
+
+        public int GetWaitingCount(LineData oData)
         {
-            const int iSTOPS_TO_SHOW = 10;
-            
+            return oData.m_iWaitingCount;
+        }
+
+        public int GetBoredCount(LineData oData)
+        {
+            return oData.m_iBoredCount;
+        }
+
+        public string GetWaitingTooltip()
+        {
+            return GetLineDataTooltip("Waiting", GetWaitingCount);
+        }
+
+        public string GetBoredTooltip()
+        {
+            return GetLineDataTooltip("Bored", GetBoredCount);
+        }
+
+        public string GetLineDataTooltip(string sValueName, GetLineDataValue hLineDataValue)
+        {
             string sTooltip = "";
-            if (m_stopPassengerCount != null)
+
+            int iSTOPS_TO_SHOW = PublicTransportInstance.GetSettings().TooltipRowLimit;
+            if (iSTOPS_TO_SHOW > 0 && m_stopPassengerCount != null)
             {
                 m_stopPassengerCount.Sort((x, y) =>
                 {
-                    if (y.Value == x.Value)
+                    if (hLineDataValue(y) == hLineDataValue(x))
                     {
-                        return x.Key - y.Key;
+                        return x.m_iStopNumber - y.m_iStopNumber;
                     }
                     else
                     {
-                        return y.Value - x.Value;
+                        return hLineDataValue(y) - hLineDataValue(x);
                     }
-                    
+
                 });
-                
-                List<string> listWaiting = new List<string>();
+
+                List<string> listValue = new List<string>();
                 List<string> listStopNumber = new List<string>();
                 for (int i = 0; i < Math.Min(m_stopPassengerCount.Count, iSTOPS_TO_SHOW); i++)
                 {
-                    KeyValuePair<int, int> kvp = m_stopPassengerCount[i];
-                    listWaiting.Add(kvp.Value.ToString());
-                    listStopNumber.Add(kvp.Key.ToString());
+                    LineData oData = m_stopPassengerCount[i];
+                    listValue.Add(hLineDataValue(oData).ToString());
+                    listStopNumber.Add(oData.m_iStopNumber.ToString());
                 }
 
-                UIFontRenderer? oRenderer = null;
-                float units = 1;
-                if (lblColumn is not null)
-                {
-                    oRenderer = lblColumn.ObtainRenderer();
-                    units = lblColumn.GetUIView().PixelsToUnits();
-                }
-                if (oRenderer is not null)
-                {
-                    listWaiting = Utils.PadToWidthFront(oRenderer, units, listWaiting);
-                    listStopNumber = Utils.PadToWidthFront(oRenderer, units, listStopNumber);
-                }
+                listValue = Utils.PadToWidth(listValue, true);
+                listStopNumber = Utils.PadToWidth(listStopNumber, true);
 
-                for (int i = 0; i < listWaiting.Count; i++)
+                sTooltip += GetLineName() + "\r\n";
+
+                for (int i = 0; i < listValue.Count; i++)
                 {
-                    sTooltip += "Waiting: " + listWaiting[i] + " | Stop: " + listStopNumber[i] + "\r\n";
+                    if (sTooltip.Length > 0)
+                    {
+                        sTooltip += "\r\n";
+                    }
+                    sTooltip += "Stop: " + listStopNumber[i] + " | " + sValueName + ": " + listValue[i];
                 }
 
                 if (m_stopPassengerCount.Count > iSTOPS_TO_SHOW)
                 {
-                    int iWaitingRemainer = 0;
+                    int iValueRemainer = 0;
                     for (int i = iSTOPS_TO_SHOW; i < m_stopPassengerCount.Count; i++)
                     {
-                        iWaitingRemainer += m_stopPassengerCount[i].Value;
+                        iValueRemainer += hLineDataValue(m_stopPassengerCount[i]);
                     }
-                    sTooltip += "\r\nAnd " + (m_stopPassengerCount.Count - iSTOPS_TO_SHOW) + " other stops (" + iWaitingRemainer + ")";
+                    sTooltip += "\r\n\r\nAnd " + (m_stopPassengerCount.Count - iSTOPS_TO_SHOW) + " other stops (" + iValueRemainer + ")";
                 }
             }
 
             return sTooltip;
         }
 
-        public string GetVehicleTooltip(UILabel lblColumn)
+        public void GetStopData(int iStopsToShow, out List<string> listStopNumber, out List<string> listWaiting, out List<string> listBored, out List<string> listDistance)
         {
-            const int iVEHICLES_TO_SHOW = 10;
+            listStopNumber = new List<string>();
+            listWaiting = new List<string>();
+            listBored = new List<string>();
+            listDistance = new List<string>();
 
-            string sTooltip = "";
-            if (m_vehicleDatas != null)
+            if (iStopsToShow > 0 && m_stopPassengerCount != null)
             {
-                // Sort by fullest vehicles
-                m_vehicleDatas.Sort((x, y) =>
+                TransportLine oLine = Singleton<TransportManager>.instance.m_lines.m_buffer[m_iLineId];
+
+                m_stopPassengerCount.Sort((x, y) =>
                 {
-                    return y.m_iPassengers - x.m_iPassengers;
+                    return x.m_iStopNumber - y.m_iStopNumber;
                 });
 
-                // Load fullest vehicles into new array
-                int iVehiclesToShow = Math.Min(m_vehicleDatas.Count, iVEHICLES_TO_SHOW);
-                List<VehicleData> oFullestVehicles = new List<VehicleData>();
-                oFullestVehicles.AddRange(m_vehicleDatas.GetRange(0, iVehiclesToShow));
+                for (int i = 0; i < Math.Min(m_stopPassengerCount.Count, iStopsToShow); i++)
+                {
+                    LineData oData = m_stopPassengerCount[i];
+                    listStopNumber.Add(oData.m_iStopNumber.ToString());
+                    listWaiting.Add(oData.m_iWaitingCount.ToString());
+                    listBored.Add(oData.m_iBoredCount.ToString());
+
+                    float fMin;
+                    float fMax;
+                    float fTotal;
+                    oLine.GetStopProgress(oData.m_usStop, out fMin, out fMax, out fTotal);
+                    listDistance.Add((fMax / 1000f).ToString("N1"));
+                }
+
+                listStopNumber = Utils.PadToWidth(listStopNumber, true);
+                listWaiting = Utils.PadToWidth(listWaiting, true);
+                listBored = Utils.PadToWidth(listBored, true);
+                listDistance = Utils.PadToWidth(listDistance, true);
+            }
+        }
+
+        public string GetStopsTooltip()
+        {
+            string sTooltip = "";
+
+            int iSTOPS_TO_SHOW = PublicTransportInstance.GetSettings().TooltipRowLimit;
+            if (iSTOPS_TO_SHOW > 0 && m_stopPassengerCount != null)
+            {
+                List<string> listStopNumber;
+                List<string> listWaiting;
+                List<string> listBored;
+                List<string> listDistance;
+                GetStopData(iSTOPS_TO_SHOW, out listStopNumber, out listWaiting, out listBored, out listDistance);
+
+                if (listDistance.Count > 0)
+                {
+                    if (GetTransportType() == TransportType.CableCar)
+                    {
+                        sTooltip += GetLineName() + "\r\n";
+                    }
+                    else
+                    {
+                        sTooltip += GetLineName() + "(" + listDistance[0] + "km)\r\n";
+                    } 
+                }
+                else
+                {
+                    sTooltip += GetLineName() + "\r\n";
+                }
+
+                for (int i = 0; i < listStopNumber.Count; i++)
+                {
+                    if (sTooltip.Length > 0)
+                    {
+                        sTooltip += "\r\n";
+                    }
+                    sTooltip += listStopNumber[i];
+                    if (GetTransportType() != TransportType.CableCar)
+                    {
+                        sTooltip += " | " + listDistance[i] + "km";
+                    }
+                    sTooltip += " | Waiting: " + listWaiting[i];
+                    sTooltip += " | Bored: " + listBored[i];
+                }
+
+                if (m_stopPassengerCount.Count > iSTOPS_TO_SHOW)
+                {
+                    int iWaitingRemainder = 0;
+                    int iBoredRemainder = 0;
+                    for (int i = iSTOPS_TO_SHOW; i < m_stopPassengerCount.Count; i++)
+                    {
+                        iWaitingRemainder += m_stopPassengerCount[i].m_iWaitingCount;
+                        iBoredRemainder += m_stopPassengerCount[i].m_iBoredCount;
+                    }
+                    sTooltip += "\r\n\r\nAnd " + (m_stopPassengerCount.Count - iSTOPS_TO_SHOW) + " other stops (Waiting: " + iWaitingRemainder + " | Bored: " + iBoredRemainder + ")";
+                }
+            }
+
+            return sTooltip;
+        }
+
+        public abstract int CompareVehicleDataProgress(VehicleData x, VehicleData y);
+
+        public string GetVehicleTooltip()
+        {
+            string sTooltip = ""; 
+            
+            // SHow all vehicles for this tooltip.
+            if (m_vehicleDatas != null && m_stopPassengerCount != null)
+            {
+                // Load vehicle progress
+                List<ushort> stops = GetStops();
+                for (int i = 0; i < m_vehicleDatas.Count; ++i)
+                {
+                    VehicleData oVD = m_vehicleDatas[i];
+                    float fCurrent;
+                    float fTotal;
+                    oVD.fProgress = LineIssueDetector.GetVehicleProgress(oVD.m_usVehicleId, stops[0], out fCurrent, out fTotal, 0);
+                    oVD.m_fDistance = fCurrent;
+                    m_vehicleDatas[i] = oVD;
+                }
 
                 // Sort by line progress
-                oFullestVehicles.Sort((x, y) =>
-                {
-                    return x.m_iNextStop - y.m_iNextStop;
-                });
+                m_vehicleDatas.Sort(CompareVehicleDataProgress);
 
                 List<string> listPassengers = new List<string>();
-                List<string> listStopNumber = new List<string>();
                 List<string> listVehicleNames = new List<string>();
-                for (int i = 0; i < oFullestVehicles.Count; i++)
+                List<string> listVehicleIds = new List<string>();
+                List<string> listVehicleProgress = new List<string>();
+                List<string> listStatus = new List<string>();
+                for (int i = 0; i < m_vehicleDatas.Count; i++)
                 {
-                    VehicleData oVD = oFullestVehicles[i];
+                    VehicleData oVD = m_vehicleDatas[i];
                     listPassengers.Add(oVD.m_iPassengers + "/" + oVD.m_iCapacity);
-                    listStopNumber.Add(oVD.m_iNextStop.ToString());
+                    listVehicleIds.Add(oVD.m_usVehicleId.ToString());
+                    listVehicleProgress.Add((oVD.m_fDistance / 1000f).ToString("N1") + "km");
+
+                    // Vehicle name
                     string sVehicleName = Singleton<VehicleManager>.instance.GetVehicleName(oVD.m_usVehicleId);
                     if (sVehicleName == null)
                     {
                         sVehicleName = GetTransportType().ToString();
                     }
                     listVehicleNames.Add(sVehicleName);
+
+                    string sStatus = "";
+                    Vehicle oVehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[oVD.m_usVehicleId];
+                    if (oVehicle.m_blockCounter > 0)
+                    {
+                        sStatus = "Blocked (" + oVehicle.m_blockCounter + ")";
+                    }
+                    else
+                    {
+                        InstanceID oInstanceId = new InstanceID();
+                        oInstanceId.Vehicle = oVD.m_usVehicleId;
+                        sStatus = oVehicle.Info.m_vehicleAI.GetLocalizedStatus(oVD.m_usVehicleId, ref oVehicle, out oInstanceId);
+                    }
+                    listStatus.Add(sStatus);
                 }
 
                 // Pad numbers
-                UIFontRenderer? oRenderer = null;
-                float units = 1;
-                if (lblColumn is not null)
+                listPassengers = Utils.PadToWidth(listPassengers, true);
+                listVehicleIds = Utils.PadToWidth(listVehicleIds, true);
+                listVehicleProgress = Utils.PadToWidth(listVehicleProgress, true);
+                listStatus = Utils.PadToWidth(listStatus, false);
+                listVehicleNames = Utils.PadToWidth(listVehicleNames, false);
+                
+                sTooltip += GetLineName() + "\r\n";
+
+                List<string> listStopNumber;
+                List<string> listWaiting;
+                List<string> listBored;
+                List<string> listDistance;
+                GetStopData(m_stopPassengerCount.Count, out listStopNumber, out listWaiting, out listBored, out listDistance);
+                
+                // Build tooltip
+                int iStopIndex = 0;
+                for (int i = 0; i < m_vehicleDatas.Count; i++)
                 {
-                    oRenderer = lblColumn.ObtainRenderer();
-                    units = lblColumn.GetUIView().PixelsToUnits();
-                }
-                if (oRenderer is not null)
-                {
-                    listPassengers = Utils.PadToWidthFront(oRenderer, units, listPassengers);
-                    listStopNumber = Utils.PadToWidthFront(oRenderer, units, listStopNumber);
-                    listVehicleNames = Utils.PadToWidthBack(oRenderer, units, listVehicleNames);
+                    VehicleData oVD = m_vehicleDatas[i];
+
+                    // Add any stops before NextStop
+                    int iNextStop = oVD.m_iNextStop;
+                    LineData oCurrentStop = m_stopPassengerCount[iStopIndex];
+                    while (iNextStop > oCurrentStop.m_iStopNumber)
+                    {
+                        if (GetTransportType() == TransportType.CableCar)
+                        {
+                            sTooltip += "\r\n" + listStopNumber[iStopIndex] + ". (" + listWaiting[iStopIndex] + ")";
+                        }
+                        else
+                        {
+                            sTooltip += "\r\n" + listStopNumber[iStopIndex] + ". " + listDistance[iStopIndex] + "km (" + listWaiting[iStopIndex] + ")";
+                        }
+                        
+                        iStopIndex++;
+                        oCurrentStop = m_stopPassengerCount[iStopIndex];
+                    }
+
+                    // Add vehicle
+                    if (sTooltip.Length > 0)
+                    {
+                        sTooltip += "\r\n";
+                    }
+                    sTooltip += listVehicleNames[i];
+                    sTooltip += " (" + listVehicleIds[i] + ")";
+                    if (GetTransportType() != TransportType.CableCar)
+                    {
+                        sTooltip += " | " + listVehicleProgress[i];
+                    }
+                    sTooltip += " | " + listPassengers[i];
+                    sTooltip += " | " + listStatus[i];
                 }
 
-                // Build tooltip
-                for (int i = 0; i < listPassengers.Count; i++)
+                // Add last stops
+                for (int i = iStopIndex; i < m_stopPassengerCount.Count; ++i)
                 {
-                    sTooltip += listPassengers[i] + " | Next stop: " + listStopNumber[i] + " | " + listVehicleNames[i] + "\r\n";
-                }
-                if (m_vehicleDatas.Count > iVehiclesToShow)
-                {
-                    int iPassengerRemainder = 0;
-                    int iCapacityRemainder = 0;
-                    for (int i = iVehiclesToShow; i < m_vehicleDatas.Count; i++)
+                    if (GetTransportType() == TransportType.CableCar)
                     {
-                        iPassengerRemainder += m_vehicleDatas[i].m_iPassengers;
-                        iCapacityRemainder += m_vehicleDatas[i].m_iCapacity;
+                        sTooltip += "\r\n" + listStopNumber[i] + ". (" + listWaiting[i] + ")";
                     }
-                    sTooltip += "\r\nAnd " + (m_vehicleDatas.Count - oFullestVehicles.Count) + " other vehicles (" + iPassengerRemainder + "/" + iCapacityRemainder + ")";
+                    else
+                    {
+                        sTooltip += "\r\n" + listStopNumber[i] + ". " + listDistance[i] + "km (" + listWaiting[i] + ")";
+                    }
                 }
             }
 
@@ -354,6 +516,30 @@ namespace PublicTransportInfo
         public virtual string GetPassengersTooltip()
         {
             return "";
+        }
+
+        public void ShowBusiestStopCommuterDestinations()
+        {
+            if (DependencyUtilities.IsCommuterDestinationsRunning())
+            {
+                // Get the Commuter Destinations panel if available
+                UIPanel pnlCommuterDestination = (UIPanel)UIView.GetAView().FindUIComponent("StopDestinationInfoPanel");
+                if (pnlCommuterDestination != null)
+                {
+                    // Find the Show function with reflection so we dont need to add CSLCommuterDestination.dll as dependency and risk loading issues.
+                    // public void StopDestinationInfoPanel.Show(ushort stopId)
+                    MethodInfo methodShow = pnlCommuterDestination.GetType().GetMethod("Show", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(ushort) }, null);
+                    if (methodShow != null)
+                    {
+                        object[] parametersArray = new object[] { m_usBusiestStopId };
+                        methodShow.Invoke(pnlCommuterDestination, parametersArray);
+                    } 
+                    else
+                    {
+                        Debug.Log("CSLShowCommuterDestination.StopDestinationInfoPanel.Show(ushort usStopId) not found.");
+                    }
+                }
+            }
         }
     }
 }

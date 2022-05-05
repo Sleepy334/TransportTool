@@ -14,7 +14,8 @@ namespace PublicTransportInfo
         private UILabel? m_lblLine = null;
         private UILabel? m_lblVehicle = null;
         private UILabel? m_lblIssue = null;
-        private int m_iIssueIndex = 0;
+        //private int m_iIssueIndex = 0;
+        private LineIssue? m_activeLineIssue = null;
         private UIButton? m_btnPrev = null;
         private UIButton? m_btnNext = null;
         private UIButton? m_btnDelete = null;
@@ -44,11 +45,28 @@ namespace PublicTransportInfo
             isVisible = false;
             playAudioEvents = true;
             m_ClipChildren = true;
-            CenterToParent();
+            eventPositionChanged += (sender, e) =>
+            {
+                ModSettings settings = PublicTransportInstance.GetSettings();
+                settings.LineIssueLocationSaved = true;
+                settings.LineIssueLocation = absolutePosition;
+                settings.Save();
+            };
+
+            if (PublicTransportInstance.GetSettings().LineIssueLocationSaved)
+            {
+                absolutePosition = PublicTransportInstance.GetSettings().LineIssueLocation;
+                FitToScreen();
+            } 
+            else
+            {
+                CenterToParent();
+            }
 
             // Title Bar
             m_title = AddUIComponent<UITitleBar>();
             m_title.SetOnclickHandler(OnCloseClick);
+            m_title.SetFollowHandler(OnFollowClick);
             m_title.title = "Line Issues";
 
             // Line label
@@ -88,7 +106,7 @@ namespace PublicTransportInfo
             m_btnPrev.pressedBgSprite = "ButtonMenuPressed";
 
             m_btnDelete = panel.AddUIComponent<UIButton>();
-            m_btnDelete.tooltip = "Delete";
+            m_btnDelete.tooltip = "Delete Issue";
             m_btnDelete.width = 70;
             m_btnDelete.height = 30;
             m_btnDelete.CenterToParent();
@@ -140,6 +158,15 @@ namespace PublicTransportInfo
             ShowIssue();
         }
 
+        private void FitToScreen()
+        {
+            Vector2 oScreenVector = UIView.GetAView().GetScreenResolution();
+            float fX = Math.Max(0.0f, Math.Min(absolutePosition.x, oScreenVector.x - width));
+            float fY = Math.Max(0.0f, Math.Min(absolutePosition.y, oScreenVector.y - height));
+            Vector3 oFitPosition = new Vector3(fX, fY, absolutePosition.z);
+            absolutePosition = oFitPosition;
+        }
+
         new public void Show()
         {
             UpdatePanel();
@@ -149,6 +176,7 @@ namespace PublicTransportInfo
 
         new public void Hide()
         {
+            m_activeLineIssue = null;
             base.Hide();
         }
 
@@ -157,10 +185,13 @@ namespace PublicTransportInfo
             PublicTransportInstance.HideLineIssuePanel();
         }
 
+        public void OnFollowClick(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            ShowIssue();
+        }
+
         public void SetInitialLineId(int iLineId)
         {
-            m_iIssueIndex = 0;
-
             List<LineIssue> oIssues = GetVisibleLineIssues();
             if (oIssues != null)
             {
@@ -168,20 +199,35 @@ namespace PublicTransportInfo
                 {
                     if (oIssue.m_iLineId == iLineId)
                     {
+                        m_activeLineIssue = oIssue;
                         break;
                     }
-
-                    m_iIssueIndex++;
+                }
+                if (m_activeLineIssue == null && oIssues.Count > 0)
+                {
+                    m_activeLineIssue = oIssues[0];
                 }
             }
+        }
+
+        public int GetActiveIndex()
+        {
+            int iIndex = 0;
+            List<LineIssue> oIssues = GetVisibleLineIssues();
+            if (oIssues != null && oIssues.Count > 0 && m_activeLineIssue != null)
+            {
+                iIndex = Math.Max(0, oIssues.IndexOf(m_activeLineIssue));
+            }
+            return iIndex;
         }
 
         public void OnPrevClick(UIComponent component, UIMouseEventParameter eventParam)
         {
             List<LineIssue> oIssues = GetVisibleLineIssues();
-            if (oIssues != null)
+            if (oIssues != null && oIssues.Count > 0)
             {
-                m_iIssueIndex = Mathf.Max(m_iIssueIndex - 1, 0);
+                int iIndex = Mathf.Max(GetActiveIndex() - 1, 0);
+                m_activeLineIssue = oIssues[iIndex];
                 ShowIssue();
             }
         }
@@ -189,114 +235,120 @@ namespace PublicTransportInfo
         public void OnNextClick(UIComponent component, UIMouseEventParameter eventParam)
         {
             List<LineIssue> oIssues = GetVisibleLineIssues();
-            if (oIssues != null)
+            if (oIssues != null && oIssues.Count > 0)
             {
-                m_iIssueIndex = Mathf.Min(m_iIssueIndex + 1, oIssues.Count - 1);
+                int iCurrentIndex = GetActiveIndex();
+                int iNewIndex = Mathf.Min(iCurrentIndex + 1, oIssues.Count - 1);
+                Debug.Log("iCurrentIndex" + iCurrentIndex + "iNewIndex" + iNewIndex);
+                m_activeLineIssue = oIssues[iNewIndex];
                 ShowIssue();
             }
         }
 
         public void OnDeleteClick(UIComponent component, UIMouseEventParameter eventParam)
         {
-            List <LineIssue> oIssues = GetVisibleLineIssues();
-            if (oIssues != null && m_iIssueIndex >= 0 && m_iIssueIndex < oIssues.Count)
+            if (m_activeLineIssue != null)
             {
-                LineIssue oIssue = oIssues[m_iIssueIndex];
-                if (oIssue.CanDelete())
-                {
-                    PublicTransportInstance.GetLineIssueManager().RemoveLineIssue(oIssue);
-                } 
-                else
-                {
-                    oIssue.SetHidden(true);
-                }
-                UpdatePanel();
+                m_activeLineIssue.SetHidden(true);
+                m_activeLineIssue = null;
+            }
+               
+            // Update visible issue array
+            List<LineIssue> oIssues = GetVisibleLineIssues();                
+            if (oIssues.Count > 0)
+            {
+                ShowIssue();
+            } 
+            else
+            {
+                PublicTransportInstance.HideLineIssuePanel();
+            }
+        }
 
-                // Update visible issue array
-                oIssues = GetVisibleLineIssues();
-
-                // Check index is still in range
-                m_iIssueIndex = Math.Min(m_iIssueIndex, oIssues.Count - 1);
-                m_iIssueIndex = Math.Max(0, m_iIssueIndex);
-                
-                if (oIssues.Count > 0)
+        private LineIssue? GetActiveLineIssue()
+        {
+            if (m_activeLineIssue == null)
+            {
+                List<LineIssue> oIssues = GetVisibleLineIssues();
+                if (oIssues != null && oIssues.Count > 0)
                 {
-                    ShowIssue();
-                } else
-                {
-                    PublicTransportInstance.HideLineIssuePanel();
+                    m_activeLineIssue = oIssues[0];
                 }
             }
+
+            return m_activeLineIssue;
         }
 
         public void ShowIssue()
         {
-            if (isVisible)
+            LineIssue? m_activeLineIssue = GetActiveLineIssue();
+            if (isVisible && m_activeLineIssue != null)
             {
-                List<LineIssue> oIssues = GetVisibleLineIssues();
-                if (oIssues != null && oIssues.Count > 0 && m_iIssueIndex >= 0 && m_iIssueIndex < oIssues.Count)
-                {
-                    PlayClickSound(this);
-                    UpdatePanel();
-
-                    LineIssue oIssue = oIssues[m_iIssueIndex];
-                    if (oIssue != null)
-                    {
-                        oIssue.ShowIssue();
-                    }
-                }
+                PlayClickSound(this);
+                UpdatePanel();
+                m_activeLineIssue.ShowIssue();
             }
         }
 
         public void UpdatePanel()
         {
-            int iIssueCount = 0;
-
             List<LineIssue> oIssues = GetVisibleLineIssues();
-            if (oIssues != null && oIssues.Count > 0)
+            int iIssueCount = oIssues.Count;
+            if (iIssueCount > 0)
             {
-                iIssueCount = oIssues.Count;
-
-                // MinMax it to ensure it is in range
-                m_iIssueIndex = Mathf.Min(m_iIssueIndex, iIssueCount - 1);
-                m_iIssueIndex = Mathf.Max(m_iIssueIndex, 0);
-
-                if (m_title != null)
+                LineIssue? activeLineIssue = GetActiveLineIssue();
+                if (activeLineIssue != null)
                 {
-                    m_title.title = "Line Issues (" + (m_iIssueIndex + 1) + "/" + iIssueCount + ")";
-                }
-
-                LineIssue oIssue = oIssues[m_iIssueIndex];
-                if (oIssue != null)
-                {
-                    oIssue.Update();
+                    activeLineIssue.Update();
 
                     if (m_lblLine != null)
                     {
-                        TransportLine oLine = TransportManager.instance.m_lines.m_buffer[oIssue.m_iLineId];
-                        m_lblLine.text = oLine.Info.m_transportType.ToString() + " Line: " + LineInfoBase.GetSafeLineName(oIssue.m_iLineId, oLine);
+                        TransportLine oLine = TransportManager.instance.m_lines.m_buffer[activeLineIssue.m_iLineId];
+                        m_lblLine.text = oLine.Info.m_transportType.ToString() + " Line: " + TransportManagerUtils.GetSafeLineName(activeLineIssue.m_iLineId);
                     }
                     if (m_lblVehicle != null)
                     {
-                        m_lblVehicle.text = oIssue.GetIssueLocation();
+                        m_lblVehicle.text = activeLineIssue.GetIssueLocation();
                     }
                     if (m_lblIssue != null)
                     {
-                        m_lblIssue.text = oIssue.GetIssueDescription();
+                        m_lblIssue.text = activeLineIssue.GetIssueDescription();
+                    }
+                    if (m_btnDelete != null)
+                    {
+                        m_btnDelete.isEnabled = true;
+                    }
+                } else {
+                    if (m_lblLine != null)
+                    {
+                        m_lblLine.text = "";
+                    }
+                    if (m_lblVehicle != null)
+                    {
+                        m_lblVehicle.text = "";
+                    }
+                    if (m_lblIssue != null)
+                    {
+                        m_lblIssue.text = "";
+                    }
+                    if (m_btnDelete != null)
+                    {
+                        m_btnDelete.isEnabled = false;
                     }
                 }
 
+                int iIndex = GetActiveIndex();
+                if (m_title != null)
+                {
+                    m_title.title = "Line Issues (" + (iIndex + 1) + "/" + iIssueCount + ")";
+                }
                 if (m_btnPrev != null)
                 {
-                    m_btnPrev.isEnabled = m_iIssueIndex > 0;
+                    m_btnPrev.isEnabled = iIndex > 0;
                 }
                 if (m_btnNext != null)
                 {
-                    m_btnNext.isEnabled = m_iIssueIndex < iIssueCount - 1;
-                }
-                if (m_btnDelete != null)
-                {
-                    m_btnDelete.isEnabled = true;
+                    m_btnNext.isEnabled = iIndex < iIssueCount - 1;
                 }
             }
             else
@@ -307,7 +359,7 @@ namespace PublicTransportInfo
                 }
                 if (m_lblLine != null)
                 {
-                    m_lblLine.text = "";
+                    m_lblLine.text = "No issues detected.";
                 }
                 if (m_lblVehicle != null)
                 {
@@ -317,6 +369,10 @@ namespace PublicTransportInfo
                 {
                     m_lblIssue.text = "";
                 }
+                if (m_btnDelete != null)
+                {
+                    m_btnDelete.isEnabled = false;
+                }
                 if (m_btnPrev != null)
                 {
                     m_btnPrev.isEnabled = false;
@@ -325,11 +381,25 @@ namespace PublicTransportInfo
                 {
                     m_btnNext.isEnabled = false;
                 }
-                if (m_btnDelete != null)
-                {
-                    m_btnDelete.isEnabled = false;
-                }
             }
+        }
+
+        public int GetActiveIssueId()
+        {
+            if (m_activeLineIssue != null)
+            {
+                return m_activeLineIssue.GetIssueId();
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        public void UpdateActiveIssue(LineIssue oNewIssue)
+        {
+            m_activeLineIssue = oNewIssue;
+            UpdatePanel();
         }
 
         public override void OnDestroy()

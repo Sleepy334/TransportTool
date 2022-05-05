@@ -9,8 +9,10 @@ namespace PublicTransportInfo
 {
     public class LineInfoCableCar : LineInfoBase
     {
+        public int m_iLineNumber;
         private ushort m_usFirstStopBuildingId = 0;
         private List<ushort> m_buildings = null;
+
         public LineInfoCableCar(ushort usBuildingId) : base()
         {
             m_usFirstStopBuildingId = usBuildingId;
@@ -20,6 +22,11 @@ namespace PublicTransportInfo
         public override TransportType GetTransportType()
         {
             return TransportType.CableCar;
+        }
+
+        public override string GetLineName()
+        {
+            return "Cable Car Line " + m_iLineNumber;
         }
 
         public override int GetStopCount()
@@ -32,7 +39,7 @@ namespace PublicTransportInfo
             return TransportManagerUtils.GetStationStops(m_usFirstStopBuildingId);
         }
 
-        public override VehicleProgressLine? GetVehicleProgress()
+        public override LineIssueDetector? GetLineIssueDetector()
         {
             return null;
         }
@@ -66,16 +73,17 @@ namespace PublicTransportInfo
                             m_iCapacity += iCapacity;
                             m_iVehicleCount++;
 
-                            Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[usVehicleId];
-                            usVehicleId = oVehicle.m_nextOwnVehicle;
-
                             // Store vehicle data
+                            Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[usVehicleId];
                             VehicleData oData = new VehicleData();
                             oData.m_usVehicleId = usVehicleId;
                             oData.m_iPassengers = iPassengerCount;
                             oData.m_iCapacity = iCapacity;
                             oData.m_iNextStop = stops.IndexOf(oVehicle.m_targetBuilding) + 1;
                             m_vehicleDatas.Add(oData);
+
+                            // Update for next car
+                            usVehicleId = oVehicle.m_nextOwnVehicle;
                         }
                     }
                 }
@@ -89,7 +97,8 @@ namespace PublicTransportInfo
             {
                 InstanceID oInstanceId = new InstanceID { Building = usBuildingId };
                 Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_usBusiestStopId].m_position;
-                PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, true);
+                ModSettings oSettings = PublicTransportInstance.GetSettings();
+                PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, oSettings.ZoomInOnTarget);
 
                 WorldInfoPanel.Show<CityServiceWorldInfoPanel>(oStopPosition, oInstanceId);
             }
@@ -109,12 +118,32 @@ namespace PublicTransportInfo
                     BuildingInfo info = building2.Info;
                     BuildingAI buildingAI = info.m_buildingAI;
                     int iWeeklyPassengers = ((CableCarStationAI)buildingAI).GetPassengerCount(usBuildingId, ref building2);
-                    sTooltip += "Building " + iBuilding + " | Weekly Passengers: " + iWeeklyPassengers + "\r\n";
+                    if (sTooltip.Length > 0)
+                    {
+                        sTooltip += "\r\n";
+                    }
+                    sTooltip += "Building " + iBuilding + " | Weekly Passengers: " + iWeeklyPassengers;
                     iBuilding++;
                 }
             }
             
             return sTooltip;
+        }
+
+        public override int CompareVehicleDataProgress(VehicleData x, VehicleData y)
+        {
+            if (x.m_iNextStop < y.m_iNextStop)
+            {
+                return -1;
+            }
+            else if (x.m_iNextStop > y.m_iNextStop)
+            {
+                return 1;
+            }
+            else
+            {
+                return x.m_iPassengers - y.m_iPassengers;
+            }
         }
     }
 }

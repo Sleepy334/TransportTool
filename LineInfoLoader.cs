@@ -28,7 +28,7 @@ namespace PublicTransportInfo
                         TransportManagerUtils.IsFirstStation(usBuildingId))
                     {
                         LineInfoCableCar lineInfo = new LineInfoCableCar(usBuildingId);
-                        lineInfo.m_sName = "CableCar Line " + (list.Count + 1);
+                        lineInfo.m_iLineNumber = list.Count + 1;
                         lineInfo.m_color = PublicTransportTypeUtils.GetDefaultLineColor(eType);
                         lineInfo.UpdateInfo();
                         list.Add(lineInfo);

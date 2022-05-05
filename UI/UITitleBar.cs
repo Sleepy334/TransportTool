@@ -12,6 +12,8 @@ namespace PublicTransportInfo
         private UIButton? m_close = null;
         private UIDragHandle? m_drag = null;
         private MouseEventHandler? m_onClick = null;
+        private UIButton? m_btnFollow = null;
+        private MouseEventHandler? m_onFollowClick = null;
 
         public bool isModal = false;
 
@@ -45,6 +47,11 @@ namespace PublicTransportInfo
             m_onClick = handler;
         }
 
+        public void SetFollowHandler(MouseEventHandler handler)
+        {
+            m_onFollowClick = handler;
+        }
+
         private void SetupControls(string sTitle)
         {
             width = parent.width - 8;
@@ -71,6 +78,28 @@ namespace PublicTransportInfo
                     m_onClick(component, param);
                 } 
             };
+
+            if (m_onFollowClick != null)
+            {
+                m_btnFollow = AddUIComponent<UIButton>();
+                m_btnFollow.name = "m_btnFollow";
+                m_btnFollow.tooltip = "Show";
+                m_btnFollow.relativePosition = new Vector3(width - m_close.width - 35, 2);
+                m_btnFollow.width = height;
+                m_btnFollow.height = height;
+                m_btnFollow.normalBgSprite = "LocationMarkerActiveNormal";
+                m_btnFollow.hoveredBgSprite = "LocationMarkerActiveHovered";
+                m_btnFollow.focusedBgSprite = "LocationMarkerActiveFocused";
+                m_btnFollow.disabledBgSprite = "LocationMarkerActiveDisabled";
+                m_btnFollow.pressedBgSprite = "LocationMarkerActivePressed";
+                m_btnFollow.eventClick += (component, param) =>
+                {
+                    if (m_onFollowClick != null)
+                    {
+                        m_onFollowClick(component, param);
+                    }
+                };
+            }
 
             m_drag = AddUIComponent<UIDragHandle>();
             m_drag.width = width - 50;

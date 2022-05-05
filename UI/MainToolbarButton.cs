@@ -29,10 +29,26 @@ namespace PublicTransportInfo
                 }
                 else
                 {
-                    m_ToolbarButton.normalBgSprite = "BusImageInverted48x48";
+                    m_ToolbarButton.normalBgSprite = "BusImageInverted48x48";  
                 }
             }
-        }        
+            UpdateTooltip(eLevel);
+        } 
+        
+        public void UpdateTooltip(LineIssue.IssueLevel eLevel)
+        {
+            if (m_ToolbarButton != null)
+            {
+                if (eLevel != LineIssue.IssueLevel.ISSUE_NONE && PublicTransportInstance.GetLineIssueManager() != null)
+                {
+                    m_ToolbarButton.tooltip = PublicTransportInstance.GetLineIssueManager().GetTooltip();
+                }
+                else
+                {
+                    m_ToolbarButton.tooltip = ITransportInfoMain.Title;
+                }
+            }
+        }
 
         public void Focus()
         {
@@ -108,6 +124,7 @@ namespace PublicTransportInfo
                 m_ToolbarButton.name = ITransportInfoMain.ModName;
                 m_ToolbarButton.tooltip = ITransportInfoMain.Title;
                 m_ToolbarButton.relativePosition = new Vector3(0, 5);
+
                 toolStrip.AddTab("Transport Tool", m_ToolbarButton.gameObject, null, null);
 
                 FieldInfo m_ObjectIndex = typeof(MainToolbar).GetField("m_ObjectIndex", BindingFlags.Instance | BindingFlags.NonPublic);

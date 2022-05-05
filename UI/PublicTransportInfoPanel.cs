@@ -197,7 +197,6 @@ namespace PublicTransportInfo
                     Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
                     UIView.library.Hide("PublicTransportInfoViewPanel");
 
-                    Debug.Log("SetSelectedTransportType" + m_SelectedTransportType.ToString());
                     LoadTransportLineTabs();
 
                     LineIssue.IssueLevel eLevel;
@@ -251,19 +250,18 @@ namespace PublicTransportInfo
             {
                 m_SelectedTransportType = eType;
 
-                if (m_title != null)
-                {
-                    m_title.title = "[" + m_SelectedTransportType.ToString() + "] " + ITransportInfoMain.Title;
-                }
+                
 
                 // Select correct tab button
                 m_tabStrip?.SelectTab(m_SelectedTransportType);
 
+                int iLineCount = 0;
                 if (m_ListView != null)
                 {
                     LineInfoLoader oLoad = new LineInfoLoader();
                     List<LineInfoBase> oList = oLoad.GetLineList(m_SelectedTransportType);
-
+                    iLineCount = oList.Count;
+                    
                     m_ListView.Clear();
 
                     if (oList != null)
@@ -283,6 +281,11 @@ namespace PublicTransportInfo
                 else
                 {
                     Debug.Log("m_ListView is null");
+                }
+
+                if (m_title != null)
+                {
+                    m_title.title = "[" + m_SelectedTransportType.ToString() + ":" + iLineCount + "] " + ITransportInfoMain.Title;
                 }
 
                 UpdateOverviewData();

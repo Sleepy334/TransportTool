@@ -29,25 +29,32 @@ namespace PublicTransportInfo
                 m_watch = new Stopwatch();
             }
 
-            // Unified UI also handles the Keyboard shortcut for us so don't respond here if we are using it.
-            if (!UnifiedUITool.HasButtonBeenAdded())
+            // Unified UI also handles the Main panel Keyboard shortcut for us so don't respond here if we are using it.
+            if (!UnifiedUITool.HasButtonBeenAdded() && ModSettings.Hotkey.IsPressed())
             {
-                if (ModSettings.Hotkey.IsPressed())
+                // cancel if they key input was already processed in a previous frame
+                if (_processed)
                 {
-                    Debug.Log("OnUpdate");
-
-                    // cancel if they key input was already processed in a previous frame
-                    if (_processed) return;
-
-                    _processed = true;
-
-                    PublicTransportInstance.ToggleMainPanel();
+                    return;
                 }
-                else
+                _processed = true;
+
+                PublicTransportInstance.ToggleMainPanel(); 
+            }
+            else if (ModSettings.LineIssueHotkey.IsPressed())
+            {
+                // cancel if they key input was already processed in a previous frame
+                if (_processed)
                 {
-                    // not both keys pressed: Reset processed state
-                    _processed = false;
+                    return;
                 }
+                _processed = true;
+
+                PublicTransportInstance.ToggleLineIssuePanel();
+            } 
+            else
+            {
+                _processed = false;
             }
 
             // Update panel
@@ -74,7 +81,7 @@ namespace PublicTransportInfo
                     long lStartTime = m_watch.ElapsedMilliseconds;
 
                     // Need to update vehicle progress every time.
-                    PublicTransportInstance.UpdateVehicleProgress();
+                    PublicTransportInstance.UpdateVehicleDetectors();
                     
                     // Only update panel if visible
                     if (PublicTransportInstance.s_mainPanel != null && PublicTransportInstance.s_mainPanel.isVisible)
@@ -86,7 +93,7 @@ namespace PublicTransportInfo
                         PublicTransportInstance.s_LineIssuePanel.UpdatePanel();
                     }
                     m_LastElapsedTime = m_watch.ElapsedMilliseconds;
-
+ 
                     long lStopTime = m_watch.ElapsedMilliseconds;
                     //Debug.Log("Execution Time: " + (lStopTime - lStartTime) + "ms");
                 }

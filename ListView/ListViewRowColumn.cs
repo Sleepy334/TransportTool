@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using UnityEngine;
 
 namespace PublicTransportInfo
 {
@@ -69,9 +70,9 @@ namespace PublicTransportInfo
 
         public bool IsTooltipVisible()
         {
-            if (m_lblColumn != null && m_lblColumn.tooltipBox != null)
+            if (m_lblColumn != null)
             {
-                return m_lblColumn.tooltipBox.isVisible;
+                return m_lblColumn.IsTooltipVisible();
             }
             return false;
         }
@@ -97,7 +98,7 @@ namespace PublicTransportInfo
             if (m_lblColumn != null && m_GetColumnTooltip != null)
             {
                 string sTooltip = m_GetColumnTooltip(this);
-                m_lblColumn.tooltip = sTooltip;
+                m_lblColumn.SetTooltip(sTooltip);
             }
         }
 

@@ -1,20 +1,18 @@
 ﻿using ColossalFramework.UI;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace PublicTransportInfo 
 {
     public class PublicTransportInstance : MonoBehaviour
     {
+        internal static bool s_isGameLoaded = false; 
         internal static PublicTransportInfoPanel? s_mainPanel = null;
         internal static LineIssuePanel? s_LineIssuePanel = null;
-        internal static bool s_isGameLoaded = false;
-
         internal static MainToolbarButton? s_ToolbarButton = null;
-        internal static UITextureAtlas? s_atlas = null;
+        private static UITextureAtlas? s_atlas = null;
         private static LineIssueManager m_lineIssueManager = new LineIssueManager();
-
+        private static Font? s_ConstantWidthFont = null;
         private static ModSettings? m_settings = null;
         
         public PublicTransportInstance() : base()
@@ -82,6 +80,18 @@ namespace PublicTransportInfo
                 s_ToolbarButton.Destroy();
             }
             UnifiedUITool.RemoveUnifiedUITool();
+
+            if (s_ConstantWidthFont != null)
+            {
+                Destroy(s_ConstantWidthFont);
+                s_ConstantWidthFont = null;
+            }
+
+            if (s_atlas != null)
+            {
+                Destroy(s_atlas);
+                s_atlas = null;
+            }
         }
 
         public static void ShowMainPanel()
@@ -109,7 +119,14 @@ namespace PublicTransportInfo
                         {
                             UnifiedUITool.Instance.Enable();
                         }
-
+                        if (DependencyUtilities.IsCommuterDestinationsRunning())
+                        {
+                            UIPanel pnlCommuterDestination = (UIPanel) UIView.GetAView().FindUIComponent("StopDestinationInfoPanel");
+                            if (pnlCommuterDestination != null)
+                            {
+                                pnlCommuterDestination.Hide();
+                            }
+                        }
                         s_mainPanel.ShowPanel();
                     }
                   
@@ -152,6 +169,21 @@ namespace PublicTransportInfo
                 else
                 {
                     ShowMainPanel();
+                }
+            }
+        }
+
+        public static void ToggleLineIssuePanel()
+        {
+            if (s_LineIssuePanel != null)
+            {
+                if (s_LineIssuePanel.isVisible)
+                {
+                    HideLineIssuePanel();
+                }
+                else
+                {
+                    ShowLineIssuePanel(-1);
                 }
             }
         }
@@ -250,11 +282,28 @@ namespace PublicTransportInfo
             return s_atlas;
         }
         
-        public static void UpdateVehicleProgress()
+        public static void UpdateVehicleDetectors()
         {
             if (m_lineIssueManager != null)
             {
-                m_lineIssueManager.UpdateVehicleProgress();
+                m_lineIssueManager.UpdateVehicleDetectors();
+            }
+        }
+
+        public static Font GetConstantWidthFont()
+        {
+            if (s_ConstantWidthFont == null) {
+                s_ConstantWidthFont = Font.CreateDynamicFontFromOSFont("Courier New Bold", GetSettings().TooltipFontSize);
+            }
+            return s_ConstantWidthFont;
+        }
+
+        public static void InvalidateFont()
+        {
+            if (s_ConstantWidthFont != null)
+            {
+                Destroy(s_ConstantWidthFont);
+                s_ConstantWidthFont = null;
             }
         }
     }

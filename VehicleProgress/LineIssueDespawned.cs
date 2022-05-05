@@ -11,15 +11,15 @@ namespace PublicTransportInfo
     {
         public Vector3 m_despawnedPosition;
 
-        public LineIssueDespawned(ushort iLineId, ushort usVehicleId, Vector3 oDespawnPosition) : base(usVehicleId)
+        public LineIssueDespawned(ushort iLineId, TransportInfo.TransportType eType, ushort usVehicleId, Vector3 oDespawnPosition) : base(iLineId, eType, usVehicleId)
         {
             m_iLineId = iLineId;
             m_despawnedPosition = oDespawnPosition;
         }
 
-        public override bool IsDespawned()
+        public override IssueType GetIssueType()
         {
-            return true;
+            return IssueType.ISSUE_TYPE_DESPAWNED;
         }
 
         public override IssueLevel GetLevel()
@@ -48,8 +48,12 @@ namespace PublicTransportInfo
 
             // Zoom in on location where vehicle despawned.
             ToolsModifierControl.cameraController.m_targetPosition = m_despawnedPosition;
-            ToolsModifierControl.cameraController.m_targetAngle.y = 45f;
-            ToolsModifierControl.cameraController.m_targetSize = 100f;
+            ModSettings oSettings = PublicTransportInstance.GetSettings();
+            if (oSettings.ZoomInOnTarget)
+            {
+                ToolsModifierControl.cameraController.m_targetAngle.y = 45f;
+                ToolsModifierControl.cameraController.m_targetSize = 100f;
+            }
         }
 
         public override bool CanDelete()

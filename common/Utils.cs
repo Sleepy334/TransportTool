@@ -61,17 +61,38 @@ namespace PublicTransportInfo
 
         public static int GetTimestampDays(float fTimeStamp)
         {
+            const int iSIMULATION_TIMER2_DAY_LENGTH = 10; // in game seconds
             float fTimeSpan = GetTimeSpan(GetSimulationTimestamp(), fTimeStamp);
-            int iDays = (int)(fTimeSpan / VehicleProgressLine.iSIMULATION_TIMER2_DAY_LENGTH);
+            int iDays = (int)(fTimeSpan / iSIMULATION_TIMER2_DAY_LENGTH);
             return iDays;
         }
 
-        private static float GetStringWidth(UIFontRenderer oRenderer, float fUnits, string sText)
+        public static string GetLongestLine(string strText, out int iLines)
+        {
+            string[] result = strText.Split(new string[] { "\n", "\r\n" }, StringSplitOptions.None);
+            string sLongest = "";
+            iLines = result.Length;
+            if (result.Length > 0 && (result[result.Length - 1] == "\r\n" || result[result.Length - 1] == "\n"))
+            {
+                iLines--;
+            }
+            foreach (string s in result)
+            {
+                if (s.Length > sLongest.Length)
+                {
+                    sLongest = s;
+                }
+            }
+            return sLongest;
+        }
+
+        public static float GetStringWidth(UIFontRenderer oRenderer, float fUnits, string sText)
         {
             float fWidth = 0;
             try
             {
                 float[] characterWidths = oRenderer.GetCharacterWidths(sText);
+                
                 for (int index = 0; index < characterWidths.Length; ++index)
                 {
                     fWidth += characterWidths[index] / fUnits;
@@ -101,23 +122,6 @@ namespace PublicTransportInfo
             }
 
             return sNewText;
-        }
-
-        public static List<string> PadToWidthFront(UIFontRenderer oRenderer, float fUnits, List<string> list)
-        {
-            float fMaxWidth = 0f;
-            foreach (string s in list)
-            {
-                fMaxWidth = Math.Max(fMaxWidth, GetStringWidth(oRenderer, fUnits, s));
-            }
-
-            List<string> result = new List<string>();
-            foreach (string s in list)
-            {
-                result.Add(PadToWidthFront(oRenderer, fUnits, fMaxWidth, s));
-            }
-
-            return result;
         }
 
         public static string PadToWidthBack(UIFontRenderer oRenderer, float fUnits, float fRequiredWidth, string text)
@@ -151,6 +155,39 @@ namespace PublicTransportInfo
             foreach (string s in list)
             {
                 result.Add(PadToWidthBack(oRenderer, fUnits, fMaxWidth, s));
+            }
+
+            return result;
+        }
+
+        public static string PadToWidth(string sText, int iWidth, bool bFront)
+        {
+            while (sText.Length < iWidth)
+            {
+                if (bFront)
+                {
+                    sText = " " + sText;
+                }
+                else
+                {
+                    sText += " ";
+                }
+
+            }
+            return sText;
+        }
+        public static List<string> PadToWidth(List<string> list, bool bFront)
+        {
+            int iMaxWidth = 0;
+            foreach (string s in list)
+            {
+                iMaxWidth = Math.Max(iMaxWidth, s.Length);
+            }
+
+            List<string> result = new List<string>();
+            foreach (string s in list)
+            {
+                result.Add(PadToWidth(s, iMaxWidth, bFront));
             }
 
             return result;

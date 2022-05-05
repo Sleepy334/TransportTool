@@ -73,7 +73,7 @@ namespace PublicTransportInfo
                 }
             }
 
-            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_NAME, this, oLineInfo.m_sName, "", PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME, iROW_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, OnItemClicked, OnGetColumnTooltip));
+            m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_NAME, this, oLineInfo.GetLineName(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME, iROW_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, OnItemClicked, OnGetColumnTooltip));
             m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_STOPS, this, oLineInfo.GetStopCount().ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
             m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_VEHICLES, this, oLineInfo.m_iVehicleCount.ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_VEHICLES, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
             m_columns.Add(ListViewRowColumn.Create(ListViewRowComparer.Columns.COLUMN_PASSENGERS, this, oLineInfo.m_iPassengers.ToString(), "", PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER, iROW_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnItemClicked, OnGetColumnTooltip));
@@ -125,13 +125,25 @@ namespace PublicTransportInfo
                 {
                     m_spriteToolbar.spriteName = "";
                 }
+
+                if (m_spriteToolbar.tooltipBox != null && m_spriteToolbar.tooltipBox.isVisible && m_spriteToolbar.tooltip != sTooltip)
+                {
+                    m_spriteToolbar.tooltipBox.isVisible = false;
+                }
                 m_spriteToolbar.tooltip = sTooltip;
             }
         }
 
         private void OnItemClicked(UIComponent component, UIMouseEventParameter eventParam)
         {
-            ShowWorldInfoPanel();
+            if (DependencyUtilities.IsCommuterDestinationsRunning() && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            {
+                ShowWorldInfoPanelCommuterDestinations(); 
+            }
+            else
+            {
+                ShowWorldInfoPanel();
+            }
         }
 
         public string OnGetColumnTooltip(ListViewRowColumn oColumn) 
@@ -142,7 +154,7 @@ namespace PublicTransportInfo
 
         private void OnWarningItemClicked(UIComponent component, UIMouseEventParameter eventParam)
         {
-            if (m_oLineInfo != null && m_oLineInfo.GetVehicleProgress() != null)
+            if (m_oLineInfo != null && m_oLineInfo.GetLineIssueDetector() != null)
             {
                 PublicTransportInstance.GetLineIssueManager().UpdateLineIssues();
                 if (PublicTransportInstance.GetLineIssueManager().HasVisibleLineIssues())
@@ -205,6 +217,7 @@ namespace PublicTransportInfo
             }
         }
  
+
         public void ShowWorldInfoPanel()
         {
             try
@@ -224,13 +237,33 @@ namespace PublicTransportInfo
             }
         }
 
+        public void ShowWorldInfoPanelCommuterDestinations()
+        {
+            try
+            {
+                // Hide the main panel before showing PTWI panel.
+                PublicTransportInstance.HideMainPanel(false);
+
+                // Shift camera to busiest stop
+                if (m_oLineInfo != null)
+                {
+                    m_oLineInfo.ShowBusiestStopCommuterDestinations();
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.Log(ex);
+            }
+        }
+        
+
         private string GetColumnText(ListViewRowComparer.Columns eColumn)
         {
             if (m_oLineInfo != null)
             {
                 switch (eColumn)
                 {
-                    case ListViewRowComparer.Columns.COLUMN_NAME: return m_oLineInfo.m_sName;
+                    case ListViewRowComparer.Columns.COLUMN_NAME: return m_oLineInfo.GetLineName();
                     case ListViewRowComparer.Columns.COLUMN_STOPS: return m_oLineInfo.GetStopCount().ToString();
                     case ListViewRowComparer.Columns.COLUMN_VEHICLES: return m_oLineInfo.m_iVehicleCount.ToString();
                     case ListViewRowComparer.Columns.COLUMN_PASSENGERS: return m_oLineInfo.m_iPassengers + "/" + m_oLineInfo.m_iCapacity;
@@ -247,12 +280,21 @@ namespace PublicTransportInfo
         {
             switch (eColumn)
             {
+                case ListViewRowComparer.Columns.COLUMN_STOPS:
+                    {
+                        string sTooltip = "";
+                        if (m_oLineInfo != null && m_columns != null && m_columns.Count > 0)
+                        {
+                            sTooltip = m_oLineInfo.GetStopsTooltip();
+                        }
+                        return sTooltip;
+                    }
                 case ListViewRowComparer.Columns.COLUMN_VEHICLES:
                     {
                         string sTooltip = "";
                         if (m_oLineInfo != null && m_columns != null && m_columns.Count > 0)
                         {
-                            sTooltip = m_oLineInfo.GetVehicleTooltip(m_columns[0].GetLabel());
+                            sTooltip = m_oLineInfo.GetVehicleTooltip();
                         }
                         return sTooltip;
                     }
@@ -272,7 +314,7 @@ namespace PublicTransportInfo
                         string sTooltip = "";
                         if (m_oLineInfo != null && m_columns != null && m_columns.Count > 0)
                         {
-                            sTooltip = m_oLineInfo.GetWaitingTooltip(m_columns[0].GetLabel());
+                            sTooltip = m_oLineInfo.GetWaitingTooltip();
                         }
                         return sTooltip;
                     }
@@ -287,7 +329,15 @@ namespace PublicTransportInfo
                             return "";
                         }
                     }
-
+                case ListViewRowComparer.Columns.COLUMN_BORED:
+                    {
+                        string sTooltip = "";
+                        if (m_oLineInfo != null && m_columns != null && m_columns.Count > 0)
+                        {
+                            sTooltip = m_oLineInfo.GetBoredTooltip();
+                        }
+                        return sTooltip;
+                    }
             }
             return "";
         }
@@ -298,7 +348,7 @@ namespace PublicTransportInfo
             {
                 m_oLineInfo.UpdateInfo();
 
-                if (m_oLineInfo.GetVehicleProgress() != null)
+                if (m_oLineInfo.GetLineIssueDetector() != null)
                 {
                     UpdateWarningIconSprite();
                 }
@@ -335,7 +385,7 @@ namespace PublicTransportInfo
                 uiComponent.tooltipBox.isVisible = false;
             }
         }
-
+        
         public override void OnDestroy()
         {
             ClearHighlight(); 

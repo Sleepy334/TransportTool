@@ -4,47 +4,38 @@ namespace PublicTransportInfo
 {
     public class LineIssueManager
     {
-        public Dictionary<ushort, VehicleProgressLine> m_LineVehicleProgress;
+        public Dictionary<ushort, LineIssueDetector> m_LineDetectors;
         private List<LineIssue> m_lineIssues;
         private LineIssue.IssueLevel m_issueLevel;
 
         public LineIssueManager()
         {
-            m_LineVehicleProgress = new Dictionary<ushort, VehicleProgressLine>();
+            m_LineDetectors = new Dictionary<ushort, LineIssueDetector>();
             m_lineIssues = new List<LineIssue>();
             m_issueLevel = LineIssue.IssueLevel.ISSUE_NONE;
         }
 
-        public VehicleProgressLine? GetVehicleProgressForLine(ushort usLineId)
+        public LineIssueDetector? GetLineIssueDetector(ushort usLineId)
         {
-            if (m_LineVehicleProgress != null && m_LineVehicleProgress.ContainsKey(usLineId))
+            if (m_LineDetectors != null && m_LineDetectors.ContainsKey(usLineId))
             {
-                return m_LineVehicleProgress[usLineId];
+                return m_LineDetectors[usLineId];
             } else
             {
                 return null;
-            }
-            
-        }
-
-        public void AddVehicleProgressForLine(ushort usLineId, VehicleProgressLine oProgress)
-        {
-            if (m_LineVehicleProgress.ContainsKey(usLineId))
-            {
-                m_LineVehicleProgress[usLineId] = oProgress;
             }
         }
 
         public bool ContainsLine(ushort iLineId)
         {
-            return m_LineVehicleProgress.ContainsKey(iLineId);
+            return m_LineDetectors.ContainsKey(iLineId);
         }
 
         private void RemoveDeletedLines(List<ushort> aTransportLines)
         {
             // Check if any lines have been deleted
             List<ushort> aVehicleProgressKeysToDelete = new List<ushort>();
-            foreach (KeyValuePair<ushort, VehicleProgressLine> oTransportLine in m_LineVehicleProgress)
+            foreach (KeyValuePair<ushort, LineIssueDetector> oTransportLine in m_LineDetectors)
             {
                 if (!aTransportLines.Contains(oTransportLine.Key))
                 {
@@ -56,12 +47,12 @@ namespace PublicTransportInfo
             // Delete extra VehicleProgressLine objects
             foreach (ushort oKey in aVehicleProgressKeysToDelete)
             {
-                m_LineVehicleProgress.Remove(oKey);
+                m_LineDetectors.Remove(oKey);
             }
         }
 
 
-        public void UpdateVehicleProgress()
+        public void UpdateVehicleDetectors()
         {
             ModSettings oSettings = PublicTransportInstance.GetSettings();
             if (oSettings.TrackVehicles())
@@ -70,21 +61,14 @@ namespace PublicTransportInfo
 
                 // Clear out deleted transport lines
                 RemoveDeletedLines(aTransportLines);
-                
-                // Now update remaining VehicleProgressLine objects
+
+                // Now add new LineIssueDetector objects
                 foreach (ushort iLineId in aTransportLines)
                 {
-                    if (m_LineVehicleProgress.ContainsKey(iLineId))
+                    if (!m_LineDetectors.ContainsKey(iLineId))
                     {
-                        VehicleProgressLine oLineProgress = m_LineVehicleProgress[iLineId];
-                        oLineProgress.LoadVehicleProgress();
-                        m_LineVehicleProgress[iLineId] = oLineProgress;
-                    }
-                    else
-                    {
-                        VehicleProgressLine oLineProgress = new VehicleProgressLine(iLineId);
-                        oLineProgress.LoadVehicleProgress();
-                        m_LineVehicleProgress.Add(iLineId, oLineProgress);
+                        LineIssueDetector oLineDetector = new LineIssueDetector(iLineId);
+                        m_LineDetectors.Add(iLineId, oLineDetector);
                     }
                 }
 
@@ -94,9 +78,9 @@ namespace PublicTransportInfo
             {
                 m_issueLevel = LineIssue.IssueLevel.ISSUE_NONE;
 
-                if (m_LineVehicleProgress != null)
+                if (m_LineDetectors != null)
                 {
-                    m_LineVehicleProgress.Clear();
+                    m_LineDetectors.Clear();
                 }
                 if (PublicTransportInstance.s_ToolbarButton != null)
                 {
@@ -175,42 +159,25 @@ namespace PublicTransportInfo
                     {
                         PublicTransportInstance.s_mainPanel.PlayWarningSound();
                     }
-                    if (PublicTransportInstance.s_ToolbarButton != null)
-                    {
-                        PublicTransportInstance.s_ToolbarButton.ShowWarningLevel(m_issueLevel);
-                    }
-                    if (UnifiedUITool.Instance != null)
-                    {
-                        UnifiedUITool.Instance.ShowWarningLevel(m_issueLevel);
-                    }
                 }
             }
             else if (eLevel == LineIssue.IssueLevel.ISSUE_INFORMATION)
             {
-                if (m_issueLevel != LineIssue.IssueLevel.ISSUE_INFORMATION)
-                {
-                    m_issueLevel = LineIssue.IssueLevel.ISSUE_INFORMATION; 
-                    if (PublicTransportInstance.s_ToolbarButton != null)
-                    {
-                        PublicTransportInstance.s_ToolbarButton.ShowWarningLevel(m_issueLevel);
-                    }
-                    if (UnifiedUITool.Instance != null)
-                    {
-                        UnifiedUITool.Instance.ShowWarningLevel(m_issueLevel);
-                    }
-                }
+                m_issueLevel = LineIssue.IssueLevel.ISSUE_INFORMATION; 
             }
             else
             {
-                m_issueLevel = LineIssue.IssueLevel.ISSUE_NONE; 
-                if (PublicTransportInstance.s_ToolbarButton != null)
-                {
-                    PublicTransportInstance.s_ToolbarButton.ShowWarningLevel(m_issueLevel);
-                }
-                if (UnifiedUITool.Instance != null)
-                {
-                    UnifiedUITool.Instance.ShowWarningLevel(m_issueLevel);
-                }
+                m_issueLevel = LineIssue.IssueLevel.ISSUE_NONE;                 
+            }
+
+            if (PublicTransportInstance.s_ToolbarButton != null)
+            {
+                PublicTransportInstance.s_ToolbarButton.ShowWarningLevel(m_issueLevel);
+            }
+
+            if (UnifiedUITool.Instance != null)
+            {
+                UnifiedUITool.Instance.ShowWarningLevel(m_issueLevel);
             }
         }
 
@@ -219,9 +186,9 @@ namespace PublicTransportInfo
             Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[usVehicle];
             if (oVehicle.m_transportLine != 0)
             {
-                if (m_LineVehicleProgress != null && m_LineVehicleProgress.ContainsKey(oVehicle.m_transportLine))
-                { 
-                    VehicleProgressLine oLine = m_LineVehicleProgress[oVehicle.m_transportLine];
+                if (m_LineDetectors != null && m_LineDetectors.ContainsKey(oVehicle.m_transportLine))
+                {
+                    LineIssueDetector oLine = m_LineDetectors[oVehicle.m_transportLine];
                     if (oLine != null)
                     {
                         oLine.DespawnVehicle(usVehicle, oVehicle);
@@ -250,12 +217,58 @@ namespace PublicTransportInfo
             return list;
         }
 
-        public void AddLineIssue(LineIssue oIssue)
+        public int FindIssueForVehicle(LineIssue issue)
         {
-            if (!m_lineIssues.Contains(oIssue))
+            if (issue.GetVehcileId() != 0)
             {
-                int iCount = m_lineIssues.Count;
+                for (int i = 0; i < m_lineIssues.Count; ++i)
+                {
+                    LineIssue lineIssue = m_lineIssues[i];
+                    if (lineIssue.GetVehcileId() != 0 && lineIssue.GetVehcileId() == issue.GetVehcileId())
+                    {
+                        return i;
+                    }
+                }
+            }
+            
+            return -1;
+        }
+
+        public void AddLineIssue(LineIssue oIssue, bool bUpdate)
+        {
+            bool bAdded = false;
+
+            // We only want 1 issue for each vehicle
+            int iIndex = FindIssueForVehicle(oIssue);
+            if (iIndex >= 0)
+            {
+                // Choose which one to keep
+                if (oIssue.GetIssueType() == LineIssue.IssueType.ISSUE_TYPE_DESPAWNED)
+                {
+                    int iActiveIssueId = 0;
+                    if (PublicTransportInstance.s_LineIssuePanel != null && PublicTransportInstance.s_LineIssuePanel.isVisible)
+                    {
+                        iActiveIssueId = PublicTransportInstance.s_LineIssuePanel.GetActiveIssueId();
+                    }
+                    bool bUpdateActiveIssue = m_lineIssues[iIndex].GetIssueId() == iActiveIssueId;
+                    m_lineIssues[iIndex] = oIssue;
+                    bAdded = true;
+
+                    if (bUpdateActiveIssue && PublicTransportInstance.s_LineIssuePanel != null && PublicTransportInstance.s_LineIssuePanel.isVisible)
+                    {
+                        PublicTransportInstance.s_LineIssuePanel.UpdateActiveIssue(oIssue);
+                    }
+                }
+            }
+            else if (!m_lineIssues.Contains(oIssue))
+            {
+                // Check if vehicle has despawned
                 m_lineIssues.Add(oIssue);
+                bAdded = true;
+            }
+
+            if (bAdded && bUpdate)
+            {
                 UpdateWarningIcons();
                 UpdateLineIssuePanel();
             }
@@ -263,16 +276,6 @@ namespace PublicTransportInfo
 
         public void UpdateLineIssues()
         {
-            // Get any new line issues
-            foreach (KeyValuePair<ushort, VehicleProgressLine> kvp in m_LineVehicleProgress)
-            {
-                List<LineIssue> lineIssues = kvp.Value.GetLineIssues();
-                foreach (LineIssue lineIssue in lineIssues)
-                {
-                    AddLineIssue(lineIssue);
-                }
-            }
-
             // Update existing line issues
             foreach (LineIssue oIssue in m_lineIssues)
             {
@@ -282,27 +285,67 @@ namespace PublicTransportInfo
                 }
             }
 
+            RemoveHiddenResolvedIssues();
+
+            // Get any new line issues
+            foreach (KeyValuePair<ushort, LineIssueDetector> kvp in m_LineDetectors)
+            {
+                List<LineIssue> lineIssues = kvp.Value.GetLineIssues();
+                foreach (LineIssue lineIssue in lineIssues)
+                {
+                    AddLineIssue(lineIssue, false);
+                }
+            }
+
             UpdateLineIssuePanel();
+        }
+
+        public void RemoveHiddenResolvedIssues()
+        {
+            double dTimeDelayBeforeDeleting = 5.0; // seconds
+            
+            int iActiveIssueId = 0;
+            if (PublicTransportInstance.s_LineIssuePanel != null && PublicTransportInstance.s_LineIssuePanel.isVisible)
+            {
+                iActiveIssueId = PublicTransportInstance.s_LineIssuePanel.GetActiveIssueId();
+            }
+
+            // Remove hidden issues that are now resolved
+            bool bDeleteResolved = PublicTransportInstance.GetSettings().DeleteResolvedIssuesAutomatically;
+            List<LineIssue> oKeepIssues = new List<LineIssue>();
+            foreach (LineIssue oIssue in m_lineIssues)
+            {
+                // Delete hidden issues if able to
+                bool bRemoveIssue = oIssue.IsHidden() && oIssue.CanDelete();
+
+                // Delete resolved issues automatically if desired
+                if (bDeleteResolved)
+                {
+                    bRemoveIssue = bRemoveIssue || (oIssue.GetIssueId() != iActiveIssueId && oIssue.GetLevel() == LineIssue.IssueLevel.ISSUE_NONE && oIssue.GetLineIssueCreationTimeSeconds() > dTimeDelayBeforeDeleting);
+                }
+
+                if (!bRemoveIssue)
+                {
+                    oKeepIssues.Add(oIssue);
+                }
+            }
+
+            m_lineIssues = oKeepIssues;
+
+            /*
+            string sMessage = "";
+            foreach (LineIssue oIssue in m_lineIssues)
+            {
+                sMessage += "\r\n" + oIssue.GetIssueId() + ": " + oIssue.GetIssueLocation() + " " + oIssue.GetIssueDescription();
+            }
+            Debug.Log(sMessage);
+            */
         }
 
         public bool HasVisibleLineIssues()
         {
             UpdateLineIssues();
             return GetVisibleLineIssues().Count > 0;
-        }
-
-        public void RemoveLineIssue(LineIssue oIssue)
-        {
-            int iIndex = m_lineIssues.IndexOf(oIssue);
-            if (iIndex != -1)
-            {
-                m_lineIssues.RemoveAt(iIndex);
-            } else
-            {
-                Debug.Log("Issue not found: " + oIssue.ToString());
-            }
-
-            UpdateLineIssuePanel();
         }
 
         public void UpdateLineIssuePanel()
@@ -328,12 +371,23 @@ namespace PublicTransportInfo
                     }
                 }
 
-                m_lineIssues.Clear();
-                m_lineIssues.AddRange(oKeepIssues);
+                m_lineIssues = oKeepIssues;
                 UpdateLineIssuePanel();
                 UpdateWarningIcons();
             }
-            
+        }
+
+        public string GetTooltip()
+        {
+            string sTooltip = "";
+            List<LineIssue> oIssues = GetVisibleLineIssues();
+
+            foreach (LineIssue oIssue in oIssues)
+            {
+                sTooltip += oIssue.GetIssueTooltip() + "\r\n";
+            }
+
+            return sTooltip;
         }
     }
 }
