@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using PublicTransportInfo.Util;
 using System.Collections.Generic;
 using UnityEngine;
 using static TransportInfo;
@@ -45,10 +46,9 @@ namespace PublicTransportInfo
 
         public override LineIssueDetector? GetLineIssueDetector()
         {
-            LineIssueManager oManager = PublicTransportInstance.GetLineIssueManager();
-            if (oManager != null && oManager.ContainsLine((ushort)m_iLineId))
+            if (LineIssueManager.Instance != null && LineIssueManager.Instance.ContainsLine((ushort)m_iLineId))
             {
-                return oManager.GetLineIssueDetector((ushort)m_iLineId);
+                return LineIssueManager.Instance.GetLineIssueDetector((ushort)m_iLineId);
             }
             else
             {
@@ -97,7 +97,7 @@ namespace PublicTransportInfo
             UIView.library.Hide("PublicTransportInfoViewPanel");
 
             // Zoom in on busiest stop
-            ModSettings oSettings = PublicTransportInstance.GetSettings();
+            ModSettings oSettings = ModSettings.GetSettings();
             InstanceID oInstanceId = new InstanceID { TransportLine = (ushort)m_iLineId };
             Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_usBusiestStopId].m_position;
             PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, oSettings.ZoomInOnTarget);
@@ -112,7 +112,7 @@ namespace PublicTransportInfo
             int iTouristCount = (int)oLine.m_passengers.m_touristPassengers.m_averageCount;
             int iResidentCount = (int)oLine.m_passengers.m_residentPassengers.m_averageCount;
             int total = iTouristCount + iResidentCount;
-            return "Weekly passengers: " + total + "\r\nResidents: " + iResidentCount + "\r\nTourists: " + iTouristCount;
+            return Localization.Get("txtWeeklyPassengers") + total + "\r\n" + Localization.Get("txtResidents") + ": " + iResidentCount + "\r\n" + Localization.Get("txtTourists") + ": " + iTouristCount;
         }
 
         public override int CompareVehicleDataProgress(VehicleData x, VehicleData y)

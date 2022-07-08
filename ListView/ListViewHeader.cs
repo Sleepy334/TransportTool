@@ -1,4 +1,5 @@
 ﻿using ColossalFramework.UI;
+using PublicTransportInfo.Util;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -37,13 +38,14 @@ namespace PublicTransportInfo
             m_lblColor.height = PublicTransportInfoPanel.iHEADER_HEIGHT;
             m_lblColor.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR + 10;
 
-            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_NAME, this, "Line Name", "Name of line.", PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, OnListViewColumnClick));
-            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_STOPS, this, "Stops", "Total number of stops on this line.", PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
-            m_columns.Add(new ListViewHeaderColumnIcon(ListViewRowComparer.Columns.COLUMN_VEHICLES, this, "InfoIconPublicTransport", "Total number of vehicles on this line", PublicTransportInfoPanel.iCOLUMN_WIDTH_VEHICLES, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
-            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_PASSENGERS, this, "Passengers", "Current Passengers / Total Capacity", PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
-            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_WAITING, this, "Waiting", "Total number of people waiting at all stops", PublicTransportInfoPanel.iCOLUMN_WIDTH_WAITING, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
-            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_BUSIEST, this, "Busiest", "Number of people waiting at busiest stop", PublicTransportInfoPanel.iCOLUMN_WIDTH_BUSIEST, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
-            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_BORED, this, "Bored", "Number of people who are waiting too long", PublicTransportInfoPanel.iCOLUMN_WIDTH_BORED, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_NAME, this, Localization.Get("headerLineName"), Localization.Get("headerLineNameTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_STOPS, this, Localization.Get("headerStops"), Localization.Get("headerStopsTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnIcon(ListViewRowComparer.Columns.COLUMN_VEHICLES, this, "InfoIconPublicTransport", Localization.Get("headerVehicleTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_VEHICLES, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_PASSENGERS, this, Localization.Get("OverviewPassengers"), Localization.Get("headerPassengersTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_VEHICLE_USAGE, this, Localization.Get("VehicleUsage"), Localization.Get("headerUsageTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_WAITING, this, Localization.Get("OverviewWaiting"), Localization.Get("headerWaitingTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_WAITING, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_BUSIEST, this, Localization.Get("headerBusiest"), Localization.Get("headerBusiestTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_BUSIEST, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
+            m_columns.Add(new ListViewHeaderColumnLabel(ListViewRowComparer.Columns.COLUMN_BORED, this, Localization.Get("OverviewBored"), Localization.Get("headerBoredTooltip"), PublicTransportInfoPanel.iCOLUMN_WIDTH_BORED, PublicTransportInfoPanel.iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopRight, OnListViewColumnClick));
 
             HandleSort(ListViewRowComparer.Columns.COLUMN_NAME);
         }

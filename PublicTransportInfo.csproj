@@ -10,6 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="Locales\en.csv" />
     <None Remove="Resources\BusImageInverted48x48.png" />
     <None Remove="Resources\BusImageWarning.png" />
     <None Remove="Resources\BusInformationIcon.png" />
@@ -19,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Locales\en.csv" />
     <EmbeddedResource Include="Resources\BusImageInverted48x48.png" />
     <EmbeddedResource Include="Resources\BusImageWarning.png" />
     <EmbeddedResource Include="Resources\BusInformationIcon.png" />
@@ -41,7 +43,7 @@
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Cities_Data\Managed\ICities.dll</HintPath>
     </Reference>
     <Reference Include="UnifiedUILib">
-      <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\workshop\content\255710\2389414419\UnifiedUILib.dll</HintPath>
+      <HintPath>..\..\References\UnifiedUILib.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine">
       <HintPath>..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Cities_Data\Managed\UnityEngine.dll</HintPath>

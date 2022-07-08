@@ -14,14 +14,9 @@ namespace PublicTransportInfo
 
         public override void OnUpdate(float realTimeDelta, float simulationTimeDelta)
         {
-            if (!PublicTransportInstance.s_isGameLoaded)
+            if (!PublicTransportLoader.isGameLoaded)
             {
                 return;
-            }
-
-            if (PublicTransportInstance.s_mainPanel == null)
-            {
-                PublicTransportInstance.Create();
             }
 
             if (m_watch == null)
@@ -78,24 +73,23 @@ namespace PublicTransportInfo
 
                 if (m_watch.ElapsedMilliseconds - m_LastElapsedTime > iUPDATE_RATE)
                 {
+#if DEBUG
                     long lStartTime = m_watch.ElapsedMilliseconds;
-
-                    // Need to update vehicle progress every time.
-                    PublicTransportInstance.UpdateVehicleDetectors();
-                    
+#endif
                     // Only update panel if visible
                     if (PublicTransportInstance.s_mainPanel != null && PublicTransportInstance.s_mainPanel.isVisible)
                     {
                         PublicTransportInstance.UpdateMainPanel();
                     }
-                    if (PublicTransportInstance.s_LineIssuePanel != null && PublicTransportInstance.s_LineIssuePanel.isVisible)
+                    if (PublicTransportInstance.s_LineIssuePanel2 != null && PublicTransportInstance.s_LineIssuePanel2.isVisible)
                     {
-                        PublicTransportInstance.s_LineIssuePanel.UpdatePanel();
+                        PublicTransportInstance.UpdateLineIssuePanel();
                     }
                     m_LastElapsedTime = m_watch.ElapsedMilliseconds;
- 
+ #if DEBUG
                     long lStopTime = m_watch.ElapsedMilliseconds;
-                    //Debug.Log("Execution Time: " + (lStopTime - lStartTime) + "ms");
+                    Debug.Log("Execution Time: " + (lStopTime - lStartTime) + "ms");
+#endif
                 }
             }
         }

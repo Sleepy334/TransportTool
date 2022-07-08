@@ -23,13 +23,7 @@ namespace PublicTransportInfo
 
         public static void AddUnifiedUITool()
         {
-            if (!PublicTransportInstance.s_isGameLoaded)
-            {
-                Debug.Log("Game not loaded");
-                return;
-            }
-
-            if (DependencyUtilities.IsUnifiedUIRunning() && PublicTransportInstance.GetSettings().AddUnifiedUIButton)
+            if (DependencyUtilities.IsUnifiedUIRunning() && ModSettings.GetSettings().AddUnifiedUIButton)
             {
                 // Add UnifiedUI button if module found
                 if (Instance == null)
@@ -73,7 +67,7 @@ namespace PublicTransportInfo
             Debug.Log("Awake");
             base.Awake();
 
-            if (PublicTransportInstance.GetSettings().AddUnifiedUIButton)
+            if (ModSettings.GetSettings().AddUnifiedUIButton)
             {
                 AddUnifiedUIButton();
             }
@@ -96,14 +90,13 @@ namespace PublicTransportInfo
                         return;
                     }
 
-                    var hotkeys = new UUIHotKeys { ActivationKey = ModSettings.Hotkey };
                     m_btnUnifiedUI = UUIHelpers.RegisterToolButton(
                         name: "TransportTool",
                         groupName: null, // default group
                         tooltip: ITransportInfoMain.Title,
                         tool: this,
                         icon: icon,
-                        hotkeys: hotkeys);
+                        hotkeys: new UUIHotKeys { ActivationKey = ModSettings.Hotkey });
 
                     m_sprite = m_btnUnifiedUI.AddUIComponent<UISprite>();
                     m_sprite.atlas = m_atlas;
@@ -137,7 +130,7 @@ namespace PublicTransportInfo
 
         public void OnUnifiedToolbarButtonChanged()
         {
-            if (PublicTransportInstance.GetSettings().AddUnifiedUIButton)
+            if (ModSettings.GetSettings().AddUnifiedUIButton)
             {
                 AddUnifiedUIButton();
             }

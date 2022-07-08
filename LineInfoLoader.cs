@@ -23,35 +23,17 @@ namespace PublicTransportInfo
                 foreach (ushort usBuildingId in oServiceBuildings)
                 {
                     Building oBuilding = BuildingManager.instance.m_buildings.m_buffer[usBuildingId];
-                    if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportCableCar &&
-                        oBuilding.Info.name == "Cable Car Station End" &&
-                        TransportManagerUtils.IsFirstStation(usBuildingId))
+                    if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportCableCar)
                     {
-                        LineInfoCableCar lineInfo = new LineInfoCableCar(usBuildingId);
-                        lineInfo.m_iLineNumber = list.Count + 1;
-                        lineInfo.m_color = PublicTransportTypeUtils.GetDefaultLineColor(eType);
-                        lineInfo.UpdateInfo();
-                        list.Add(lineInfo);
-                    }
-
-                    /*
-                    if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportTaxi)
-                    {
-                        string sBuildingInfo = "";
-                        int iPassengers = 0;
-                        //sBuildingInfo = oBuilding.Info.name + "\r\n";
-                        ushort usVehicleId = oBuilding.m_ownVehicles;
-                        while (usVehicleId != 0)
+                        if (TransportManagerUtils.IsFirstStation(usBuildingId))
                         {
-                            Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[usVehicleId];
-                            iPassengers += oVehicle.m_touristCount + oVehicle.m_transferSize;
-                            //sBuildingInfo += "Vehicle:" + usVehicleId + " Tourists:" + oVehicle.m_touristCount + " Transfer: " + oVehicle.m_transferSize + "\r\n";
-                            usVehicleId = oVehicle.m_nextOwnVehicle;
+                            LineInfoCableCar lineInfo = new LineInfoCableCar(usBuildingId);
+                            lineInfo.m_iLineNumber = list.Count + 1;
+                            lineInfo.m_color = PublicTransportTypeUtils.GetDefaultLineColor(eType);
+                            lineInfo.UpdateInfo();
+                            list.Add(lineInfo);
                         }
-                        sBuildingInfo += oBuilding.Info.name + " Passengers: " + iPassengers + "\r\n";
-                        Debug.Log(sBuildingInfo);
                     }
-                    */
                 }
             } 
             else
@@ -121,9 +103,7 @@ namespace PublicTransportInfo
             foreach (ushort usBuildingId in oServiceBuildings)
             {
                 Building oBuilding = BuildingManager.instance.m_buildings.m_buffer[usBuildingId];
-                if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportCableCar &&
-                    oBuilding.Info.name == "Cable Car Station End" &&
-                    TransportManagerUtils.IsFirstStation(usBuildingId))
+                if (oBuilding.Info.m_class.m_subService == ItemClass.SubService.PublicTransportCableCar)
                 {
                     list.Add(PublicTransportType.CableCar);
                     break;

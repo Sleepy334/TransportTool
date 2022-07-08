@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using PublicTransportInfo.Util;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,12 +15,12 @@ namespace PublicTransportInfo
         public const int iHEADER_HEIGHT = 20;
 
         public const int iCOLUMN_WIDTH_COLOR = 20;
-        public const int iCOLUMN_WIDTH_NAME = 370;
+        public const int iCOLUMN_WIDTH_NAME = 320;
         public const int iCOLUMN_WIDTH_STOPS = 70;
         public const int iCOLUMN_WIDTH_VEHICLES = 40;
-        public const int iCOLUMN_WIDTH_PASSENGER = 150;
+        public const int iCOLUMN_WIDTH_PASSENGER = 130;
         public const int iCOLUMN_WIDTH_WAITING = 85;
-        public const int iCOLUMN_WIDTH_BUSIEST = 80;
+        public const int iCOLUMN_WIDTH_BUSIEST = 85;
         public const int iCOLUMN_WIDTH_BORED = 70;
         
         private TabStrip? m_tabStrip;
@@ -200,19 +201,23 @@ namespace PublicTransportInfo
                     LoadTransportLineTabs();
 
                     LineIssue.IssueLevel eLevel;
-                    ushort usLineId = PublicTransportInstance.GetLineIssueManager().GetHighestLineWarningIcons(out eLevel);
-                    if (usLineId != 0 && eLevel != LineIssue.IssueLevel.ISSUE_NONE)
+                    if (LineIssueManager.Instance != null)
                     {
-                        // Open tab for this line
-                        TransportLine oLine = TransportManager.instance.m_lines.m_buffer[usLineId];
-                        TransportInfo.TransportType eType = oLine.Info.m_transportType;
-                        PublicTransportType eTransportType = PublicTransportTypeUtils.Convert(eType);
-                        SetSelectedTransportType(eTransportType);
+                        ushort usLineId = LineIssueManager.Instance.GetHighestLineWarningIcons(out eLevel);
+                        if (usLineId != 0 && eLevel != LineIssue.IssueLevel.ISSUE_NONE)
+                        {
+                            // Open tab for this line
+                            TransportLine oLine = TransportManager.instance.m_lines.m_buffer[usLineId];
+                            TransportInfo.TransportType eType = oLine.Info.m_transportType;
+                            PublicTransportType eTransportType = PublicTransportTypeUtils.Convert(eType);
+                            SetSelectedTransportType(eTransportType);
+                        }
+                        else
+                        {
+                            SetSelectedTransportType(m_SelectedTransportType);
+                        }
                     }
-                    else
-                    {
-                        SetSelectedTransportType(m_SelectedTransportType);
-                    }
+                    
                 }
 
                 Show();
@@ -327,8 +332,8 @@ namespace PublicTransportInfo
                 {
                     m_lblOverview.BringToFront(); // Bring to the right of other elements
                     m_lblOverview.name = "m_lblOverview";
-                    m_lblOverview.text = "Overview";
-                    m_lblOverview.tooltip = "Overview for all lines.";
+                    m_lblOverview.text = Localization.Get("lblOverview");// "Overview";
+                    m_lblOverview.tooltip = Localization.Get("lblOverviewTooltip");
                     m_lblOverview.verticalAlignment = UIVerticalAlignment.Middle;
                     m_lblOverview.textAlignment = UIHorizontalAlignment.Right;
                     m_lblOverview.autoSize = false;
@@ -365,7 +370,7 @@ namespace PublicTransportInfo
                     iWaiting += oInfo.m_iWaiting;
                     iBored += oInfo.m_iBored;
                 }
-                m_lblOverview.text = "Passengers: " + iPassengerCount + " | Waiting: " + iWaiting + " | Bored: " + iBored;
+                m_lblOverview.text = Localization.Get("OverviewPassengers") + ": " + iPassengerCount + " | " + Localization.Get("OverviewWaiting") + ": " + iWaiting + " | " + Localization.Get("OverviewBored") + ": " + iBored;
             }
             else
             {

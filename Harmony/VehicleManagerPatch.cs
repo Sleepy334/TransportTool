@@ -1,32 +1,15 @@
-using PublicTransportInfo;
+using HarmonyLib;
 
-namespace PublicTransportInfo.HarmonyPatches
+namespace PublicTransportInfo.Patch
 {
+    [HarmonyPatch(typeof(VehicleManager), "ReleaseVehicle")]
     public class VehicleManagerPatch
     {
-        public static void Apply()
+        public static bool PrefixReleaseVehicle(ushort vehicle)
         {
-            PatchUtil.Patch(
-                new PatchUtil.MethodDefinition(typeof(VehicleManager), nameof(VehicleManager.ReleaseVehicle)),
-                new PatchUtil.MethodDefinition(typeof(VehicleManagerPatch), nameof(PrefixReleaseVehicle))
-            );
-        }
-
-        public static void Undo()
-        {
-            PatchUtil.Unpatch(
-                new PatchUtil.MethodDefinition(typeof(VehicleManager), nameof(VehicleManager.ReleaseVehicle))
-            );
-        }
-
-        //public void RemoveVehicle(ushort vehicleID, ref Vehicle data)
-
-        public static bool PrefixReleaseVehicle(System.UInt16 vehicle)
-        {
-            LineIssueManager oManager = PublicTransportInstance.GetLineIssueManager();
-            if (oManager != null)
+            if (LineIssueManager.Instance != null)
             {
-                oManager.DespawnVehicle(vehicle);
+                LineIssueManager.Instance.DespawnVehicle(vehicle);
             }
 
             return true;

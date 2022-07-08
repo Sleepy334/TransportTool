@@ -1,5 +1,7 @@
 ﻿using ColossalFramework.UI;
 using ICities;
+using PublicTransportInfo.Settings;
+using PublicTransportInfo.Util;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -8,6 +10,7 @@ namespace PublicTransportInfo
     {
 		SettingsSlider? m_oStuckSlider = null;
 		SettingsSlider? m_oSlowSlider = null;
+		SettingsSlider? m_oBoredCountSlider = null;
 		UICheckBox? m_playSound = null;
 
 		public SettingsUI()
@@ -16,105 +19,90 @@ namespace PublicTransportInfo
         
         public void OnSettingsUI(UIHelper helper)
         {
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
-
-			UIComponent oMainPanel = (UIComponent)helper.self;
-
 			// Add tabstrip.
-			UITabstrip tabStrip = oMainPanel.AddUIComponent<UITabstrip>();
-			tabStrip.relativePosition = new Vector3(0, 0);
-			tabStrip.width = oMainPanel.width;
-			tabStrip.height = 40;
-
-			// Tab container (the panels underneath each tab).
-			UITabContainer tabContainer = oMainPanel.AddUIComponent<UITabContainer>();
-			tabContainer.relativePosition = new Vector3(0, 40);
-			tabContainer.width = oMainPanel.width;
-			tabContainer.height = oMainPanel.width - tabStrip.height;
-			tabStrip.tabPages = tabContainer;
-
-			UIPanel tabGeneral = AddTab(tabStrip, "General", true);
-			UIPanel tabMainPanel = AddTab(tabStrip, "Main Panel", true);
-			UIPanel tabLineIssues = AddTab(tabStrip, "Line Issues", true);
+			ExtUITabstrip tabStrip = ExtUITabstrip.Create(helper);
+			UIHelper tabGeneral = tabStrip.AddTabPage(Localization.Get("tabGeneral"), true);
+			UIHelper tabMainPanel = tabStrip.AddTabPage(Localization.Get("tabMainPanel"), true);
+			UIHelper tabLineIssues = tabStrip.AddTabPage(Localization.Get("tabLineIssues"), true);
 
 			// general tab
-			UIHelper helperGeneral = new UIHelper(tabGeneral);
-			SetupGeneralTab(helperGeneral);
+			SetupGeneralTab(tabGeneral);
+
+			// Main Panel
+			SetupMainPanelTab(tabMainPanel);
 
 			// Line Issues
-			UIHelper helperMainPanel = new UIHelper(tabMainPanel);
-			SetupMainPanelTab(helperMainPanel);
-			tabMainPanel.isVisible = false;
-
-			// Line Issues
-			UIHelper helperLineIssues = new UIHelper(tabLineIssues);
-			SetupLineIssuesTab(helperLineIssues);
-			tabLineIssues.isVisible = false;
+			SetupLineIssuesTab(tabLineIssues);
 
 			tabStrip.selectedIndex = 0;
 		}
 
 		private void SetupGeneralTab(UIHelper helperGeneral)
         {
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
+
+			UIHelper groupLocalisation = (UIHelper)helperGeneral.AddGroup(Localization.Get("GROUP_LOCALISATION"));
+			groupLocalisation.AddDropdown(Localization.Get("dropdownLocalization"), Localization.GetLoadedLanguages(), Localization.GetLanguageIndexFromCode(oSettings.PreferredLanguage), OnLocalizationDropDownChanged);
 
 			// UI Buttons
-			UIHelperBase oButtonGroup = helperGeneral.AddGroup("Toolbar Buttons");
-			oButtonGroup.AddCheckbox("Add button to main toolbar", oSettings.MainToolbarButton, OnToolbarButtonChanged);
-			oButtonGroup.AddCheckbox("Add button to UnifiedUI toolbar", oSettings.AddUnifiedUIButton, OnUnifiedToolbarButtonChanged);
+			UIHelperBase oButtonGroup = helperGeneral.AddGroup(Localization.Get("groupToolbarButtons"));
+			oButtonGroup.AddCheckbox(Localization.Get("btnAddMainToolbar"), oSettings.MainToolbarButton, OnToolbarButtonChanged);
+			oButtonGroup.AddCheckbox(Localization.Get("btnAddUnifiedUI"), oSettings.AddUnifiedUIButton, OnUnifiedToolbarButtonChanged);
 
 			// Keyboard shortcut
-			UIHelper group = (UIHelper)helperGeneral.AddGroup("Keyboard Shortcuts");
+			UIHelper group = (UIHelper)helperGeneral.AddGroup(Localization.Get("groupKeyboardShortcuts"));
 			UIPanel panel = (UIPanel)group.self;
 			UIKeymappingsPanel keymappings = panel.gameObject.AddComponent<UIKeymappingsPanel>();
-			keymappings.AddKeymapping("Open Main Panel", ModSettings.Hotkey); // Automatically saved
+			keymappings.AddKeymapping(Localization.Get("keyOpenMainPanel"), ModSettings.Hotkey); // Automatically saved
 			
 			UIKeymappingsPanel keymappingsLineIssue = panel.gameObject.AddComponent<UIKeymappingsPanel>();
-			keymappingsLineIssue.AddKeymapping("Open Line Issue Panel", ModSettings.LineIssueHotkey); // Automatically saved
+			keymappingsLineIssue.AddKeymapping(Localization.Get("keyOpenIssuesPanel"), ModSettings.LineIssueHotkey); // Automatically saved
 		}
 
 		private void SetupMainPanelTab(UIHelper helperMainPanel)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 
 			// Zoom
-			UIHelper oBehaviourGroup = (UIHelper)helperMainPanel.AddGroup("Behaviour");
-			oBehaviourGroup.AddCheckbox("Zoom in on target vehicle/stop/position", oSettings.ZoomInOnTarget, OnZoomInChanged);
+			UIHelper oBehaviourGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBehaviour"));
+			oBehaviourGroup.AddCheckbox(Localization.Get("chkZoomInOnTarget"), oSettings.ZoomInOnTarget, OnZoomInChanged);
 
 			// Bored Slider
-			UIHelper oBoredGroup = (UIHelper)helperMainPanel.AddGroup("Bored Threshold");
-			SettingsSlider oBoredSlider = SettingsSlider.Create(oBoredGroup, "Bored", 0f, 255f, 1f, (float)oSettings.BoredThreshold, OnBoredValueChanged);
+			UIHelper oBoredGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBoredThreshold"));
+			SettingsSlider oBoredSlider = SettingsSlider.Create(oBoredGroup, Localization.Get("sliderBored"), 0f, 255f, 1f, (float)oSettings.BoredThreshold, OnBoredValueChanged);
 			UIPanel pnlBoredGroup = (UIPanel)oBoredGroup.self;
 			UILabel lblHint = pnlBoredGroup.AddUIComponent<UILabel>();
-			lblHint.text = "[0..255] 0 = Just Arrived, 255 = Bored, time to go.";
+			lblHint.text = Localization.Get("txtBoredHint");
 
 			// Tooltips
-			UIHelper oTooltipGroup = (UIHelper)helperMainPanel.AddGroup("Tooltips");
-			SettingsSlider.Create(oTooltipGroup, "Font Size", 8f, 32f, 1f, (float)oSettings.TooltipFontSize, OnTooltipFontSizeChanged);
-			SettingsSlider.Create(oTooltipGroup, "Tooltip Row Limit", 0f, 100f, 1f, (float)oSettings.TooltipRowLimit, OnTooltipRowLimitValueChanged);
+			UIHelper oTooltipGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupTooltips"));
+			SettingsSlider.Create(oTooltipGroup, Localization.Get("sliderFontSize"), 8f, 32f, 1f, (float)oSettings.TooltipFontSize, OnTooltipFontSizeChanged);
+			SettingsSlider.Create(oTooltipGroup, Localization.Get("sliderTooltipRowLimit"), 0f, 100f, 1f, (float)oSettings.TooltipRowLimit, OnTooltipRowLimitValueChanged);
 		}
 
 		private void SetupLineIssuesTab(UIHelper helperLineIssues)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
-
-			// General
-			UIHelper oLineIssuePanelGroup = (UIHelper)helperLineIssues.AddGroup("General");
-			oLineIssuePanelGroup.AddCheckbox("Delete resolved issues automatically", oSettings.DeleteResolvedIssuesAutomatically, OnDeleteResolvedIssuesAutomatically);
-			oLineIssuePanelGroup.AddCheckbox("Delete issues when closing Line Issue panel", oSettings.DeleteLineIssuesOnClosing, OnDeleteLineIssuesOnClosing);
+			ModSettings oSettings = ModSettings.GetSettings();
 
 			// Issues
-			UIHelper oFlagsGroup = (UIHelper)helperLineIssues.AddGroup("Issues");
-			oFlagsGroup.AddCheckbox("Flag if vehicles move slowly", oSettings.WarnVehicleMovesSlowly, OnWarnVehicleMovesSlowly);
-			m_oSlowSlider = SettingsSlider.Create(oFlagsGroup, "       Slow vehicle threshold", 1f, 255f, 1f, (float)oSettings.WarnVehicleMovingSlowlyThreshold, OnSlowValueChanged);
+			UIHelper oFlagsGroup = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupIssues"));
+			oFlagsGroup.AddCheckbox(Localization.Get("chkFlagMoveSlowly"), oSettings.WarnVehicleMovesSlowly, OnWarnVehicleMovesSlowly);
+			m_oSlowSlider = SettingsSlider.Create(oFlagsGroup, Localization.Get("sliderSlowVehicleThreshold"), 1f, 255f, 1f, (float)oSettings.WarnVehicleMovingSlowlyThreshold, OnSlowValueChanged);
 
 			// Warnings group
-			UIHelper oWarnGroup = (UIHelper)helperLineIssues.AddGroup("Warnings");
-			UICheckBox oWarnDespawn = (UICheckBox)oWarnGroup.AddCheckbox("Warn if vehicles despawn", oSettings.WarnVehicleDespawed, OnWarnVehicleDespawed);
-			oWarnGroup.AddCheckbox("Warn if vehicles stop moving (blocked)", oSettings.WarnVehicleStopsMoving, OnWarnVehicleStopsMoving);
-			m_oStuckSlider = SettingsSlider.Create(oWarnGroup, "       Blocked vehicle threshold", 1f, 255f, 1f, (float)oSettings.WarnVehicleBlockedThreshold, OnStuckValueChanged);
-			oWarnGroup.AddCheckbox("Warn if transport line issues detected", oSettings.WarnLineIssues, OnWarnLineIssues);
-			m_playSound = (UICheckBox)oWarnGroup.AddCheckbox("Play sound when warnings are detected", oSettings.PlaySoundForWarnings, OnPlaySoundForWarnings);
+			UIHelper oWarnGroup = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupWarnings"));
+			
+			UICheckBox oWarnDespawn = (UICheckBox)oWarnGroup.AddCheckbox(Localization.Get("chkWarnDespawn"), oSettings.WarnVehicleDespawed, OnWarnVehicleDespawed);
+			
+			oWarnGroup.AddCheckbox(Localization.Get("chkWarnBlocked"), oSettings.WarnVehicleStopsMoving, OnWarnVehicleStopsMoving);
+			m_oStuckSlider = SettingsSlider.Create(oWarnGroup, Localization.Get("sliderBlockedThreshold"), 1f, 255f, 1f, (float)oSettings.WarnVehicleBlockedThreshold, OnStuckValueChanged);
+			
+			oWarnGroup.AddCheckbox(Localization.Get("chkLineIssues"), oSettings.WarnLineIssues, OnWarnLineIssues);
+			
+			oWarnGroup.AddCheckbox(Localization.Get("chkBoredCount"), oSettings.WarnBoredCountExceedsThreshold, OnWarnBoredCount);
+			m_oBoredCountSlider = SettingsSlider.Create(oWarnGroup, Localization.Get("sliderBoredCountThreshold"), 1f, 500f, 1f, (float)oSettings.WarnBoredCountThreshold, OnWarnBoredCountThreshold);
+
+			m_playSound = (UICheckBox)oWarnGroup.AddCheckbox(Localization.Get("chkPlaySound"), oSettings.PlaySoundForWarnings, OnPlaySoundForWarnings);
 			UpdatePlaySoundEnabled();
 		}
 
@@ -165,25 +153,50 @@ namespace PublicTransportInfo
 			return rootPanel;
 		}
 
+		public void OnLocalizationDropDownChanged(int value)
+		{
+			ModSettings oSettings = ModSettings.GetSettings();
+			oSettings.PreferredLanguage = Localization.GetLoadedCodes()[value];
+			oSettings.Save();
+		}
+		public void OnWarnBoredCount(bool bChecked)
+		{
+			ModSettings oSettings = ModSettings.GetSettings();
+			oSettings.WarnBoredCountExceedsThreshold = bChecked;
+			oSettings.Save();
+
+			if (m_oBoredCountSlider != null)
+            {
+				m_oBoredCountSlider.Enable(bChecked);
+			}
+		}
+
+		public void OnWarnBoredCountThreshold(float value)
+		{
+			ModSettings oSettings = ModSettings.GetSettings();
+			oSettings.WarnBoredCountThreshold = (int)value;
+			oSettings.Save();
+		}
+
 		private void UpdatePlaySoundEnabled()
         {
 			if (m_playSound != null)
 			{
-				ModSettings oSettings = PublicTransportInstance.GetSettings();
+				ModSettings oSettings = ModSettings.GetSettings();
 				m_playSound.isEnabled = (oSettings.WarnVehicleStopsMoving || oSettings.WarnVehicleDespawed || oSettings.WarnLineIssues);
 			} 
 		}
 
 		public void OnZoomInChanged(bool bChecked)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.ZoomInOnTarget = bChecked;
 			oSettings.Save();
 		}
 
 		public void OnTooltipFontSizeChanged(float fValue)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.TooltipFontSize = (int)fValue;
 			PublicTransportInstance.InvalidateFont(); 
 
@@ -192,31 +205,15 @@ namespace PublicTransportInfo
 
 		public void OnTooltipRowLimitValueChanged(float fValue)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.TooltipRowLimit = (int)fValue;
-			oSettings.Save();
-		}
-
-		public void OnDeleteResolvedIssuesAutomatically(bool bIsChecked)
-		{
-			Debug.Log("OnDeleteResolvedIssuesAutomatically" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
-			oSettings.DeleteResolvedIssuesAutomatically = bIsChecked;
-			oSettings.Save();
-		}
-
-		public void OnDeleteLineIssuesOnClosing(bool bIsChecked)
-		{
-			Debug.Log("DeleteLineIssuesOnClosing" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
-			oSettings.DeleteLineIssuesOnClosing = bIsChecked;
 			oSettings.Save();
 		}
 
 		public void OnWarnLineIssues(bool bIsChecked)
 		{
 			Debug.Log("OnWarnLineIssues" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnLineIssues = bIsChecked;
 			oSettings.Save();
 			UpdatePlaySoundEnabled();
@@ -225,7 +222,7 @@ namespace PublicTransportInfo
 		public void OnWarnVehicleDespawed(bool bIsChecked)
 		{
 			Debug.Log("OnWarnVehicleDespawed" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleDespawed = bIsChecked;
 			oSettings.Save();
 			UpdatePlaySoundEnabled();
@@ -234,7 +231,7 @@ namespace PublicTransportInfo
 		public void OnWarnVehicleStopsMoving(bool bIsChecked)
 		{
 			Debug.Log("OnWarnVehicleStopsMoving" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleStopsMoving = bIsChecked;
 			oSettings.Save();
 			m_oStuckSlider?.Enable(bIsChecked);
@@ -244,7 +241,7 @@ namespace PublicTransportInfo
 		public void OnWarnVehicleMovesSlowly(bool bIsChecked)
 		{
 			Debug.Log("OnWarnVehicleMovesSlowly" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleMovesSlowly = bIsChecked;
 			oSettings.Save();
 			if (m_oSlowSlider != null)
@@ -256,7 +253,7 @@ namespace PublicTransportInfo
 		public void OnPlaySoundForWarnings(bool bIsChecked)
 		{
 			Debug.Log("OnPlaySoundForWarnings" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.PlaySoundForWarnings = bIsChecked;
 			oSettings.Save();
 		}
@@ -264,11 +261,11 @@ namespace PublicTransportInfo
 		public void OnToolbarButtonChanged(bool bIsChecked)
 		{
 			Debug.Log("Checkbox changed" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.MainToolbarButton = bIsChecked;
 			oSettings.Save();
 
-			if (PublicTransportInstance.s_isGameLoaded)
+			if (PublicTransportLoader.isGameLoaded)
 			{
 				if (oSettings.MainToolbarButton)
 				{
@@ -283,12 +280,12 @@ namespace PublicTransportInfo
 
 		public void OnUnifiedToolbarButtonChanged(bool bIsChecked)
 		{
-			PublicTransportInfo.Debug.Log("Checkbox changed" + bIsChecked);
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			Debug.Log("Checkbox changed" + bIsChecked);
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.AddUnifiedUIButton = bIsChecked;
 			oSettings.Save();
 
-			if (PublicTransportInstance.s_isGameLoaded)
+			if (PublicTransportLoader.isGameLoaded)
 			{
 				if (UnifiedUITool.Instance == null)
 				{
@@ -311,21 +308,21 @@ namespace PublicTransportInfo
 
 		public void OnBoredValueChanged(float fValue)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.BoredThreshold = (int)fValue;
 			oSettings.Save();
 		}
 
 		public void OnSlowValueChanged(float fValue)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleMovingSlowlyThreshold = (int)fValue;
 			oSettings.Save();
 		}
 
 		public void OnStuckValueChanged(float fValue)
 		{
-			ModSettings oSettings = PublicTransportInstance.GetSettings();
+			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleBlockedThreshold = (int)fValue;
 			oSettings.Save();
 		}

@@ -1,19 +1,19 @@
 ﻿using ColossalFramework.UI;
 using UnityEngine;
 
-namespace PublicTransportInfo
+namespace SleepyCommon
 {
-    public class ListViewHeaderColumnLabel : ListViewHeaderColumnBase
+    public class NewListViewHeaderColumnLabel : NewListViewHeaderColumnBase
     {
         private UILabel? m_lblColumn = null;
 
-        public ListViewHeaderColumnLabel(ListViewRowComparer.Columns eColumn, UIComponent parent, string sText, string sTooltip, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor, OnListViewColumnClick eventCallback) :
-                base(eColumn, sText, eventCallback)
+        public NewListViewHeaderColumnLabel(NewListViewRowComparer.Columns eColumn, UIComponent parent, string sText, string sTooltip, float textScale, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor, OnListViewColumnClick eventClickCallback) :
+                base(eColumn, sText, eventClickCallback)
         {
             m_lblColumn = parent.AddUIComponent<UILabel>();
             m_lblColumn.name = eColumn.ToString();
             m_lblColumn.text = sText;
-            m_lblColumn.textScale = 0.9f;
+            m_lblColumn.textScale = textScale;
             m_lblColumn.tooltip = sTooltip;
             m_lblColumn.textAlignment = oTextAlignment;
             m_lblColumn.verticalAlignment = UIVerticalAlignment.Middle;
@@ -26,7 +26,7 @@ namespace PublicTransportInfo
             m_lblColumn.eventClick += new MouseEventHandler(OnItemClicked);
         }
 
-        public override void Sort(ListViewRowComparer.Columns eColumn, bool bDescending)
+        public override void Sort(NewListViewRowComparer.Columns eColumn, bool bDescending)
         {
             if (m_lblColumn != null)
             {
@@ -34,7 +34,7 @@ namespace PublicTransportInfo
 
                 if (eColumn == m_eColumn)
                 {
-                    string sSortCharacter = Utils.GetSortCharacter(bDescending);
+                    string sSortCharacter = PublicTransportInfo.Utils.GetSortCharacter(bDescending);
                     if (m_lblColumn.textAlignment == UIHorizontalAlignment.Left)
                     {
                         m_lblColumn.text += " " + sSortCharacter;

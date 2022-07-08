@@ -39,9 +39,9 @@ namespace PublicTransportInfo
         {
             if (m_ToolbarButton != null)
             {
-                if (eLevel != LineIssue.IssueLevel.ISSUE_NONE && PublicTransportInstance.GetLineIssueManager() != null)
+                if (eLevel != LineIssue.IssueLevel.ISSUE_NONE && LineIssueManager.Instance != null)
                 {
-                    m_ToolbarButton.tooltip = PublicTransportInstance.GetLineIssueManager().GetTooltip();
+                    m_ToolbarButton.tooltip = LineIssueManager.Instance.GetTooltip();
                 }
                 else
                 {

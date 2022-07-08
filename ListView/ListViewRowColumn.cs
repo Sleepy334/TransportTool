@@ -31,6 +31,7 @@ namespace PublicTransportInfo
             m_lblColumn = parent.AddUIComponent<UILabelLiveTooltip>();
             m_lblColumn.name = eColumn.ToString();
             m_lblColumn.text = sText;
+            m_lblColumn.textScale = 0.9f;
             m_lblColumn.tooltip = sTooltip;
             m_lblColumn.textAlignment = oTextAlignment;// UIHorizontalAlignment.Center;
             m_lblColumn.verticalAlignment = UIVerticalAlignment.Middle;

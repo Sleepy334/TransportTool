@@ -14,12 +14,12 @@ namespace PublicTransportInfo
 
         private static float GetFontWidthFactor()
         {
-            return (float) (PublicTransportInstance.GetSettings().TooltipFontSize / 1.60f);
+            return (float) (ModSettings.GetSettings().TooltipFontSize / 1.60f);
         }
 
         private static float GetFontHeightFactor()
         {
-            return (float)(PublicTransportInstance.GetSettings().TooltipFontSize / 0.85f);
+            return (float)(ModSettings.GetSettings().TooltipFontSize / 0.85f);
         }
 
         public static UITooltip Create(UIComponent parent, string tooltip, TextAnchor textAnchor)
@@ -57,7 +57,7 @@ namespace PublicTransportInfo
             settings.scaleFactor = 1.0f;
             settings.color = Color.red;
             settings.font = PublicTransportInstance.GetConstantWidthFont();// m_skin.font;
-            settings.fontSize = PublicTransportInstance.GetSettings().TooltipFontSize;
+            settings.fontSize = ModSettings.GetSettings().TooltipFontSize;
             settings.fontStyle = FontStyle.Bold;
             settings.pivot = Vector2.zero;
             settings.richText = false;

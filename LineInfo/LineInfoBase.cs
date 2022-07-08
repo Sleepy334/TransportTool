@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using PublicTransportInfo.Util;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
@@ -92,6 +93,11 @@ namespace PublicTransportInfo
             return ComparatorBase(oLine1.m_iPassengers.CompareTo(oLine2.m_iPassengers), oLine1, oLine2);
         }
 
+        public static int ComparatorUsage(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.GetUsage().CompareTo(oLine2.GetUsage()), oLine1, oLine2);
+        }
+
         public static int ComparatorWaiting(LineInfoBase oLine1, LineInfoBase oLine2)
         {
             return ComparatorBase(oLine1.m_iWaiting.CompareTo(oLine2.m_iWaiting), oLine1, oLine2);
@@ -119,6 +125,8 @@ namespace PublicTransportInfo
                     return LineInfoBase.ComparatorVehicles;
                 case ListViewRowComparer.Columns.COLUMN_PASSENGERS:
                     return LineInfoBase.ComparatorPassengers;
+                case ListViewRowComparer.Columns.COLUMN_VEHICLE_USAGE:
+                    return LineInfoBase.ComparatorUsage;
                 case ListViewRowComparer.Columns.COLUMN_WAITING:
                     return LineInfoBase.ComparatorWaiting;
                 case ListViewRowComparer.Columns.COLUMN_BUSIEST:
@@ -205,9 +213,27 @@ namespace PublicTransportInfo
             }
         }
 
-        
-
         public delegate int GetLineDataValue(LineData oData);
+
+        public string GetPassengersDescription()
+        {
+            return m_iPassengers + "/" + m_iCapacity;
+        }
+
+        public int GetUsage()
+        {
+            double dCapacityPercent = 0;
+            if (m_vehicleDatas.Count > 0)
+            {
+                foreach (VehicleData vehicle in m_vehicleDatas)
+                {
+                    dCapacityPercent += (double)vehicle.m_iPassengers / (double)vehicle.m_iCapacity;
+                }
+
+                dCapacityPercent = (dCapacityPercent / (double)m_vehicleDatas.Count) * 100;
+            }
+            return (int) Math.Round(dCapacityPercent);
+        }
 
         public int GetWaitingCount(LineData oData)
         {
@@ -221,19 +247,19 @@ namespace PublicTransportInfo
 
         public string GetWaitingTooltip()
         {
-            return GetLineDataTooltip("Waiting", GetWaitingCount);
+            return GetLineDataTooltip(Localization.Get("OverviewWaiting"), GetWaitingCount);
         }
 
         public string GetBoredTooltip()
         {
-            return GetLineDataTooltip("Bored", GetBoredCount);
+            return GetLineDataTooltip(Localization.Get("OverviewBored"), GetBoredCount);
         }
 
-        public string GetLineDataTooltip(string sValueName, GetLineDataValue hLineDataValue)
+        public string GetLineDataTooltip(string sValueNameLocalized, GetLineDataValue hLineDataValue)
         {
             string sTooltip = "";
 
-            int iSTOPS_TO_SHOW = PublicTransportInstance.GetSettings().TooltipRowLimit;
+            int iSTOPS_TO_SHOW = ModSettings.GetSettings().TooltipRowLimit;
             if (iSTOPS_TO_SHOW > 0 && m_stopPassengerCount != null)
             {
                 m_stopPassengerCount.Sort((x, y) =>
@@ -269,7 +295,7 @@ namespace PublicTransportInfo
                     {
                         sTooltip += "\r\n";
                     }
-                    sTooltip += "Stop: " + listStopNumber[i] + " | " + sValueName + ": " + listValue[i];
+                    sTooltip += Localization.Get("txtStop") + ": " + listStopNumber[i] + " | " + sValueNameLocalized + ": " + listValue[i];
                 }
 
                 if (m_stopPassengerCount.Count > iSTOPS_TO_SHOW)
@@ -327,7 +353,7 @@ namespace PublicTransportInfo
         {
             string sTooltip = "";
 
-            int iSTOPS_TO_SHOW = PublicTransportInstance.GetSettings().TooltipRowLimit;
+            int iSTOPS_TO_SHOW = ModSettings.GetSettings().TooltipRowLimit;
             if (iSTOPS_TO_SHOW > 0 && m_stopPassengerCount != null)
             {
                 List<string> listStopNumber;
@@ -363,8 +389,8 @@ namespace PublicTransportInfo
                     {
                         sTooltip += " | " + listDistance[i] + "km";
                     }
-                    sTooltip += " | Waiting: " + listWaiting[i];
-                    sTooltip += " | Bored: " + listBored[i];
+                    sTooltip += " | " + Localization.Get("OverviewWaiting") + ": " + listWaiting[i];
+                    sTooltip += " | " + Localization.Get("OverviewBored") + ": " + listBored[i];
                 }
 
                 if (m_stopPassengerCount.Count > iSTOPS_TO_SHOW)
@@ -376,7 +402,9 @@ namespace PublicTransportInfo
                         iWaitingRemainder += m_stopPassengerCount[i].m_iWaitingCount;
                         iBoredRemainder += m_stopPassengerCount[i].m_iBoredCount;
                     }
-                    sTooltip += "\r\n\r\nAnd " + (m_stopPassengerCount.Count - iSTOPS_TO_SHOW) + " other stops (Waiting: " + iWaitingRemainder + " | Bored: " + iBoredRemainder + ")";
+                    sTooltip += "\r\n\r\nAnd " + (m_stopPassengerCount.Count - iSTOPS_TO_SHOW) + " other stops (" + 
+                        Localization.Get("OverviewWaiting") + ": " + iWaitingRemainder + " | " + 
+                        Localization.Get("OverviewBored") + ": " + iBoredRemainder + ")";
                 }
             }
 
@@ -431,7 +459,7 @@ namespace PublicTransportInfo
                     Vehicle oVehicle = Singleton<VehicleManager>.instance.m_vehicles.m_buffer[oVD.m_usVehicleId];
                     if (oVehicle.m_blockCounter > 0)
                     {
-                        sStatus = "Blocked (" + oVehicle.m_blockCounter + ")";
+                        sStatus = Localization.Get("txtBlocked") + " (" + oVehicle.m_blockCounter + ")";
                     }
                     else
                     {

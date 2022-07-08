@@ -97,7 +97,7 @@ namespace PublicTransportInfo
             {
                 InstanceID oInstanceId = new InstanceID { Building = usBuildingId };
                 Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_usBusiestStopId].m_position;
-                ModSettings oSettings = PublicTransportInstance.GetSettings();
+                ModSettings oSettings = ModSettings.GetSettings();
                 PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, oSettings.ZoomInOnTarget);
 
                 WorldInfoPanel.Show<CityServiceWorldInfoPanel>(oStopPosition, oInstanceId);

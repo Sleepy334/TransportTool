@@ -5,98 +5,44 @@ using UnityEngine;
 namespace PublicTransportInfo 
 {
     public class PublicTransportInstance : MonoBehaviour
-    {
-        internal static bool s_isGameLoaded = false; 
+    { 
         internal static PublicTransportInfoPanel? s_mainPanel = null;
-        internal static LineIssuePanel? s_LineIssuePanel = null;
+        internal static LineIssuePanel? s_LineIssuePanel2 = null;
         internal static MainToolbarButton? s_ToolbarButton = null;
         private static UITextureAtlas? s_atlas = null;
-        private static LineIssueManager m_lineIssueManager = new LineIssueManager();
         private static Font? s_ConstantWidthFont = null;
-        private static ModSettings? m_settings = null;
         
         public PublicTransportInstance() : base()
         {
             s_mainPanel = null;
         }
 
-        public static ModSettings GetSettings()
-        {
-            if (m_settings == null)
-            {
-                m_settings = ModSettings.Load();
-                Debug.Log("Settings loaded." + m_settings.AddUnifiedUIButton + " " + m_settings.BoredThreshold);
-            }
-            return m_settings;
-        }
-
-        public static LineIssueManager GetLineIssueManager()
-        {
-            return m_lineIssueManager;
-        }
-
         public void Start()
         {
-            try
-            {
-                s_isGameLoaded = true;
-            }
-            catch (Exception e)
-            {
-                Debug.Log("UI initialization failed.", e);
-                GameObject.Destroy(gameObject);
-            }
         }
 
         public static void Create() 
         {
-            if (s_isGameLoaded)
+            if (PublicTransportLoader.isGameLoaded)
             {
                 s_mainPanel = UIView.GetAView().AddUIComponent(typeof(PublicTransportInfoPanel)) as PublicTransportInfoPanel;
-                s_LineIssuePanel = UIView.GetAView().AddUIComponent(typeof(LineIssuePanel)) as LineIssuePanel;
-            }
 
-            if (GetSettings().MainToolbarButton)
-            {
-                ShowToolbarButton();
-            }
+                if (ModSettings.GetSettings().MainToolbarButton)
+                {
+                    ShowToolbarButton();
+                }
 
-            // Add UnifiedUI button if module found
-            if (PublicTransportInstance.GetSettings().AddUnifiedUIButton)
-            {
-                UnifiedUITool.AddUnifiedUITool();
-            }
-            
-        }
-
-        public static void Destroy()
-        {
-            if (s_mainPanel != null)
-            {
-                GameObject.Destroy(s_mainPanel.gameObject);
-            }
-            if (s_ToolbarButton != null)
-            {
-                s_ToolbarButton.Destroy();
-            }
-            UnifiedUITool.RemoveUnifiedUITool();
-
-            if (s_ConstantWidthFont != null)
-            {
-                Destroy(s_ConstantWidthFont);
-                s_ConstantWidthFont = null;
-            }
-
-            if (s_atlas != null)
-            {
-                Destroy(s_atlas);
-                s_atlas = null;
+                // Add UnifiedUI button if module found
+                if (ModSettings.GetSettings().AddUnifiedUIButton)
+                {
+                    UnifiedUITool.AddUnifiedUITool();
+                }
             }
         }
 
         public static void ShowMainPanel()
         {
-            if (s_isGameLoaded)
+            if (PublicTransportLoader.isGameLoaded)
             {
                 if (s_mainPanel == null)
                 {
@@ -175,9 +121,10 @@ namespace PublicTransportInfo
 
         public static void ToggleLineIssuePanel()
         {
-            if (s_LineIssuePanel != null)
+            CreateLineIssuePanel();
+            if (s_LineIssuePanel2 != null)
             {
-                if (s_LineIssuePanel.isVisible)
+                if (s_LineIssuePanel2.isVisible)
                 {
                     HideLineIssuePanel();
                 }
@@ -196,43 +143,60 @@ namespace PublicTransportInfo
             }
         }
 
+        public static void CreateLineIssuePanel()
+        {
+            if (s_LineIssuePanel2 == null)
+            {
+                s_LineIssuePanel2 = UIView.GetAView().AddUIComponent(typeof(LineIssuePanel)) as LineIssuePanel;
+                if (s_LineIssuePanel2 == null)
+                {
+                    //Prompt.Info("Transfer Manager CE", "Error creating Stats Panel.");
+                }
+            }
+        }
+
         public static void ShowLineIssuePanel(int iInitialLineId)
         {
-            if (s_LineIssuePanel != null)
+            if (s_LineIssuePanel2 == null)
             {
-                GetLineIssueManager().UpdateLineIssues();
-                s_LineIssuePanel.SetInitialLineId(iInitialLineId);
-                s_LineIssuePanel.Show();
+                CreateLineIssuePanel();
+            }
+            if (s_LineIssuePanel2 != null)
+            {
+                s_LineIssuePanel2.Show();
             }
         }
 
         public static void HideLineIssuePanel()
         {
-            if (s_LineIssuePanel != null && s_LineIssuePanel.isVisible)
+            if (s_LineIssuePanel2 != null && s_LineIssuePanel2.isVisible)
             {
-                s_LineIssuePanel.isVisible = false;
-
-                if (PublicTransportInstance.GetSettings().DeleteLineIssuesOnClosing)
-                {
-                    GetLineIssueManager().ClearIssuesWhenClosingPanel();
-                }
+                s_LineIssuePanel2.Hide();
             }
+        }
+
+        public static void UpdateLineIssuePanel()
+        {
+            if (s_LineIssuePanel2 != null && s_LineIssuePanel2.isVisible)
+            {
+                s_LineIssuePanel2.UpdatePanel();
+            }   
         }
 
         public static void ShowToolbarButton()
         {
             Debug.Log("AddToolbarButton");
-            if (s_ToolbarButton == null)
+            if (PublicTransportLoader.isGameLoaded)
             {
-                if (!s_isGameLoaded || s_mainPanel == null)
+                if (s_ToolbarButton == null)
                 {
-                    return;
+                    s_ToolbarButton = new MainToolbarButton();
+                    s_ToolbarButton.AddToolbarButton();
                 }
-                s_ToolbarButton = new MainToolbarButton();
-                s_ToolbarButton.AddToolbarButton();
-            } else
-            {
-                s_ToolbarButton.Show();
+                else
+                {
+                    s_ToolbarButton.Show();
+                }
             }
         }
 
@@ -281,19 +245,11 @@ namespace PublicTransportInfo
 
             return s_atlas;
         }
-        
-        public static void UpdateVehicleDetectors()
-        {
-            if (m_lineIssueManager != null)
-            {
-                m_lineIssueManager.UpdateVehicleDetectors();
-            }
-        }
 
         public static Font GetConstantWidthFont()
         {
             if (s_ConstantWidthFont == null) {
-                s_ConstantWidthFont = Font.CreateDynamicFontFromOSFont("Courier New Bold", GetSettings().TooltipFontSize);
+                s_ConstantWidthFont = Font.CreateDynamicFontFromOSFont("Courier New Bold", ModSettings.GetSettings().TooltipFontSize);
             }
             return s_ConstantWidthFont;
         }
@@ -304,6 +260,47 @@ namespace PublicTransportInfo
             {
                 Destroy(s_ConstantWidthFont);
                 s_ConstantWidthFont = null;
+            }
+        }
+
+        public static bool HandleEscape()
+        {
+            if (s_LineIssuePanel2 != null && s_LineIssuePanel2.isVisible)
+            {
+                HideLineIssuePanel();
+                return true;
+            }
+            else if(s_mainPanel != null && s_mainPanel.isVisible)
+            {
+                HideMainPanel();
+                return true;
+            }
+
+            return false;
+        }
+
+        public static void Destroy()
+        {
+            if (s_mainPanel != null)
+            {
+                GameObject.Destroy(s_mainPanel.gameObject);
+            }
+            if (s_ToolbarButton != null)
+            {
+                s_ToolbarButton.Destroy();
+            }
+            UnifiedUITool.RemoveUnifiedUITool();
+
+            if (s_ConstantWidthFont != null)
+            {
+                Destroy(s_ConstantWidthFont);
+                s_ConstantWidthFont = null;
+            }
+
+            if (s_atlas != null)
+            {
+                Destroy(s_atlas);
+                s_atlas = null;
             }
         }
     }

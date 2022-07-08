@@ -1,15 +1,27 @@
 ﻿using ColossalFramework;
-using ColossalFramework.UI;
-using ICities;
 using System;
 using System.IO;
 using System.Xml.Serialization;
 using UnityEngine;
+using PublicTransportInfo.Util;
 
 namespace PublicTransportInfo
 {
     public class ModSettings
     {
+        
+
+        private static ModSettings s_settings = null;
+
+        public static ModSettings GetSettings()
+        {
+            if (s_settings == null)
+            {
+                s_settings = ModSettings.Load();
+            }
+            return s_settings;
+        }
+
         [XmlIgnore]
         const string SETTINGS_FILE_NAME = "TransportToolSettings";
 
@@ -64,6 +76,20 @@ namespace PublicTransportInfo
             set;
         } = true;
 
+        [XmlElement("WarnBoredCountExceedsThreshold")]
+        public bool WarnBoredCountExceedsThreshold
+        {
+            get;
+            set;
+        } = true;
+
+        [XmlElement("WarnBoredCountThreshold")]
+        public int WarnBoredCountThreshold
+        {
+            get;
+            set;
+        } = 50;
+
         [XmlElement("PlaySoundForWarnings")]
         public bool PlaySoundForWarnings
         {
@@ -84,18 +110,6 @@ namespace PublicTransportInfo
         } = 220;
 
         public bool WarnLineIssues
-        {
-            get;
-            set;
-        } = true;
-
-        public bool DeleteResolvedIssuesAutomatically
-        {
-            get;
-            set;
-        } = true;
-
-        public bool DeleteLineIssuesOnClosing
         {
             get;
             set;
@@ -130,6 +144,12 @@ namespace PublicTransportInfo
             set;
         } = false;
 
+        public string PreferredLanguage
+        {
+            get;
+            set;
+        } = Localization.SYSTEM_DEFAULT;
+
         static ModSettings()
         {
             if (GameSettings.FindSettingsFileByName(SETTINGS_FILE_NAME) == null)
@@ -149,17 +169,20 @@ namespace PublicTransportInfo
 
         public static ModSettings Load()
         {
-            Debug.Log("Loading settings: " + SettingsFile); 
+            Debug.Log("Loading settings: " + SettingsFile);
             try
             {
                 // Read settings file.
-                using (StreamReader reader = new StreamReader(SettingsFile))
+                if (File.Exists(SettingsFile))
                 {
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
-                    ModSettings? oSettings = xmlSerializer.Deserialize(reader) as ModSettings;
-                    if (oSettings != null)
+                    using (StreamReader reader = new StreamReader(SettingsFile))
                     {
-                        return oSettings;
+                        XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
+                        ModSettings? oSettings = xmlSerializer.Deserialize(reader) as ModSettings;
+                        if (oSettings != null)
+                        {
+                            return oSettings;
+                        }
                     }
                 }
             }
@@ -176,27 +199,18 @@ namespace PublicTransportInfo
         /// </summary>
         public void Save()
         {
-            Debug.Log("Saving settings: " + SettingsFile); 
             try
             {
                 // Pretty straightforward.
                 using (StreamWriter writer = new StreamWriter(SettingsFile))
                 {
-                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings)); 
-                    xmlSerializer.Serialize(writer, PublicTransportInstance.GetSettings());
+                    XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
+                    xmlSerializer.Serialize(writer, ModSettings.GetSettings());
                 }
-
-                // Cleaning up after ourselves - delete any old config file in the application direcotry.
-                if (File.Exists(SettingsFileName))
-                {
-                    File.Delete(SettingsFileName);
-                }
-
-                Debug.Log("User Setting Configuration successful saved."); 
             }
             catch (Exception ex)
             {
-                Debug.Log("Saving settings file failed.", ex); 
+                Debug.Log("Saving settings file failed.", ex);
             }
         }
 
