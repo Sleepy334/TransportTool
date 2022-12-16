@@ -108,8 +108,8 @@ namespace PublicTransportInfo
                 {
                     // Node issues
                     netNode = netManager.m_nodes.m_buffer[usStop];
-                    Notification.Problem problems = netNode.m_problems;
-                    if (problems != Notification.Problem.None)
+                    Notification.Problem1 problems = netNode.m_problems;
+                    if (problems != Notification.Problem1.None)
                     {
                         if (netNode.m_flags != NetNode.Flags.None && (netNode.m_flags & NetNode.Flags.Temporary) == 0)
                         {

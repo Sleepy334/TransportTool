@@ -12,9 +12,9 @@ namespace PublicTransportInfo
     {
         public ushort m_usStop;
         public int m_iStopNumber;
-        Notification.Problem m_eProblem;
+        Notification.Problem1 m_eProblem;
 
-        public LineIssueBrokenStop(ushort iLineId, TransportInfo.TransportType eType, int iStopNumber, ushort usStop, Notification.Problem eProblem) : base(iLineId, eType)
+        public LineIssueBrokenStop(ushort iLineId, TransportInfo.TransportType eType, int iStopNumber, ushort usStop, Notification.Problem1 eProblem) : base(iLineId, eType)
         {
             m_usStop = usStop;
             m_iStopNumber = iStopNumber;
@@ -28,7 +28,7 @@ namespace PublicTransportInfo
 
         public override IssueLevel GetLevel()
         { 
-            if (m_eProblem != Notification.Problem.None)
+            if (m_eProblem != Notification.Problem1.None)
             {
                 return IssueLevel.ISSUE_WARNING;
             }
@@ -93,7 +93,7 @@ namespace PublicTransportInfo
             }
             else
             {
-                m_eProblem = Notification.Problem.None;
+                m_eProblem = Notification.Problem1.None;
             }
             
             // Issue has changed restart deletion time stamp

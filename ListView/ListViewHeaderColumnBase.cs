@@ -1,8 +1,9 @@
 ﻿using ColossalFramework.UI;
+using PublicTransportInfo;
 using System;
 using UnityEngine;
 
-namespace PublicTransportInfo
+namespace SleepyCommon
 {
     public abstract class ListViewHeaderColumnBase
     {

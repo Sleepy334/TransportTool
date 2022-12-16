@@ -10,7 +10,8 @@ namespace PublicTransportInfo
 	{
 		public enum Columns
         {
-            COLUMN_NAME,
+			COLUMN_COLOR,
+			COLUMN_NAME,
             COLUMN_STOPS,
 			COLUMN_VEHICLES,
             COLUMN_PASSENGERS,
@@ -18,7 +19,12 @@ namespace PublicTransportInfo
 			COLUMN_WAITING,
             COLUMN_BUSIEST,
 			COLUMN_BORED,
-        }
+			COLUMN_TIME,
+			COLUMN_TYPE,
+			COLUMN_SOURCE,
+			COLUMN_LOCATION,
+			COLUMN_DESCRIPTION,
+		}
         
         public Columns m_eSortColumn;
 		public bool m_bSortDesc;
@@ -31,6 +37,7 @@ namespace PublicTransportInfo
 
 		public int Compare(UIComponent o1, UIComponent o2)
 		{
+			/*
 			ListViewRow? oRow1 = o1 as ListViewRow;
 			ListViewRow? oRow2 = o2 as ListViewRow;
 
@@ -44,6 +51,8 @@ namespace PublicTransportInfo
 				}
 			}
 			return iResult;
+			*/
+			return 1;
 		}
 	}
 }

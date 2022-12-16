@@ -7,7 +7,7 @@ namespace PublicTransportInfo
     {
 		public static string ModName => "TransportTool " + Version;
 
-		private static string Version = "v2.2";
+		private static string Version = "v2.4.6";
 		public static string Title => "Transport Tool" + " " + Version;
 
 		public static bool IsEnabled = false;
@@ -16,7 +16,7 @@ namespace PublicTransportInfo
 
 		public string Name
 		{
-			get { return ModName; }
+			get { return ModName; } 
 		}
 
 		public string Description

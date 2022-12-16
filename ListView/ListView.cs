@@ -1,199 +1,173 @@
-﻿using ColossalFramework;
-using ColossalFramework.UI;
+﻿using ColossalFramework.UI;
+using PublicTransportInfo;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
-namespace PublicTransportInfo
+namespace SleepyCommon
 {
     public class ListView : UIPanel
     {
         public const int iSCROLL_BAR_WIDTH = 20;
+        public const int iROW_HEIGHT = 22;
 
-        public ListViewMainPanel? m_listPanel;
-        public UIPanel? m_scrollbarPanel;
-        public UIScrollbar? m_scrollbar;
+
+        private ListViewHeader? m_header = null;
+        private UIFastList? m_listPanel;
+        private float m_fTextScale = 1.0f;
+
+        public ListViewRowComparer.Columns m_eSortColumn = ListViewRowComparer.Columns.COLUMN_NAME;
+        public bool m_bSortDescending = false;
+        public delegate void ListViewColumnClickEvent();
+        public ListViewColumnClickEvent? m_eventOnListViewColumnClick = null;
 
         public ListView() : base() {
-            m_scrollbar = null;
             m_listPanel = null;
-            m_scrollbarPanel = null;
         }
 
-        public static ListView? Create(UIComponent oParent)
+        public static ListView? Create<T>(UIComponent oParent, Color backgroundColor, float fTextScale, float fRowHeight, float fWidth, float fHeight)
+            where T : UIPanel, IUIFastListRow
         {
             try
             {
                 ListView listView = oParent.AddUIComponent<ListView>();
                 if (listView != null)
                 {
-                    listView.SetupListView();
-
-                    listView.backgroundSprite = "GenericPanelWhite";
-                    listView.autoLayoutDirection = LayoutDirection.Horizontal;
+                    //listView.backgroundSprite = "InfoviewPanel";
+                    //listView.color = backgroundColor;// new Color32(81, 87, 89, 225);
+                    listView.autoLayoutDirection = LayoutDirection.Vertical;
                     listView.autoLayoutStart = LayoutStart.TopLeft;
                     listView.autoLayout = true;
+                    listView.m_fTextScale = fTextScale;
+                    listView.width = fWidth;
+                    listView.height = fHeight;
+
+                    listView.m_header = ListViewHeader.Create(listView, fWidth, null);
+
+                    listView.m_listPanel = UIFastList.Create<T>(listView);
+                    listView.m_listPanel.width = fWidth;
+                    listView.m_listPanel.height = fHeight - listView.m_header.height;
+                    listView.m_listPanel.rowHeight = fRowHeight;
                 }
                 return listView;
             }
             catch (Exception ex)
             {
-                Debug.Log(ex);
+                UnityEngine.Debug.Log(ex);
             }
 
             return null;
         }
 
-        public void SetupListView()
+        public int Count
         {
-            m_listPanel = this.AddUIComponent<ListViewMainPanel>();
+            get
+            {
+                if (m_listPanel != null)
+                {
+                    return m_listPanel.rowsData.m_size;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+        }
+
+        public UIFastList? GetList()
+        {
+            return m_listPanel;
+        }
+
+        public void SetItems(FastList<object> data)
+        {
             if (m_listPanel != null)
             {
-                m_listPanel.Start();
-            } else
-            {
-                PublicTransportInfo.Debug.Log("m_listPanel is null");
-                return;
-            }
-
-            m_scrollbarPanel = this.AddUIComponent<UIPanel>();
-            if (m_scrollbarPanel != null)
-            {
-                m_scrollbarPanel.width = iSCROLL_BAR_WIDTH;
-                m_scrollbarPanel.height = m_listPanel.height;
-                m_scrollbarPanel.relativePosition = new Vector3(width - iSCROLL_BAR_WIDTH, 0.0f);
-                m_scrollbar = SetUpScrollbar();
-            }
-            else
-            {
-                PublicTransportInfo.Debug.Log("m_scrollbarPanel is null");
-                return;
-            }
-
-            if (m_scrollbar != null)
-            {
-                m_listPanel.verticalScrollbar = m_scrollbar;
-                m_listPanel.eventMouseWheel += (MouseEventHandler)((component, param) => this.m_listPanel.scrollPosition += new Vector2(0.0f, Mathf.Sign(param.wheelDelta) * -1f * m_scrollbar.incrementAmount));
+                m_listPanel.rowsData = data;
             }
         }
 
-        public UIScrollbar? SetUpScrollbar()
+        public void AddColumn(ListViewRowComparer.Columns eColumn, string sText, string sTooltip, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor)
         {
-            if (m_scrollbarPanel != null) 
+            if (m_header != null)
             {
-                m_scrollbar = m_scrollbarPanel.AddUIComponent<UIScrollbar>();
-                m_scrollbar.name = "Scrollbar";
-                m_scrollbar.width = iSCROLL_BAR_WIDTH;
-                m_scrollbar.height = 495; // m_scrollbarPanel.height - 5; // Seem to have to hard code this, not sure why yet...
-                m_scrollbar.orientation = UIOrientation.Vertical;
-                m_scrollbar.pivot = UIPivotPoint.BottomLeft;
-                m_scrollbar.relativePosition = Vector2.zero;
-                m_scrollbar.minValue = 0;
-                m_scrollbar.value = 0;
-                m_scrollbar.incrementAmount = 50;
+                m_header.AddColumn(eColumn, sText, sTooltip, m_fTextScale, iWidth, iHeight, oTextAlignment, oAncor, OnListViewColumnClick);
+            }
+        }
 
-                UISlicedSprite tracSprite = m_scrollbar.AddUIComponent<UISlicedSprite>();
-                tracSprite.relativePosition = Vector2.zero;
-                tracSprite.autoSize = true;
-                tracSprite.size = tracSprite.parent.size;
-                tracSprite.fillDirection = UIFillDirection.Vertical;
-                tracSprite.spriteName = "ScrollbarTrack";
-                tracSprite.name = "Track";
-                m_scrollbar.trackObject = tracSprite;
-                m_scrollbar.trackObject.height = m_scrollbar.height;
+        public void AddIconColumn(ListViewRowComparer.Columns eColumn, string sIcon, string sTooltip, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor)
+        {
+            if (m_header != null)
+            {
+                m_header.AddIconColumn(eColumn, sIcon, sTooltip, iWidth, iHeight, oTextAlignment, oAncor, OnListViewColumnClick);
+            }
+        }
 
-                UISlicedSprite thumbSprite = tracSprite.AddUIComponent<UISlicedSprite>();
-                thumbSprite.relativePosition = Vector2.zero;
-                thumbSprite.fillDirection = UIFillDirection.Vertical;
-                thumbSprite.autoSize = true;
-                thumbSprite.width = thumbSprite.parent.width - 8;
-                thumbSprite.spriteName = "ScrollbarThumb";
-                thumbSprite.name = "Thumb";
+        public void OnListViewColumnClick(ListViewHeaderColumnBase oColumn)
+        {
+            if (oColumn != null)
+            {
+                ListViewRowComparer.Columns eColumn = oColumn.GetColumn();
+                HandleSort(eColumn);
+            }
+        }
 
-                m_scrollbar.thumbObject = thumbSprite;
-                m_scrollbar.isVisible = true;
-                m_scrollbar.isEnabled = true;
-
-                return m_scrollbar;
+        public void HandleSort(ListViewRowComparer.Columns eColumn) {
+            if (m_eSortColumn == eColumn)
+            {
+                m_bSortDescending = !m_bSortDescending;
             }
             else
             {
-                return null;
+                m_eSortColumn = eColumn;
+                m_bSortDescending = false;
             }
-            
+
+            if (m_eventOnListViewColumnClick != null)
+            {
+                m_eventOnListViewColumnClick();
+            }
         }
 
-        public ListViewRow? AddItem(LineInfoBase oLineInfo)
+        public virtual void OnSort()
         {
-            return ListViewRow.Create(this, oLineInfo);
+
         }
 
         public void Clear()
         {
-            if (m_listPanel == null)
+            if (m_listPanel != null)
             {
-                return;
+                m_listPanel.Clear();
             }
-            m_listPanel.Clear();
         }
 
         protected override void OnSizeChanged()
         { 
             base.OnSizeChanged();
 
-            if (m_listPanel != null)
+            if (m_header != null)
             {
-                m_listPanel.width = width - iSCROLL_BAR_WIDTH;
-                m_listPanel.height = height;
-            }
-            
-            if (m_scrollbarPanel != null)
-            {
-                m_scrollbarPanel.height = m_scrollbarPanel.parent.height;
-            }
+                m_header.width = width;
 
-            if (m_scrollbar != null)
-            {
-                m_scrollbar.height = m_scrollbar.parent.height;
-            }
-        }
-
-        public void UpdateLineData(ListViewRowComparer.Columns eSortColumn, bool bDesc)
-        {
-            if (m_listPanel != null)
-            {
-                foreach (ListViewRow oRow in m_listPanel.components)
+                if (m_listPanel != null)
                 {
-                    oRow.UpdateLineData();
+                    m_listPanel.width = width;
+                    m_listPanel.height = height - m_header.height;
                 }
-            }
-
-            Sort(eSortColumn, bDesc);
-        }
-
-        public void Sort(ListViewRowComparer.Columns eSortColumn, bool bDesc)
-        {
-            if (m_listPanel != null)
-            {
-                m_listPanel.Sort(eSortColumn, bDesc);
-                m_listPanel.Invalidate();
             }
         }
 
         public override void OnDestroy()
         {
+            if (m_header != null)
+            {
+                UnityEngine.Object.Destroy(m_header.gameObject);
+                m_listPanel = null;
+            }
             if (m_listPanel != null)
             {
                 UnityEngine.Object.Destroy(m_listPanel.gameObject);
-            }
-            if (m_scrollbarPanel != null)
-            {
-                UnityEngine.Object.Destroy(m_scrollbarPanel.gameObject);
-            }
-            if (m_scrollbar != null)
-            {
-                UnityEngine.Object.Destroy(m_scrollbar.gameObject);
+                m_listPanel = null;
             }
             base.OnDestroy();
         }

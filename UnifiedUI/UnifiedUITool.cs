@@ -34,9 +34,7 @@ namespace PublicTransportInfo
                         // it then thinks my panel is open and wont open the panel the first few times you click the button.
                         // By changing the tool back after adding my tool it seems to reset itself correctly.
                         s_bLoadingTool = true;
-                        ToolBase oCurrentTool = ToolsModifierControl.toolController.CurrentTool;
                         Instance = ToolsModifierControl.toolController.gameObject.AddComponent<UnifiedUITool>();
-                        ToolsModifierControl.toolController.CurrentTool = oCurrentTool;
                     }
                     catch (Exception e)
                     {

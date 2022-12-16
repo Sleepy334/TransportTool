@@ -144,6 +144,12 @@ namespace PublicTransportInfo
             set;
         } = false;
 
+        public bool DisableTransparency
+        {
+            get;
+            set;
+        } = false;
+        
         public string PreferredLanguage
         {
             get;
@@ -169,7 +175,9 @@ namespace PublicTransportInfo
 
         public static ModSettings Load()
         {
+#if DEBUG
             Debug.Log("Loading settings: " + SettingsFile);
+#endif
             try
             {
                 // Read settings file.

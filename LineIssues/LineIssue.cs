@@ -5,10 +5,10 @@ using System.Collections.Generic;
 
 namespace PublicTransportInfo
 {
-    public abstract class LineIssue : ListData, IEquatable<LineIssue>
+    public abstract class LineIssue : IEquatable<LineIssue>, IComparable
     {
         private static int s_iIssueId = 1;
-        private DateTime m_CreationTime;
+        public DateTime m_CreationTime;
         private DateTime m_ResolvedTime;
 
         public enum IssueType
@@ -29,7 +29,7 @@ namespace PublicTransportInfo
 
         public int m_iIssueId;
         public ushort m_iLineId;
-        protected TransportInfo.TransportType m_transportType;
+        public TransportInfo.TransportType m_transportType;
 
         public LineIssue(ushort iLineId, TransportInfo.TransportType eType)
         {
@@ -40,21 +40,26 @@ namespace PublicTransportInfo
             m_ResolvedTime = DateTime.MaxValue;
         }
 
-        public override int CompareTo(object second)
+        public int Compare(LineIssue x, LineIssue y)
+        {
+            if (y.m_CreationTime == x.m_CreationTime)
+            {
+                return y.m_iIssueId.CompareTo(x.m_iIssueId);
+            }
+            else
+            {
+                return y.m_CreationTime.CompareTo(x.m_CreationTime); // Descending
+            }
+        }
+
+        public int CompareTo(object second)
         {
             if (second == null)
             {
                 return 1;
             }
             LineIssue oSecond = (LineIssue)second;
-            if (oSecond.m_CreationTime == m_CreationTime)
-            {
-                return oSecond.m_iIssueId.CompareTo(m_iIssueId);
-            }
-            else
-            {
-                return oSecond.m_CreationTime.CompareTo(m_CreationTime); // Descending
-            }
+            return Compare(this, oSecond);
         }
 
         public abstract IssueType GetIssueType();
@@ -70,6 +75,10 @@ namespace PublicTransportInfo
         public abstract string GetIssueTooltip();
         public abstract void ShowIssue();
         
+        public virtual void Update()
+        {
+
+        }
 
         public void SetResolved()
         {
@@ -94,33 +103,6 @@ namespace PublicTransportInfo
         protected void UpdateTimeStamp()
         {
             m_CreationTime = DateTime.Now;
-        }
-
-        public override string GetText(NewListViewRowComparer.Columns eColumn)
-        {
-            switch (eColumn)
-            {
-                case NewListViewRowComparer.Columns.COLUMN_TIME: return m_CreationTime.ToString("h:mm:ss");
-                case NewListViewRowComparer.Columns.COLUMN_TYPE: return m_transportType.ToString();
-                case NewListViewRowComparer.Columns.COLUMN_SOURCE: return GetLineDescription();
-                case NewListViewRowComparer.Columns.COLUMN_LOCATION: return GetIssueLocation();
-                case NewListViewRowComparer.Columns.COLUMN_DESCRIPTION: return GetIssueDescription();
-            }
-            return "";
-        }
-
-        public override void CreateColumns(NewListViewRow oRow, List<NewListViewRowColumn> m_columns)
-        {
-            oRow.AddColumn(NewListViewRowComparer.Columns.COLUMN_TIME, GetText(NewListViewRowComparer.Columns.COLUMN_TIME), "", LineIssuePanel.iCOLUMN_WIDTH_TIME, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
-            oRow.AddColumn(NewListViewRowComparer.Columns.COLUMN_TYPE, GetText(NewListViewRowComparer.Columns.COLUMN_TYPE), "", LineIssuePanel.iCOLUMN_WIDTH_NORMAL, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
-            oRow.AddColumn(NewListViewRowComparer.Columns.COLUMN_SOURCE, GetText(NewListViewRowComparer.Columns.COLUMN_SOURCE), "", LineIssuePanel.iCOLUMN_VEHICLE_WIDTH, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
-            oRow.AddColumn(NewListViewRowComparer.Columns.COLUMN_LOCATION, GetText(NewListViewRowComparer.Columns.COLUMN_LOCATION), "", LineIssuePanel.iCOLUMN_VEHICLE_WIDTH, UIHorizontalAlignment.Left, UIAlignAnchor.TopRight);
-            oRow.AddColumn(NewListViewRowComparer.Columns.COLUMN_DESCRIPTION, GetText(NewListViewRowComparer.Columns.COLUMN_DESCRIPTION), "", LineIssuePanel.iCOLUMN_DESCRIPTION_WIDTH, UIHorizontalAlignment.Left, UIAlignAnchor.TopRight);
-        }
-
-        public override void OnClick(NewListViewRowColumn column)
-        {
-            ShowIssue();
         }
     }
 }

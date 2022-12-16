@@ -11,6 +11,8 @@ namespace PublicTransportInfo
 {
     public class LineIssuePanel : UIPanel
     {
+        public const float fTEXT_SCALE = 0.8f;
+
         const int iMARGIN = 8;
         public const int iCOLUMN_WIDTH_TIME = 60;
         public const int iCOLUMN_WIDTH_NORMAL = 80;
@@ -18,7 +20,7 @@ namespace PublicTransportInfo
         public const int iCOLUMN_DESCRIPTION_WIDTH = 300;
 
         private UITitleBar? m_title = null;
-        private NewListView? m_listIssues = null;
+        private ListView? m_listIssues = null;
 
         public LineIssuePanel() : base()
         {
@@ -30,6 +32,10 @@ namespace PublicTransportInfo
             name = "LineIssuePanel";
             width = 740;
             height = 500;
+            if (!ModSettings.GetSettings().DisableTransparency)
+            {
+                opacity = 0.95f;
+            }
             padding = new RectOffset(iMARGIN, iMARGIN, 4, 4);
             autoLayout = true;
             autoLayoutDirection = LayoutDirection.Vertical;
@@ -63,14 +69,14 @@ namespace PublicTransportInfo
             m_title.title = Localization.Get("titleLineIssuesPanel");
 
             // Issue list
-            m_listIssues = NewListView.Create(this, "ScrollbarTrack", 0.8f, width - 2*iMARGIN, height - m_title.height - 10);
+            m_listIssues = ListView.Create<UIIssueRow>(this, new Color32(81, 87, 89, 225), 0.8f, ListView.iROW_HEIGHT, width - 2*iMARGIN, height - m_title.height - 10);
             if (m_listIssues != null)
             {
-                m_listIssues.AddColumn(NewListViewRowComparer.Columns.COLUMN_TIME, Localization.Get("listIssuesColumn1"), Localization.Get("listIssuesColumn1Tooltip"), iCOLUMN_WIDTH_TIME, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, null);
-                m_listIssues.AddColumn(NewListViewRowComparer.Columns.COLUMN_TYPE, Localization.Get("listIssuesColumnType"), Localization.Get("listIssuesColumnTypeTooltip"), iCOLUMN_WIDTH_NORMAL, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, null);
-                m_listIssues.AddColumn(NewListViewRowComparer.Columns.COLUMN_SOURCE, Localization.Get("listIssuesColumn2"), Localization.Get("listIssuesColumn2Tooltip"), iCOLUMN_VEHICLE_WIDTH, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, null);
-                m_listIssues.AddColumn(NewListViewRowComparer.Columns.COLUMN_LOCATION, Localization.Get("listIssuesColumn3"), Localization.Get("listIssuesColumn3Tooltip"), iCOLUMN_VEHICLE_WIDTH, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, null);
-                m_listIssues.AddColumn(NewListViewRowComparer.Columns.COLUMN_DESCRIPTION, Localization.Get("listIssuesColumn4"), Localization.Get("listIssuesColumn4Tooltip"), iCOLUMN_DESCRIPTION_WIDTH, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft, null);
+                m_listIssues.AddColumn(ListViewRowComparer.Columns.COLUMN_TIME, Localization.Get("listIssuesColumn1"), Localization.Get("listIssuesColumn1Tooltip"), iCOLUMN_WIDTH_TIME, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
+                m_listIssues.AddColumn(ListViewRowComparer.Columns.COLUMN_TYPE, Localization.Get("listIssuesColumnType"), Localization.Get("listIssuesColumnTypeTooltip"), iCOLUMN_WIDTH_NORMAL, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
+                m_listIssues.AddColumn(ListViewRowComparer.Columns.COLUMN_SOURCE, Localization.Get("listIssuesColumn2"), Localization.Get("listIssuesColumn2Tooltip"), iCOLUMN_VEHICLE_WIDTH, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
+                m_listIssues.AddColumn(ListViewRowComparer.Columns.COLUMN_LOCATION, Localization.Get("listIssuesColumn3"), Localization.Get("listIssuesColumn3Tooltip"), iCOLUMN_VEHICLE_WIDTH, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
+                m_listIssues.AddColumn(ListViewRowComparer.Columns.COLUMN_DESCRIPTION, Localization.Get("listIssuesColumn4"), Localization.Get("listIssuesColumn4Tooltip"), iCOLUMN_DESCRIPTION_WIDTH, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
             }
 
             isVisible = true;
@@ -120,10 +126,18 @@ namespace PublicTransportInfo
 
         public void UpdatePanel()
         {
-            if (m_listIssues != null) {
+            if (m_listIssues != null && m_listIssues.GetList() != null) {
                 List<LineIssue> list = GetLineIssues();
-                list.Sort();
-                m_listIssues.SetItems(list.Take(100).ToArray());
+                if (list != null)
+                {
+                    list.Sort();
+
+                    m_listIssues.GetList().rowsData = new FastList<object>
+                    {
+                        m_buffer = list.ToArray(),
+                        m_size = list.Count,
+                    };
+                }
             }
         }
 

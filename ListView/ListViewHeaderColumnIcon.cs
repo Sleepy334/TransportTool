@@ -1,8 +1,9 @@
 ﻿using ColossalFramework.UI;
+using PublicTransportInfo;
 using System;
 using UnityEngine;
 
-namespace PublicTransportInfo
+namespace SleepyCommon
 {
     public class ListViewHeaderColumnIcon : ListViewHeaderColumnBase
     {
@@ -10,82 +11,45 @@ namespace PublicTransportInfo
         private UILabel? m_lblIcon = null;
         private UILabel? m_lblIconSort = null;
 
-        public ListViewHeaderColumnIcon(ListViewRowComparer.Columns eColumn, UIComponent parent, string sText, string sTooltip, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor, OnListViewColumnClick eventCallback) :
-                base(eColumn, sText, eventCallback)
+        public ListViewHeaderColumnIcon(ListViewRowComparer.Columns eColumn, UIComponent parent, string sIconName, string sTooltip, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor, OnListViewColumnClick eventCallback) :
+                base(eColumn, sIconName, eventCallback)
         {
             m_eColumn = eColumn;
             m_eventClickCallback = eventCallback;
-            m_sText = sText;
+            m_sText = sIconName;
 
             m_pnlIcon = parent.AddUIComponent<UIPanel>();
             m_pnlIcon.name = eColumn.ToString() + "Panel"; ;
             m_pnlIcon.autoSize = false;
             m_pnlIcon.tooltip = sTooltip;
-            //m_pnlVehicles.backgroundSprite = "InfoviewPanel";
-            //m_pnlVehicles.color = Color.red;
+            //m_pnlIcon.backgroundSprite = "InfoviewPanel";
+            //m_pnlIcon.color = Color.red;
             m_pnlIcon.height = PublicTransportInfoPanel.iHEADER_HEIGHT;
-            m_pnlIcon.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_VEHICLES;
-            m_pnlIcon.autoLayoutDirection = LayoutDirection.Horizontal;
-            m_pnlIcon.autoLayout = true;
+            m_pnlIcon.width = iWidth;
+            //m_pnlIcon.autoLayoutDirection = LayoutDirection.Horizontal;
+            //m_pnlIcon.autoLayout = true;
             m_pnlIcon.eventMouseEnter += OnMouseHover;
             m_pnlIcon.eventMouseLeave += OnMouseLeave;
             m_pnlIcon.eventClick += new MouseEventHandler(OnItemClicked);
-
-            m_lblIconSort = m_pnlIcon.AddUIComponent<UILabel>();
-            m_lblIconSort.name = eColumn.ToString() + "Sort";
-            m_lblIconSort.text = "";
-            //m_lblVehiclesSort.backgroundSprite = "InfoviewPanel";
-            //m_lblVehiclesSort.color = Color.green;
-            m_lblIconSort.textAlignment = UIHorizontalAlignment.Center;
-            m_lblIconSort.autoSize = false;
-            m_lblIconSort.height = PublicTransportInfoPanel.iHEADER_HEIGHT;
-            m_lblIconSort.width = 0;// This gets resized when sorting is enabled.
-            m_lblIconSort.AlignTo(m_pnlIcon, UIAlignAnchor.TopLeft);
-            m_lblIconSort.eventMouseEnter += OnMouseHover;
-            m_lblIconSort.eventMouseLeave += OnMouseLeave;
 
             m_lblIcon = m_pnlIcon.AddUIComponent<UILabel>();
             m_lblIcon.name = eColumn.ToString() + "Icon";
             m_lblIcon.text = "";
             //m_lblVehicles.backgroundSprite = "InfoviewPanel";
             //m_lblVehicles.color = Color.blue;
-            m_lblIcon.backgroundSprite = sText;
+            m_lblIcon.backgroundSprite = sIconName;
             m_lblIcon.textAlignment = UIHorizontalAlignment.Center;
             m_lblIcon.autoSize = false;
             m_lblIcon.height = PublicTransportInfoPanel.iHEADER_HEIGHT;
-            m_lblIcon.width = 30;
+            m_lblIcon.width = PublicTransportInfoPanel.iHEADER_HEIGHT;
             m_lblIcon.AlignTo(m_pnlIcon, UIAlignAnchor.TopRight);
             m_lblIcon.eventMouseEnter += OnMouseHover;
             m_lblIcon.eventMouseLeave += OnMouseLeave;
+            m_lblIcon.CenterToParent();
         }
 
         public override void Sort(ListViewRowComparer.Columns eColumn, bool bDescending)
         {
-            if (eColumn == ListViewRowComparer.Columns.COLUMN_VEHICLES)
-            {
-                if (m_lblIconSort != null)
-                {
-                    m_lblIconSort.isVisible = true;
-                    m_lblIconSort.text = Utils.GetSortCharacter(bDescending);
-                    m_lblIconSort.width = 20;
-                }
-                if (m_lblIcon != null)
-                {
-                    m_lblIcon.width = 30;
-                    m_lblIcon.AlignTo(m_pnlIcon, UIAlignAnchor.TopRight);
-                }
-            }
-            else
-            {
-                if (m_lblIconSort != null)
-                {
-                    m_lblIconSort.isVisible = false;
-                }
-                if (m_lblIcon != null)
-                {
-                    m_lblIcon.CenterToParent();
-                }
-            }
         }
 
         public override bool IsHit(UIComponent component)

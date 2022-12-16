@@ -6,14 +6,19 @@ namespace PublicTransportInfo
     public class UITitleBar : UIPanel
     {
         const int iTITLE_HEIGHT = 35;
+        const int iBUTTON_MARGIN = 35;
 
         private UISprite? m_icon = null;
         private UILabel? m_title = null;
         private UIButton? m_close = null;
         private UIDragHandle? m_drag = null;
         private MouseEventHandler? m_onClick = null;
+
         private UIButton? m_btnFollow = null;
         private MouseEventHandler? m_onFollowClick = null;
+
+        private UIButton? m_btnIssues = null;
+        private MouseEventHandler? m_onIssueClick = null;
 
         public bool isModal = false;
 
@@ -52,6 +57,11 @@ namespace PublicTransportInfo
             m_onFollowClick = handler;
         }
 
+        public void SetIssuesHandler(MouseEventHandler handler)
+        {
+            m_onIssueClick = handler;
+        }
+
         private void SetupControls(string sTitle)
         {
             width = parent.width - 8;
@@ -66,25 +76,32 @@ namespace PublicTransportInfo
             m_title.textAlignment = UIHorizontalAlignment.Center;
             m_title.position = new Vector3(this.width / 2f - m_title.width / 2f, -20f + m_title.height / 2f);
 
+            float fOffset = iBUTTON_MARGIN;
             m_close = AddUIComponent<UIButton>();
-            m_close.relativePosition = new Vector3(width - 35, 2);
-            m_close.normalBgSprite = "buttonclose";
-            m_close.hoveredBgSprite = "buttonclosehover";
-            m_close.pressedBgSprite = "buttonclosepressed";
-            m_close.eventClick += (component, param) =>
+            if (m_close != null)
             {
-                if (m_onClick != null)
+                m_close.relativePosition = new Vector3(width - fOffset, 2);
+                m_close.width = height;
+                m_close.height = height;
+                m_close.normalBgSprite = "buttonclose";
+                m_close.hoveredBgSprite = "buttonclosehover";
+                m_close.pressedBgSprite = "buttonclosepressed";
+                m_close.eventClick += (component, param) =>
                 {
-                    m_onClick(component, param);
-                } 
-            };
+                    if (m_onClick != null)
+                    {
+                        m_onClick(component, param);
+                    }
+                };
+                fOffset += m_close.width;
+            }
 
             if (m_onFollowClick != null)
             {
                 m_btnFollow = AddUIComponent<UIButton>();
                 m_btnFollow.name = "m_btnFollow";
                 m_btnFollow.tooltip = "Show";
-                m_btnFollow.relativePosition = new Vector3(width - m_close.width - 35, 2);
+                m_btnFollow.relativePosition = new Vector3(width - fOffset, 2);
                 m_btnFollow.width = height;
                 m_btnFollow.height = height;
                 m_btnFollow.normalBgSprite = "LocationMarkerActiveNormal";
@@ -99,10 +116,31 @@ namespace PublicTransportInfo
                         m_onFollowClick(component, param);
                     }
                 };
+                fOffset += m_btnFollow.width;
+            }
+
+            if (m_onIssueClick != null)
+            {
+                m_btnIssues = AddUIComponent<UIButton>();
+                m_btnIssues.name = "m_btnIssues";
+                m_btnIssues.tooltip = "Show Issues Panel";
+                m_btnIssues.width = height;
+                m_btnIssues.height = height;
+                m_btnIssues.relativePosition = new Vector3(width - fOffset, 2);
+                m_btnIssues.normalBgSprite = "IconWarning";
+                m_btnIssues.color = Color.white;
+                m_btnIssues.eventClick += (component, param) =>
+                {
+                    if (m_onIssueClick != null)
+                    {
+                        m_onIssueClick(component, param);
+                    }
+                };
+                fOffset += m_btnIssues.width;
             }
 
             m_drag = AddUIComponent<UIDragHandle>();
-            m_drag.width = width - 50;
+            m_drag.width = width - fOffset;
             m_drag.height = height;
             m_drag.relativePosition = Vector3.zero;
             m_drag.target = parent;

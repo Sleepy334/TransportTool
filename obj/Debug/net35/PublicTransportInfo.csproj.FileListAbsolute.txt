@@ -1,0 +1,39 @@
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\PublicTransportInfo.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\PublicTransportInfo.pdb
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\Assembly-CSharp.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\ColossalManaged.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\ICities.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\UnityEngine.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\UnityEngine.UI.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\PopsApiWrapper.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\Assembly-CSharp-firstpass.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\ICSharpCode.SharpZipLib.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.Properties.Resources.resources
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.csproj.GenerateResource.cache
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.csproj.CoreCompileInputs.cache
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.csproj.CopyComplete
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.pdb
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\bin\Debug\net35\UnifiedUILib.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo\obj\Debug\net35\PublicTransportInfo.csproj.AssemblyReference.cache
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.csproj.AssemblyReference.cache
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.Properties.Resources.resources
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.csproj.GenerateResource.cache
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.csproj.CoreCompileInputs.cache
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.pdb
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\PublicTransportInfo.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\PublicTransportInfo.pdb
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\Assembly-CSharp.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\CitiesHarmony.Harmony.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\ColossalManaged.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\ICities.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\UnifiedUILib.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\UnityEngine.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\UnityEngine.UI.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\PopsApiWrapper.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\Assembly-CSharp-firstpass.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\bin\Debug\net35\ICSharpCode.SharpZipLib.dll
+C:\Users\Adrianw.THENETS\source\repos\PublicTransportInfo\PublicTransportInfo 2.0\obj\Debug\net35\PublicTransportInfo.csproj.CopyComplete

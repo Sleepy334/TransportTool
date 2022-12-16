@@ -85,14 +85,20 @@ namespace PublicTransportInfo
             for (int i = 0; i < iSize; i++)
             {
                 TransportLine oLine = TransportManager.instance.m_lines.m_buffer[i];
-                TransportInfo oInfo = oLine.Info;
-                TransportInfo.TransportType eType = oInfo.m_transportType;
-                PublicTransportType ePTT = PublicTransportTypeUtils.Convert(eType);
-                if (oLine.Complete)
+                if (oLine.m_flags != 0)
                 {
-                    if (!list.Contains(ePTT))
+                    TransportInfo? oInfo = oLine.Info;
+                    if (oInfo != null)
                     {
-                        list.Add(ePTT);
+                        TransportInfo.TransportType eType = oInfo.m_transportType;
+                        PublicTransportType ePTT = PublicTransportTypeUtils.Convert(eType);
+                        if (oLine.Complete)
+                        {
+                            if (!list.Contains(ePTT))
+                            {
+                                list.Add(ePTT);
+                            }
+                        }
                     }
                 }
             }
@@ -167,26 +173,6 @@ namespace PublicTransportInfo
                 text += " ";
             }
             return text + "|";
-        }
-
-        public static List<LineInfoBase> SortList(List<LineInfoBase> oList, ListViewRowComparer.Columns eSortColumn, bool bSortDesc)
-        {
-            if (oList != null)
-            {
-                Comparison<LineInfoBase> SortComparison = LineInfoBase.GetComparator(eSortColumn);
-                oList.Sort(SortComparison);
-
-                if (bSortDesc)
-                {
-                    oList.Reverse();
-                }
-
-                return oList;
-            }
-            else
-            {
-                return new List<LineInfoBase>();
-            }
         }
     }
 }

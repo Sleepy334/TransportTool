@@ -22,7 +22,14 @@ namespace PublicTransportInfo
         public byte GetBlockCounter()
         {
             Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[m_vehicleId];
-            return oVehicle.m_blockCounter;
+            if (oVehicle.m_flags != 0)
+            {
+                return oVehicle.m_blockCounter;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public override IssueLevel GetLevel()

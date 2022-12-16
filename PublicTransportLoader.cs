@@ -33,7 +33,6 @@ namespace PublicTransportInfo
 
                 if (instance != null)
                 {
-                    Debug.Log("DestroyImmediate");
                     GameObject.DestroyImmediate(instance.gameObject);
                     instance = null;
                 }

@@ -1,19 +1,20 @@
 ﻿using ColossalFramework.UI;
+using PublicTransportInfo;
 using UnityEngine;
 
-namespace PublicTransportInfo
+namespace SleepyCommon
 {
     public class ListViewHeaderColumnLabel : ListViewHeaderColumnBase
     {
         private UILabel? m_lblColumn = null;
 
-        public ListViewHeaderColumnLabel(ListViewRowComparer.Columns eColumn, UIComponent parent, string sText, string sTooltip, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor, OnListViewColumnClick eventCallback) :
-                base(eColumn, sText, eventCallback)
+        public ListViewHeaderColumnLabel(ListViewRowComparer.Columns eColumn, UIComponent parent, string sText, string sTooltip, float textScale, int iWidth, int iHeight, UIHorizontalAlignment oTextAlignment, UIAlignAnchor oAncor, OnListViewColumnClick eventClickCallback) :
+                base(eColumn, sText, eventClickCallback)
         {
             m_lblColumn = parent.AddUIComponent<UILabel>();
             m_lblColumn.name = eColumn.ToString();
             m_lblColumn.text = sText;
-            m_lblColumn.textScale = 0.9f;
+            m_lblColumn.textScale = textScale;
             m_lblColumn.tooltip = sTooltip;
             m_lblColumn.textAlignment = oTextAlignment;
             m_lblColumn.verticalAlignment = UIVerticalAlignment.Middle;

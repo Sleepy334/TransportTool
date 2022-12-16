@@ -15,7 +15,7 @@ namespace PublicTransportInfo
         public static void PatchAll() {
             if (!s_patched)
             {
-                UnityEngine.Debug.Log("TransferManagerCE: Patching...");
+                UnityEngine.Debug.Log("TransportTool: Patching...");
 
                 s_patched = true;
                 var harmony = new Harmony(HarmonyId);

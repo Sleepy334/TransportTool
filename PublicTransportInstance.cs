@@ -185,7 +185,6 @@ namespace PublicTransportInfo
 
         public static void ShowToolbarButton()
         {
-            Debug.Log("AddToolbarButton");
             if (PublicTransportLoader.isGameLoaded)
             {
                 if (s_ToolbarButton == null)

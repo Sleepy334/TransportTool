@@ -66,9 +66,10 @@ namespace PublicTransportInfo
 			// Zoom
 			UIHelper oBehaviourGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBehaviour"));
 			oBehaviourGroup.AddCheckbox(Localization.Get("chkZoomInOnTarget"), oSettings.ZoomInOnTarget, OnZoomInChanged);
+            oBehaviourGroup.AddCheckbox(Localization.Get("chkDisableTransparency"), oSettings.DisableTransparency, OnDisableTransparencyChanged);
 
-			// Bored Slider
-			UIHelper oBoredGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBoredThreshold"));
+            // Bored Slider
+            UIHelper oBoredGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBoredThreshold"));
 			SettingsSlider oBoredSlider = SettingsSlider.Create(oBoredGroup, Localization.Get("sliderBored"), 0f, 255f, 1f, (float)oSettings.BoredThreshold, OnBoredValueChanged);
 			UIPanel pnlBoredGroup = (UIPanel)oBoredGroup.self;
 			UILabel lblHint = pnlBoredGroup.AddUIComponent<UILabel>();
@@ -194,7 +195,15 @@ namespace PublicTransportInfo
 			oSettings.Save();
 		}
 
-		public void OnTooltipFontSizeChanged(float fValue)
+        public void OnDisableTransparencyChanged(bool bChecked)
+        {
+            ModSettings oSettings = ModSettings.GetSettings();
+            oSettings.DisableTransparency = bChecked;
+            oSettings.Save();
+        }
+        
+
+        public void OnTooltipFontSizeChanged(float fValue)
 		{
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.TooltipFontSize = (int)fValue;
@@ -212,7 +221,6 @@ namespace PublicTransportInfo
 
 		public void OnWarnLineIssues(bool bIsChecked)
 		{
-			Debug.Log("OnWarnLineIssues" + bIsChecked);
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnLineIssues = bIsChecked;
 			oSettings.Save();
@@ -221,7 +229,6 @@ namespace PublicTransportInfo
 
 		public void OnWarnVehicleDespawed(bool bIsChecked)
 		{
-			Debug.Log("OnWarnVehicleDespawed" + bIsChecked);
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleDespawed = bIsChecked;
 			oSettings.Save();
@@ -230,7 +237,6 @@ namespace PublicTransportInfo
 
 		public void OnWarnVehicleStopsMoving(bool bIsChecked)
 		{
-			Debug.Log("OnWarnVehicleStopsMoving" + bIsChecked);
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleStopsMoving = bIsChecked;
 			oSettings.Save();
@@ -240,7 +246,6 @@ namespace PublicTransportInfo
 
 		public void OnWarnVehicleMovesSlowly(bool bIsChecked)
 		{
-			Debug.Log("OnWarnVehicleMovesSlowly" + bIsChecked);
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.WarnVehicleMovesSlowly = bIsChecked;
 			oSettings.Save();
@@ -252,7 +257,6 @@ namespace PublicTransportInfo
 
 		public void OnPlaySoundForWarnings(bool bIsChecked)
 		{
-			Debug.Log("OnPlaySoundForWarnings" + bIsChecked);
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.PlaySoundForWarnings = bIsChecked;
 			oSettings.Save();
@@ -260,7 +264,6 @@ namespace PublicTransportInfo
 
 		public void OnToolbarButtonChanged(bool bIsChecked)
 		{
-			Debug.Log("Checkbox changed" + bIsChecked);
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.MainToolbarButton = bIsChecked;
 			oSettings.Save();
@@ -280,7 +283,6 @@ namespace PublicTransportInfo
 
 		public void OnUnifiedToolbarButtonChanged(bool bIsChecked)
 		{
-			Debug.Log("Checkbox changed" + bIsChecked);
 			ModSettings oSettings = ModSettings.GetSettings();
 			oSettings.AddUnifiedUIButton = bIsChecked;
 			oSettings.Save();

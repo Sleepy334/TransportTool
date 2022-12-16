@@ -1,14 +1,18 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
 using PublicTransportInfo.Util;
+using SleepyCommon;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static PublicTransportInfo.ListViewRowComparer;
 
 namespace PublicTransportInfo
 {
     public class PublicTransportInfoPanel : UIPanel
     {
+        public const float fTEXT_SCALE = 1.0f;
+
         public const float PanelWidth = 1000;
         public const float PanelHeight = 600;
         public const int Margin = 10;
@@ -19,13 +23,13 @@ namespace PublicTransportInfo
         public const int iCOLUMN_WIDTH_STOPS = 70;
         public const int iCOLUMN_WIDTH_VEHICLES = 40;
         public const int iCOLUMN_WIDTH_PASSENGER = 130;
+        public const int iCOLUMN_WIDTH_VEHICLE_USAGE = 70;
         public const int iCOLUMN_WIDTH_WAITING = 85;
         public const int iCOLUMN_WIDTH_BUSIEST = 85;
         public const int iCOLUMN_WIDTH_BORED = 70;
-        
+
         private TabStrip? m_tabStrip;
         private ListView? m_ListView = null;
-        private ListViewHeader? m_headingPanel = null;
         private UILabel? m_lblOverview = null;
         private UITitleBar? m_title = null;
 
@@ -44,30 +48,48 @@ namespace PublicTransportInfo
         public override void Start()
         {
             //base.Start();
-            this.name = "PublicTransportInfoPanel";
-            this.width = PanelWidth;
-            this.height = PanelHeight;
-            this.backgroundSprite = "UnlockingPanel2";
-            this.canFocus = true;
-            this.isInteractive = true;
-            this.isVisible = false;
+            name = "PublicTransportInfoPanel";
+            width = PanelWidth;
+            height = PanelHeight;
+            backgroundSprite = "UnlockingPanel2";
+
+            if (!ModSettings.GetSettings().DisableTransparency)
+            {
+                opacity = 0.95f;
+            }
+            
+            canFocus = true;
+            isInteractive = true;
+            isVisible = false;
             playAudioEvents = true;
-            autoLayout = true;
-            autoLayoutDirection = LayoutDirection.Vertical;
-            autoLayoutPadding = new RectOffset(Margin, Margin, 0, 0);
-            this.CenterToParent();
+            clipChildren = true;
+            CenterToParent();
 
             // Title Bar
             m_title = AddUIComponent<UITitleBar>();
-            m_title.SetOnclickHandler(OnCloseClick);
-            m_title.title = ITransportInfoMain.Title;
+            if (m_title != null)
+            {
+                m_title.SetOnclickHandler(OnCloseClick);
+                m_title.SetIssuesHandler(OnIssuesClick);
+                m_title.title = ITransportInfoMain.Title;
+            }
 
-            m_tabStrip = this.AddUIComponent<TabStrip>();
+            UIPanel mainPanel = AddUIComponent<UIPanel>();
+            if (mainPanel != null)
+            {
+                mainPanel.width = width;
+                mainPanel.height = height - m_title.height;
+                mainPanel.padding = new RectOffset(Margin, Margin, 0, Margin);
+                mainPanel.relativePosition = new Vector3(0f, m_title.height);
+                mainPanel.autoLayout = true;
+                mainPanel.autoLayoutDirection = LayoutDirection.Vertical;
+            }
+
+            m_tabStrip = mainPanel.AddUIComponent<TabStrip>();
             if (m_tabStrip != null)
             {
                 m_tabStrip.backgroundSprite = "GenericPanel";
                 m_tabStrip.name = "tabStrip";
-                //m_tabStrip.position = new Vector3(Margin, -m_title.height - Margin);
                 m_tabStrip.width = width - (Margin * 2);
                 m_tabStrip.height = 40;
                 m_tabStrip.autoLayoutDirection = LayoutDirection.Horizontal;
@@ -83,32 +105,29 @@ namespace PublicTransportInfo
                 return;
             }
 
-            float fHeadingPanelHeight = 0;
-            m_headingPanel = AddUIComponent<ListViewHeader>();
-            if (m_headingPanel != null)
-            {
-                m_headingPanel.Setup(m_tabStrip.width, ListViewColumnClickEvent);
-                fHeadingPanelHeight = m_headingPanel.height;
-            }
-            else
-            {
-                Debug.LogError("ListViewHeader is null");
-            }
-
-            UIPanel tabPanel = this.AddUIComponent<UIPanel>();
+            UIPanel tabPanel = mainPanel.AddUIComponent<UIPanel>();
             if (tabPanel != null)
             {
                 tabPanel.autoLayoutDirection = LayoutDirection.Vertical;
-                tabPanel.backgroundSprite = "InfoviewPanel";
                 tabPanel.width = m_tabStrip.width;
-                tabPanel.height = height - m_title.height - m_tabStrip.height - fHeadingPanelHeight - Margin;
+                tabPanel.height = height - m_title.height - m_tabStrip.height - Margin;
                 tabPanel.autoLayout = true;
 
-                m_ListView = ListView.Create(tabPanel);
+                m_ListView = ListView.Create<UILineRow>(tabPanel, Color.white, fTEXT_SCALE, UILineRow.fROW_HEIGHT, tabPanel.width, tabPanel.height);
                 if (m_ListView != null)
                 {
                     m_ListView.width = tabPanel.width;
                     m_ListView.height = tabPanel.height;
+                    m_ListView.AddColumn(Columns.COLUMN_COLOR, "", "", iCOLUMN_WIDTH_COLOR, iHEADER_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_NAME, Localization.Get("headerLineName"), Localization.Get("headerStopsTooltip"), iCOLUMN_WIDTH_NAME, iHEADER_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_STOPS, Localization.Get("headerStops"), Localization.Get("headerVehicleTooltip"), iCOLUMN_WIDTH_STOPS, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddIconColumn(Columns.COLUMN_VEHICLES, "InfoIconPublicTransport", Localization.Get("headerPassengersTooltip"), iCOLUMN_WIDTH_VEHICLES, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_PASSENGERS, Localization.Get("OverviewPassengers"), Localization.Get("headerUsageTooltip"), iCOLUMN_WIDTH_PASSENGER, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_VEHICLE_USAGE, Localization.Get("VehicleUsage"), Localization.Get("headerUsageTooltip"), iCOLUMN_WIDTH_VEHICLE_USAGE, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_WAITING, Localization.Get("OverviewWaiting"), Localization.Get("headerWaitingTooltip"), iCOLUMN_WIDTH_WAITING, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_BUSIEST, Localization.Get("headerBusiest"), Localization.Get("headerBusiestTooltip"), iCOLUMN_WIDTH_BUSIEST, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_BORED, Localization.Get("OverviewBored"), Localization.Get("headerBoredTooltip"), iCOLUMN_WIDTH_BORED, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.m_eventOnListViewColumnClick = ListViewColumnClickEvent;
                 }
                 else
                 {
@@ -119,8 +138,9 @@ namespace PublicTransportInfo
             LoadTransportLineTabs();
         }
 
-        public void ListViewColumnClickEvent(ListViewRowComparer.Columns eColumn, bool bSortDescending)
+        public void ListViewColumnClickEvent()
         {
+            Debug.Log("ListViewColumnClickEvent");
             if (m_bLoadingLines)
             {
                 return; // Don't try and reload lines til line loading is done.
@@ -128,6 +148,12 @@ namespace PublicTransportInfo
 
             // Redraw lines
             SetSelectedTransportType(m_SelectedTransportType);
+        }
+
+
+        public void OnIssuesClick(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            PublicTransportInstance.ToggleLineIssuePanel();
         }
 
         public void OnCloseClick(UIComponent component, UIMouseEventParameter eventParam)
@@ -171,13 +197,13 @@ namespace PublicTransportInfo
             }
         }
 
-        
+
 
         public void OnTabSelectionChanged(object sender, EventArgs e)
         {
             if (e != null)
             {
-                TabStrip.TabStripSelectionChangedArgs eArgs = (TabStrip.TabStripSelectionChangedArgs) e;
+                TabStrip.TabStripSelectionChangedArgs eArgs = (TabStrip.TabStripSelectionChangedArgs)e;
                 if (eArgs != null)
                 {
                     SetSelectedTransportType(eArgs.m_eType);
@@ -217,7 +243,7 @@ namespace PublicTransportInfo
                             SetSelectedTransportType(m_SelectedTransportType);
                         }
                     }
-                    
+
                 }
 
                 Show();
@@ -255,8 +281,6 @@ namespace PublicTransportInfo
             {
                 m_SelectedTransportType = eType;
 
-                
-
                 // Select correct tab button
                 m_tabStrip?.SelectTab(m_SelectedTransportType);
 
@@ -265,22 +289,24 @@ namespace PublicTransportInfo
                 {
                     LineInfoLoader oLoad = new LineInfoLoader();
                     List<LineInfoBase> oList = oLoad.GetLineList(m_SelectedTransportType);
-                    iLineCount = oList.Count;
-                    
-                    m_ListView.Clear();
-
                     if (oList != null)
                     {
-                        // Sort list before adding it so the items are in the correct order from the start
-                        if (m_headingPanel != null)
+                        iLineCount = oList.Count;
+
+                        // Sort list before adding it
+                        oList.Sort(LineInfoBase.GetComparator(m_ListView.m_eSortColumn));
+
+                        // Reverse if necessary
+                        if (m_ListView.m_bSortDescending)
                         {
-                            LineInfoLoader.SortList(oList, m_headingPanel.GetSortColumn(), m_headingPanel.GetSortDirection());
+                            oList.Reverse();
                         }
 
-                        foreach (LineInfoBase oInfo in oList)
+                        m_ListView.GetList().rowsData = new FastList<object>
                         {
-                            m_ListView.AddItem(oInfo);
-                        }
+                            m_buffer = oList.ToArray(),
+                            m_size = oList.Count,
+                        };
                     }
                 }
                 else
@@ -313,10 +339,7 @@ namespace PublicTransportInfo
             }
 
             // Update list view
-            if (m_headingPanel != null)
-            {
-                m_ListView?.UpdateLineData(m_headingPanel.GetSortColumn(), m_headingPanel.GetSortDirection());
-            }
+            SetSelectedTransportType(m_SelectedTransportType);
 
             // Update overview label
             UpdateOverviewData();
@@ -380,10 +403,6 @@ namespace PublicTransportInfo
 
         public override void OnDestroy()
         {
-            if (m_headingPanel != null)
-            {
-                m_headingPanel.Destroy();
-            }
             if (m_ListView != null)
             {
                 Destroy(m_ListView.gameObject);

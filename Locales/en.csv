@@ -50,6 +50,7 @@
 "titleLineIssuesPanel","Line Issues"
 "listIssuesColumn1","Time"
 "listIssuesColumnType","Type"
+"listIssuesColumnTypeTooltip","Type of Issue"
 "listIssuesColumn2","Line Name"
 "listIssuesColumn3","Source"
 "listIssuesColumn4","Description"
@@ -67,3 +68,5 @@
 "sliderBoredCountThreshold","Bored Count Threshold"
 "chkBoredCount","Warn when bored count is above threshold (Per stop)"
 "VehicleUsage","Usage %"
+"headerUsageTooltip","Vehicle usage %"
+"chkDisableTransparency","Disable Panel Transparency"

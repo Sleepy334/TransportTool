@@ -57,7 +57,6 @@ namespace PublicTransportInfo
             {
                 if (m_watch.IsRunning)
                 {
-                    Debug.Log("Simulation stopped");
                     m_watch.Stop();
                     m_LastElapsedTime = 0;
                 }
@@ -66,7 +65,6 @@ namespace PublicTransportInfo
             {    
                 if (!m_watch.IsRunning)
                 {
-                    Debug.Log("Simulation started");
                     m_watch.Start();
                     m_LastElapsedTime = m_watch.ElapsedMilliseconds;
                 }
