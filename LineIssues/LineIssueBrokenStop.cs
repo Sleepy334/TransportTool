@@ -53,7 +53,7 @@ namespace PublicTransportInfo
         {
             if (GetLevel() == IssueLevel.ISSUE_NONE)
             {
-                return Localization.Get("txtResolved");
+                return base.GetIssueDescription();
             }
             else
             {
@@ -63,7 +63,7 @@ namespace PublicTransportInfo
 
         public override string GetIssueTooltip()
         {
-            return Localization.Get("txtStop") + " " + m_iStopNumber + " " + Localization.Get("txtStop") + " (" + m_eProblem.ToString() + ")";
+            return $"{GetTransportType()}:{GetLineDescription()} - {Localization.Get("txtStop")}{m_iStopNumber} - {m_eProblem}";
         }
 
         public List<ushort> GetStopList()
@@ -89,7 +89,14 @@ namespace PublicTransportInfo
             {
                 // Does it still have an issue
                 NetNode netNode = NetManager.instance.m_nodes.m_buffer[m_usStop];
-                m_eProblem = netNode.m_problems;
+                if (netNode.m_flags != 0 && netNode.m_problems.IsNotNone)
+                {
+                    m_eProblem = netNode.m_problems;
+                }
+                else
+                {
+                    m_eProblem = Notification.Problem1.None;
+                }
             }
             else
             {

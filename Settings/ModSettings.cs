@@ -149,7 +149,13 @@ namespace PublicTransportInfo
             get;
             set;
         } = false;
-        
+
+        public int DeleteResolvedDelay
+        {
+            get;
+            set;
+        } = 10;
+
         public string PreferredLanguage
         {
             get;

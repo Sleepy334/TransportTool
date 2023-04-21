@@ -39,27 +39,17 @@ namespace PublicTransportInfo
 
             if (oSettings.WarnVehicleStopsMoving && blockCounter > oSettings.WarnVehicleBlockedThreshold)
             {
-                if (m_eLevel != IssueLevel.ISSUE_WARNING)
-                {
-                    UpdateTimeStamp();
-                }
                 m_eLevel = IssueLevel.ISSUE_WARNING;
+                ClearResolved();
             }
             else if (oSettings.WarnVehicleMovesSlowly && blockCounter > oSettings.WarnVehicleMovingSlowlyThreshold) 
             {
-                if (m_eLevel != IssueLevel.ISSUE_INFORMATION)
-                {
-                    UpdateTimeStamp();
-                }
                 m_eLevel = IssueLevel.ISSUE_INFORMATION;
+                ClearResolved();
             }
             else
             {
-                if (m_eLevel != IssueLevel.ISSUE_NONE)
-                {
-                    UpdateTimeStamp();
-                    SetResolved();
-                }
+                SetResolved();
                 m_eLevel = IssueLevel.ISSUE_NONE;
             }
             return m_eLevel;
@@ -78,7 +68,7 @@ namespace PublicTransportInfo
                     }
                 case IssueLevel.ISSUE_NONE:
                 default:
-                    return Localization.Get("txtResolved") + " (" + blockCounter + ")";
+                    return base.GetIssueDescription();
             }
         }
 

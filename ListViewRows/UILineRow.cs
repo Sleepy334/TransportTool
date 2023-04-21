@@ -19,9 +19,10 @@ namespace PublicTransportInfo
         private UILabelLiveTooltip? m_lblBusiest = null;
         private UILabelLiveTooltip? m_lblBored = null;
         private UISprite? m_spriteToolbar = null;
-        private static UITextureAtlas? m_atlas = null;
-
         private LineInfoBase? m_data = null;
+
+        private static UITextureAtlas? m_atlas = null;
+        private static ushort m_usHighlightLine = 0;
 
         public override void Start()
         {
@@ -42,7 +43,7 @@ namespace PublicTransportInfo
             if (oIconContainer != null)
             {
                 oIconContainer.name = "oIconContainer";
-                oIconContainer.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
+                oIconContainer.width = MainPanel.iCOLUMN_WIDTH_COLOR;
                 oIconContainer.height = fROW_HEIGHT - 4;
 
                 m_pnlColor = oIconContainer.AddUIComponent<UIPanel>();
@@ -50,8 +51,8 @@ namespace PublicTransportInfo
                 {
                     m_pnlColor.name = "m_lblColor";
                     m_pnlColor.backgroundSprite = "InfoviewPanel";
-                    m_pnlColor.height = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
-                    m_pnlColor.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_COLOR;
+                    m_pnlColor.height = MainPanel.iCOLUMN_WIDTH_COLOR;
+                    m_pnlColor.width = MainPanel.iCOLUMN_WIDTH_COLOR;
                     m_pnlColor.CenterToParent();
                     m_pnlColor.eventClick += new MouseEventHandler(OnItemClicked);
                 }
@@ -62,13 +63,13 @@ namespace PublicTransportInfo
             {
                 m_lblName.name = "m_lblName";
                 m_lblName.text = "";
-                m_lblName.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblName.textScale = MainPanel.fTEXT_SCALE;
                 m_lblName.tooltip = "";
                 m_lblName.textAlignment = UIHorizontalAlignment.Left;
                 m_lblName.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblName.autoSize = false;
                 m_lblName.height = height;
-                m_lblName.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_NAME;
+                m_lblName.width = MainPanel.iCOLUMN_WIDTH_NAME;
                 m_lblName.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblName.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblName.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -80,13 +81,13 @@ namespace PublicTransportInfo
             {
                 m_lblStops.name = "m_lblStops";
                 m_lblStops.text = "";
-                m_lblStops.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblStops.textScale = MainPanel.fTEXT_SCALE;
                 m_lblStops.tooltip = "";
                 m_lblStops.textAlignment = UIHorizontalAlignment.Center;
                 m_lblStops.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblStops.autoSize = false;
                 m_lblStops.height = height;
-                m_lblStops.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_STOPS;
+                m_lblStops.width = MainPanel.iCOLUMN_WIDTH_STOPS;
                 m_lblStops.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblStops.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblStops.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -98,13 +99,13 @@ namespace PublicTransportInfo
             {
                 m_lblVehicles.name = "m_lblVehicles";
                 m_lblVehicles.text = "";
-                m_lblVehicles.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblVehicles.textScale = MainPanel.fTEXT_SCALE;
                 m_lblVehicles.tooltip = "";
                 m_lblVehicles.textAlignment = UIHorizontalAlignment.Center;
                 m_lblVehicles.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblVehicles.autoSize = false;
                 m_lblVehicles.height = height;
-                m_lblVehicles.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_VEHICLES;
+                m_lblVehicles.width = MainPanel.iCOLUMN_WIDTH_VEHICLES;
                 m_lblVehicles.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblVehicles.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblVehicles.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -116,13 +117,13 @@ namespace PublicTransportInfo
             {
                 m_lblPassengers.name = "m_lblPassengers";
                 m_lblPassengers.text = "";
-                m_lblPassengers.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblPassengers.textScale = MainPanel.fTEXT_SCALE;
                 m_lblPassengers.tooltip = "";
                 m_lblPassengers.textAlignment = UIHorizontalAlignment.Center;
                 m_lblPassengers.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblPassengers.autoSize = false;
                 m_lblPassengers.height = height;
-                m_lblPassengers.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_PASSENGER;
+                m_lblPassengers.width = MainPanel.iCOLUMN_WIDTH_PASSENGER;
                 m_lblPassengers.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblPassengers.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblPassengers.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -134,13 +135,13 @@ namespace PublicTransportInfo
             {
                 m_lblVehicleUsage.name = "m_lblVehicleUsage";
                 m_lblVehicleUsage.text = "";
-                m_lblVehicleUsage.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblVehicleUsage.textScale = MainPanel.fTEXT_SCALE;
                 m_lblVehicleUsage.tooltip = "";
                 m_lblVehicleUsage.textAlignment = UIHorizontalAlignment.Center;
                 m_lblVehicleUsage.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblVehicleUsage.autoSize = false;
                 m_lblVehicleUsage.height = height;
-                m_lblVehicleUsage.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_VEHICLE_USAGE;
+                m_lblVehicleUsage.width = MainPanel.iCOLUMN_WIDTH_VEHICLE_USAGE;
                 m_lblVehicleUsage.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblVehicleUsage.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblVehicleUsage.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -152,13 +153,13 @@ namespace PublicTransportInfo
             {
                 m_lblWaiting.name = "m_lblWaiting";
                 m_lblWaiting.text = "";
-                m_lblWaiting.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblWaiting.textScale = MainPanel.fTEXT_SCALE;
                 m_lblWaiting.tooltip = "";
                 m_lblWaiting.textAlignment = UIHorizontalAlignment.Center;
                 m_lblWaiting.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblWaiting.autoSize = false;
                 m_lblWaiting.height = height;
-                m_lblWaiting.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_WAITING;
+                m_lblWaiting.width = MainPanel.iCOLUMN_WIDTH_WAITING;
                 m_lblWaiting.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblWaiting.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblWaiting.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -170,13 +171,13 @@ namespace PublicTransportInfo
             {
                 m_lblBusiest.name = "m_lblBusiest";
                 m_lblBusiest.text = "";
-                m_lblBusiest.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblBusiest.textScale = MainPanel.fTEXT_SCALE;
                 m_lblBusiest.tooltip = "";
                 m_lblBusiest.textAlignment = UIHorizontalAlignment.Center;
                 m_lblBusiest.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblBusiest.autoSize = false;
                 m_lblBusiest.height = height;
-                m_lblBusiest.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_BUSIEST;
+                m_lblBusiest.width = MainPanel.iCOLUMN_WIDTH_BUSIEST;
                 m_lblBusiest.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblBusiest.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblBusiest.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -188,13 +189,13 @@ namespace PublicTransportInfo
             {
                 m_lblBored.name = "m_lblBored";
                 m_lblBored.text = "";
-                m_lblBored.textScale = PublicTransportInfoPanel.fTEXT_SCALE;
+                m_lblBored.textScale = MainPanel.fTEXT_SCALE;
                 m_lblBored.tooltip = "";
                 m_lblBored.textAlignment = UIHorizontalAlignment.Center;
                 m_lblBored.verticalAlignment = UIVerticalAlignment.Middle;
                 m_lblBored.autoSize = false;
                 m_lblBored.height = height;
-                m_lblBored.width = PublicTransportInfoPanel.iCOLUMN_WIDTH_BORED;
+                m_lblBored.width = MainPanel.iCOLUMN_WIDTH_BORED;
                 m_lblBored.eventClicked += new MouseEventHandler(OnItemClicked);
                 m_lblBored.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblBored.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
@@ -215,7 +216,6 @@ namespace PublicTransportInfo
                 m_spriteToolbar.atlas = m_atlas;
                 m_spriteToolbar.AlignTo(this, UIAlignAnchor.TopRight);
                 m_spriteToolbar.eventClick += new MouseEventHandler(OnWarningItemClicked);
-                UpdateWarningIconSprite();
             }
 
             if (m_data != null)
@@ -241,7 +241,7 @@ namespace PublicTransportInfo
                 }
                 if (m_lblStops != null)
                 {
-                    m_lblStops.text = rowData.GetStops().Count.ToString();
+                    m_lblStops.text = rowData.GetStopCount().ToString();
                 }
                 if (m_lblVehicles != null)
                 {
@@ -267,8 +267,29 @@ namespace PublicTransportInfo
                 {
                     m_lblBored.text = rowData.m_iBored.ToString();
                 }
+                if (m_spriteToolbar != null)
+                {
+                    switch (rowData.m_eLevel)
+                    {
+                        case LineIssue.IssueLevel.ISSUE_WARNING:
+                            {
+                                m_spriteToolbar.spriteName = "Warning_icon48x48";
+                                break;
+                            }
+                        case LineIssue.IssueLevel.ISSUE_INFORMATION:
+                            {
+                                m_spriteToolbar.spriteName = "Information";
+                                break;
+                            }
+                        case LineIssue.IssueLevel.ISSUE_NONE:
+                            {
+                                m_spriteToolbar.spriteName = "";
+                                break;
+                            }
+                    }
 
-                UpdateWarningIconSprite();
+                    m_spriteToolbar.tooltip = rowData.m_lineIssueTooltip;
+                }
             }
             else
             {
@@ -405,49 +426,24 @@ namespace PublicTransportInfo
         protected void OnMouseEnter(UIComponent component, UIMouseEventParameter eventParam)
         {
             backgroundSprite = "ListItemHighlight";
+
+            if (m_data != null)
+            {
+                HighlightLine((ushort)m_data.m_iLineId);
+            }
         }
 
         protected void OnMouseLeave(UIComponent component, UIMouseEventParameter eventParam)
         {
             backgroundSprite = "";
-        }
 
-        private void UpdateWarningIconSprite()
-        {
-            if (m_spriteToolbar != null)
-            {
-                string sTooltip = "";
-                LineIssue.IssueLevel eLevel = LineIssue.IssueLevel.ISSUE_NONE;
-                if (m_data != null && LineIssueManager.Instance != null)
-                {
-                    eLevel = LineIssueManager.Instance.GetLineWarningLevel((ushort)m_data.m_iLineId, out sTooltip);
-                }
-                if (eLevel == LineIssue.IssueLevel.ISSUE_WARNING)
-                {
-                    m_spriteToolbar.spriteName = "Warning_icon48x48";
-                }
-                else if (eLevel == LineIssue.IssueLevel.ISSUE_INFORMATION)
-                {
-                    m_spriteToolbar.spriteName = "Information";
-                }
-                else
-                {
-                    m_spriteToolbar.spriteName = "";
-                }
-
-                if (m_spriteToolbar.tooltipBox != null && m_spriteToolbar.tooltipBox.isVisible && m_spriteToolbar.tooltip != sTooltip)
-                {
-                    m_spriteToolbar.tooltipBox.isVisible = false;
-                }
-                m_spriteToolbar.tooltip = sTooltip;
-            }
+            ClearHighlightLine();
         }
 
         private void OnWarningItemClicked(UIComponent component, UIMouseEventParameter eventParam)
         {
             if (m_data != null && m_data.GetLineIssueDetector() != null && LineIssueManager.Instance != null)
             {
-                LineIssueManager.Instance.UpdateLineIssues();
                 if (LineIssueManager.Instance.HasVisibleLineIssues())
                 {
                     PublicTransportInstance.HideMainPanel();
@@ -462,6 +458,24 @@ namespace PublicTransportInfo
             if (LineIssueManager.Instance != null)
             {
                 LineIssueManager.Instance.UpdateWarningIcons();
+            }
+        }
+
+        private void HighlightLine(ushort lineId)
+        {
+            ClearHighlightLine();
+
+            m_usHighlightLine = lineId;
+
+            TransportManagerUtils.HighlightLine(m_usHighlightLine);
+        }
+
+        private void ClearHighlightLine()
+        {
+            if (m_usHighlightLine != 0)
+            {
+                TransportManagerUtils.ClearLineHighlight(m_usHighlightLine);
+                m_usHighlightLine = 0;
             }
         }
     }

@@ -8,7 +8,7 @@ namespace PublicTransportInfo
 {
     public class SettingsUI
     {
-		SettingsSlider? m_oStuckSlider = null;
+        SettingsSlider? m_oStuckSlider = null;
 		SettingsSlider? m_oSlowSlider = null;
 		SettingsSlider? m_oBoredCountSlider = null;
 		UICheckBox? m_playSound = null;
@@ -85,8 +85,12 @@ namespace PublicTransportInfo
 		{
 			ModSettings oSettings = ModSettings.GetSettings();
 
-			// Issues
-			UIHelper oFlagsGroup = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupIssues"));
+			// General
+            UIHelper groupGeneral = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupLineIssuesGeneral"));
+            SettingsSlider.Create(groupGeneral, Localization.Get("txtDeleteresolvedDelay"), 0f, 30f, 1f, (float)oSettings.DeleteResolvedDelay, OnDeleteResolvedChanged);
+
+            // Issues
+            UIHelper oFlagsGroup = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupIssues"));
 			oFlagsGroup.AddCheckbox(Localization.Get("chkFlagMoveSlowly"), oSettings.WarnVehicleMovesSlowly, OnWarnVehicleMovesSlowly);
 			m_oSlowSlider = SettingsSlider.Create(oFlagsGroup, Localization.Get("sliderSlowVehicleThreshold"), 1f, 255f, 1f, (float)oSettings.WarnVehicleMovingSlowlyThreshold, OnSlowValueChanged);
 
@@ -300,14 +304,6 @@ namespace PublicTransportInfo
 			}
 		}
 
-		public void OnBoredTextChanged(string text)
-		{
-		}
-
-		public void OnBoredTextSubmitted(string sText)
-		{
-		}
-
 		public void OnBoredValueChanged(float fValue)
 		{
 			ModSettings oSettings = ModSettings.GetSettings();
@@ -328,5 +324,13 @@ namespace PublicTransportInfo
 			oSettings.WarnVehicleBlockedThreshold = (int)fValue;
 			oSettings.Save();
 		}
-	}
+
+        public void OnDeleteResolvedChanged(float fValue)
+        {
+            ModSettings oSettings = ModSettings.GetSettings();
+            oSettings.DeleteResolvedDelay = (int)fValue;
+            oSettings.Save();
+        }
+        
+    }
 }

@@ -28,7 +28,7 @@ namespace SleepyCommon
         public virtual void Setup(float fWidth, ListViewColumnClickEvent? eventOnListViewColumnClick)
         {
             width = fWidth;
-            height = PublicTransportInfoPanel.iHEADER_HEIGHT;
+            height = MainPanel.iHEADER_HEIGHT;
             backgroundSprite = "ListItemHighlight";
             autoLayoutDirection = LayoutDirection.Horizontal;
             autoLayoutStart = LayoutStart.TopLeft;

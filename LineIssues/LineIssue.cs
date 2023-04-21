@@ -1,4 +1,5 @@
 ﻿using ColossalFramework.UI;
+using PublicTransportInfo.Util;
 using SleepyCommon;
 using System;
 using System.Collections.Generic;
@@ -62,6 +63,16 @@ namespace PublicTransportInfo
             return Compare(this, oSecond);
         }
 
+        public virtual string GetCreationTime()
+        {
+            return m_CreationTime.ToString("h:mm:ss");
+        }
+
+        public virtual string GetTransportType()
+        {
+            return m_transportType.ToString();
+        }
+
         public abstract IssueType GetIssueType();
         public abstract IssueLevel GetLevel();
 
@@ -71,18 +82,30 @@ namespace PublicTransportInfo
         }
         public abstract ushort GetVehicleId();
         public abstract string GetIssueLocation();
-        public abstract string GetIssueDescription();
+        
         public abstract string GetIssueTooltip();
         public abstract void ShowIssue();
         
-        public virtual void Update()
-        {
+        public virtual void Update() {}
 
+        public virtual string GetIssueDescription()
+        {
+            if (IsResolved())
+            {
+                return Localization.Get("txtResolved") + " (" + GetResolved() + ")";
+            }
+            else
+            {
+                return "";
+            }
         }
 
         public void SetResolved()
         {
-            m_ResolvedTime = DateTime.Now;
+            if (!IsResolved())
+            {
+                m_ResolvedTime = DateTime.Now;
+            }
         }
 
         public bool IsResolved()
@@ -90,9 +113,19 @@ namespace PublicTransportInfo
             return m_ResolvedTime != DateTime.MaxValue;
         }
 
+        public string GetResolved()
+        {
+            return m_ResolvedTime.ToString("h:mm:ss");
+        }
+
+        public void ClearResolved()
+        {
+            m_ResolvedTime = DateTime.MaxValue;
+        }
+
         public virtual bool CanDelete()
         {
-            return (IsResolved() && (DateTime.Now - m_ResolvedTime).TotalSeconds > 20);
+            return (IsResolved() && (DateTime.Now - m_ResolvedTime).TotalSeconds >= ModSettings.GetSettings().DeleteResolvedDelay);
         }
 
         public virtual bool Equals(LineIssue oSecond)

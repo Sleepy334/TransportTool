@@ -69,4 +69,5 @@
 "chkBoredCount","Waarschuwen wanneer de vervelingsteller boven de drempel komt (per stop)"
 "VehicleUsage","Gebruik %"
 "headerUsageTooltip","Voertuig gebruik %"
-"chkDisableTransparency","Disable Panel Transparency"
+"chkDisableTransparency","Transparantie van paneel uitschakelen"
+"txtDeleteresolvedDelay","Delete Resolved Delay (Seconds)"

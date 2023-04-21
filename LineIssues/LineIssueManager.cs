@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Text;
+using UnityEngine;
 
 namespace PublicTransportInfo
 {
@@ -10,19 +12,19 @@ namespace PublicTransportInfo
         private LineIssue.IssueLevel m_issueLevel;
         static readonly object s_IssueLock = new object();
 
-        public LineIssueManager()
-        {
-            m_LineDetectors = new Dictionary<ushort, LineIssueDetector>();
-            m_lineIssues = new List<LineIssue>();
-            m_issueLevel = LineIssue.IssueLevel.ISSUE_NONE;
-        }
-
         public static void Init()
         {
             if (Instance == null)
             {
                 Instance = new LineIssueManager();
             }
+        }
+
+        public LineIssueManager()
+        {
+            m_LineDetectors = new Dictionary<ushort, LineIssueDetector>();
+            m_lineIssues = new List<LineIssue>();
+            m_issueLevel = LineIssue.IssueLevel.ISSUE_NONE;
         }
 
         public LineIssueDetector? GetLineIssueDetector(ushort usLineId)
@@ -135,7 +137,6 @@ namespace PublicTransportInfo
             LineIssue.IssueLevel eLevel = LineIssue.IssueLevel.ISSUE_NONE;
             sTooltip = "";
 
-            UpdateLineIssues();
             foreach (LineIssue oIssue in GetVisibleLineIssues())
             {
                 if (oIssue.m_iLineId == usLineId)
@@ -165,9 +166,9 @@ namespace PublicTransportInfo
             {
                 if (m_issueLevel != LineIssue.IssueLevel.ISSUE_WARNING)
                 {
-                    m_issueLevel = LineIssue.IssueLevel.ISSUE_WARNING; 
-                    
-                    if (PublicTransportInstance.s_mainPanel != null && ModSettings.GetSettings().PlaySoundForWarnings)
+                    m_issueLevel = LineIssue.IssueLevel.ISSUE_WARNING;
+
+                    if (PublicTransportInstance.s_mainPanel != null)
                     {
                         PublicTransportInstance.s_mainPanel.PlayWarningSound();
                     }
@@ -270,7 +271,7 @@ namespace PublicTransportInfo
             }
         }
 
-        public void UpdateLineIssues()
+        private void UpdateLineIssues()
         {
             // Update existing line issues
             lock (s_IssueLock)
@@ -334,15 +335,18 @@ namespace PublicTransportInfo
 
         public string GetTooltip()
         {
-            string sTooltip = "";
-            List<LineIssue> oIssues = GetVisibleLineIssues();
+            StringBuilder stringBuilder = new StringBuilder();
 
+            List<LineIssue> oIssues = GetVisibleLineIssues();
             foreach (LineIssue oIssue in oIssues)
             {
-                sTooltip += oIssue.GetIssueTooltip() + "\r\n";
+                if (!oIssue.IsResolved())
+                {
+                    stringBuilder.AppendLine(oIssue.GetIssueTooltip());
+                }
             }
 
-            return sTooltip;
+            return stringBuilder.ToString();
         }
     }
 }

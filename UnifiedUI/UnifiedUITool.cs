@@ -103,7 +103,7 @@ namespace PublicTransportInfo
                     m_sprite.spriteName = "BusImageInverted48x48";
 
                     // Need to tell the panel to refresh so it sizes correctly for new button
-                    MainPanel.Instance.Refresh();
+                    UnifiedUI.GUI.MainPanel.Instance.Refresh();
                 }
                 catch (Exception ex)
                 {

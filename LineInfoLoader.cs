@@ -30,7 +30,7 @@ namespace PublicTransportInfo
                             LineInfoCableCar lineInfo = new LineInfoCableCar(usBuildingId);
                             lineInfo.m_iLineNumber = list.Count + 1;
                             lineInfo.m_color = PublicTransportTypeUtils.GetDefaultLineColor(eType);
-                            lineInfo.UpdateInfo();
+                            lineInfo.LoadInfo();
                             list.Add(lineInfo);
                         }
                     }
@@ -77,9 +77,9 @@ namespace PublicTransportInfo
             return list;
         }
 
-        public static List<PublicTransportType> GetLineTypes()
+        public static HashSet<PublicTransportType> GetLineTypes()
         {
-            List<PublicTransportType> list = new List<PublicTransportType>();
+            HashSet<PublicTransportType> list = new HashSet<PublicTransportType>();
 
             uint iSize = TransportManager.instance.m_lines.m_size;
             for (int i = 0; i < iSize; i++)
@@ -94,10 +94,7 @@ namespace PublicTransportInfo
                         PublicTransportType ePTT = PublicTransportTypeUtils.Convert(eType);
                         if (oLine.Complete)
                         {
-                            if (!list.Contains(ePTT))
-                            {
-                                list.Add(ePTT);
-                            }
+                            list.Add(ePTT);
                         }
                     }
                 }
@@ -116,8 +113,6 @@ namespace PublicTransportInfo
                 }
             }
             
-
-            list.Sort();
             return list;
         }
 
@@ -151,7 +146,7 @@ namespace PublicTransportInfo
         {
             LineInfoTransportLine oInfo = new LineInfoTransportLine(oLine.Info.m_transportType);
             oInfo.m_iLineId = iLineId;
-            oInfo.UpdateInfo();
+            oInfo.LoadInfo();
 
             return oInfo;
         }

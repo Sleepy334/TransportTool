@@ -76,6 +76,7 @@ namespace PublicTransportInfo
             if (oSettings.WarnVehicleMovesSlowly || oSettings.WarnVehicleStopsMoving)
             {
                 int iWarnValue = oSettings.GetBlockedVehicleMinThreshold();
+
                 List<ushort> oVehicles = GetVehicles();
                 foreach (ushort usVehicle in oVehicles) 
                 {

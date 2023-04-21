@@ -55,19 +55,19 @@ namespace PublicTransportInfo
 
         public override string GetIssueDescription()
         {
-            if (GetLevel() == IssueLevel.ISSUE_NONE)
+            if (GetLevel() != IssueLevel.ISSUE_NONE)
             {
-                return Localization.Get("txtResolved");
+                return Localization.Get("OverviewBored") + ": " + m_iBoredCount;
             }
             else
             {
-                return Localization.Get("OverviewBored") + ": " + m_iBoredCount;
+                return base.GetIssueDescription();
             }
         }
 
         public override string GetIssueTooltip()
         {
-            return Localization.Get("txtStop") + " " + m_iStopNumber + " " + Localization.Get("OverviewBored") + " (" + m_iBoredCount.ToString() + ")";
+            return $"{GetTransportType()}:{GetLineDescription()} - {Localization.Get("txtStop")}:{m_iStopNumber} - {Localization.Get("OverviewBored")} ({m_iBoredCount})";
         }
 
         public List<ushort> GetStopList()

@@ -38,6 +38,9 @@ namespace PublicTransportInfo
         public int m_iBored;
         public ushort m_usBusiestStopId;
         public int m_iBusiestStopNumber;
+        public LineIssue.IssueLevel m_eLevel;
+        public string m_lineIssueTooltip;
+
         protected List<LineData> m_stopPassengerCount;
         protected List<VehicleData> m_vehicleDatas;
 
@@ -172,10 +175,13 @@ namespace PublicTransportInfo
             return iPassengers;
         }
 
-        public virtual void UpdateInfo()
+        public virtual void LoadInfo()
         {
             LoadLineInfo();
             LoadVehicleInfo();
+
+            // Get issue level for this line
+            m_eLevel = LineIssueManager.Instance.GetLineWarningLevel((ushort) m_iLineId, out m_lineIssueTooltip);
         }
 
         protected virtual void LoadLineInfo()

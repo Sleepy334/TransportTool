@@ -69,4 +69,5 @@
 "chkBoredCount","退屈カウントがしきい値を超えたときに警告する（ストップごと）"
 "VehicleUsage","使用率 (%)"
 "headerUsageTooltip","車両の使用率 (%)"
-"chkDisableTransparency","Disable Panel Transparency"
+"chkDisableTransparency","パネルの透過を無効化"
+"txtDeleteresolvedDelay","Delete Resolved Delay (Seconds)"

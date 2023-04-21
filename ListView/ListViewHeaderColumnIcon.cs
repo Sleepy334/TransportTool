@@ -24,7 +24,7 @@ namespace SleepyCommon
             m_pnlIcon.tooltip = sTooltip;
             //m_pnlIcon.backgroundSprite = "InfoviewPanel";
             //m_pnlIcon.color = Color.red;
-            m_pnlIcon.height = PublicTransportInfoPanel.iHEADER_HEIGHT;
+            m_pnlIcon.height = MainPanel.iHEADER_HEIGHT;
             m_pnlIcon.width = iWidth;
             //m_pnlIcon.autoLayoutDirection = LayoutDirection.Horizontal;
             //m_pnlIcon.autoLayout = true;
@@ -40,8 +40,8 @@ namespace SleepyCommon
             m_lblIcon.backgroundSprite = sIconName;
             m_lblIcon.textAlignment = UIHorizontalAlignment.Center;
             m_lblIcon.autoSize = false;
-            m_lblIcon.height = PublicTransportInfoPanel.iHEADER_HEIGHT;
-            m_lblIcon.width = PublicTransportInfoPanel.iHEADER_HEIGHT;
+            m_lblIcon.height = MainPanel.iHEADER_HEIGHT;
+            m_lblIcon.width = MainPanel.iHEADER_HEIGHT;
             m_lblIcon.AlignTo(m_pnlIcon, UIAlignAnchor.TopRight);
             m_lblIcon.eventMouseEnter += OnMouseHover;
             m_lblIcon.eventMouseLeave += OnMouseLeave;

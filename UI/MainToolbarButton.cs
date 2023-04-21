@@ -1,5 +1,5 @@
-﻿using ColossalFramework.Globalization;
-using ColossalFramework.UI;
+﻿using ColossalFramework.UI;
+using System;
 using System.Reflection;
 using UnityEngine;
 
@@ -7,29 +7,53 @@ namespace PublicTransportInfo
 {
     public class MainToolbarButton
     {
-        private UIButton? m_ToolbarButton = null;
-        private int m_ToolbarIndex = -1;
-        public UITextureAtlas? m_atlas = null;
+        private ToggleButtonComponents? m_toggleButtonComponents = null;
+        private static readonly string kEmptyContainer = "EmptyContainer";
+        private static readonly string kMainToolbarSeparatorTemplate = "MainToolbarSeparator";
+        private static readonly string kMainToolbarButtonTemplate = "MainToolbarButtonTemplate";
+        private static readonly string kToggleButton = "TransportTool";
 
         public MainToolbarButton()
         {
         }
 
+        public void AddToolbarButton()
+        {
+            if (m_toggleButtonComponents == null)
+            {
+                // Adding main button
+                UITabstrip? toolStrip = GetMainToolStrip();
+                if (toolStrip != null)
+                {
+                    m_toggleButtonComponents = CreateToggleButtonComponents(toolStrip);
+
+                    if (m_toggleButtonComponents != null)
+                    {
+                        toolStrip.eventSelectedIndexChanged += OnSelectedIndexChanged;
+                    }
+                    else
+                    {
+                        Debug.LogError("AddToolButton - Failed to create toolbar button.");
+                    }
+                }
+            }
+        }
+
         public void ShowWarningLevel(LineIssue.IssueLevel eLevel)
         {
-            if (m_ToolbarButton != null && m_atlas != null)
+            if (m_toggleButtonComponents != null)
             {
                 if (eLevel == LineIssue.IssueLevel.ISSUE_WARNING)
                 {
-                    m_ToolbarButton.normalBgSprite = "BusImageWarning";
+                    m_toggleButtonComponents.ToggleButton.normalFgSprite = "BusImageWarning";
                 }    
                 else if (eLevel == LineIssue.IssueLevel.ISSUE_INFORMATION)
                 {
-                    m_ToolbarButton.normalBgSprite = "BusInformationIcon";
+                    m_toggleButtonComponents.ToggleButton.normalFgSprite = "BusInformationIcon";
                 }
                 else
                 {
-                    m_ToolbarButton.normalBgSprite = "BusImageInverted48x48";  
+                    m_toggleButtonComponents.ToggleButton.normalFgSprite = "BusImageInverted48x48";
                 }
             }
             UpdateTooltip(eLevel);
@@ -37,38 +61,38 @@ namespace PublicTransportInfo
         
         public void UpdateTooltip(LineIssue.IssueLevel eLevel)
         {
-            if (m_ToolbarButton != null)
+            if (m_toggleButtonComponents != null)
             {
                 if (eLevel != LineIssue.IssueLevel.ISSUE_NONE && LineIssueManager.Instance != null)
                 {
-                    m_ToolbarButton.tooltip = LineIssueManager.Instance.GetTooltip();
+                    m_toggleButtonComponents.ToggleButton.tooltip = LineIssueManager.Instance.GetTooltip();
                 }
                 else
                 {
-                    m_ToolbarButton.tooltip = ITransportInfoMain.Title;
+                    m_toggleButtonComponents.ToggleButton.tooltip = ITransportInfoMain.Title;
                 }
             }
         }
 
         public void Focus()
         {
-            m_ToolbarButton?.Focus();
+            m_toggleButtonComponents.ToggleButton?.Focus();
         }
 
         public void Unfocus()
         {
-            m_ToolbarButton?.Unfocus();
+            m_toggleButtonComponents.ToggleButton?.Unfocus();
         }
 
         public void Enable()
         {
-            if (m_ToolbarButton != null)
+            if (m_toggleButtonComponents != null)
             {
                 UIView oView = UIView.GetAView();
                 UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip");
                 if (toolStrip != null)
                 {
-                    toolStrip.selectedIndex = m_ToolbarIndex;
+                    toolStrip.selectedIndex = FindButtonIndex();
                     Focus();
                 }
             }
@@ -76,7 +100,7 @@ namespace PublicTransportInfo
 
         public void Disable()
         {
-            if (m_ToolbarButton != null)
+            if (m_toggleButtonComponents != null)
             {
                 UIView oView = UIView.GetAView();
                 UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip");
@@ -88,75 +112,44 @@ namespace PublicTransportInfo
             }
         }
 
-        public void AddToolbarButton()
+        private ToggleButtonComponents CreateToggleButtonComponents(UITabstrip tabstrip)
         {
-            Debug.Log("AddToolbarButton");
-            if (m_ToolbarButton == null)
+            GameObject tabStripPage = UITemplateManager.GetAsGameObject(kEmptyContainer);
+            GameObject mainToolbarButtonTemplate = UITemplateManager.GetAsGameObject(kMainToolbarButtonTemplate);
+
+            UIButton? toggleButton = tabstrip.AddTab(kToggleButton, mainToolbarButtonTemplate, tabStripPage, new Type[0]) as UIButton;
+            if (toggleButton != null)
             {
-                Debug.Log("Adding toolbar button");
-                // Adding main button
-                UIView oView = UIView.GetAView();
-                UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip");
-                toolStrip.eventSelectedIndexChanged += OnSelectedIndexChanged;
+                toggleButton.atlas = PublicTransportInstance.LoadResources();
+                toggleButton.tooltip = ITransportInfoMain.Title;
+                toggleButton.normalFgSprite = "BusImageInverted48x48";
+                toggleButton.focusedBgSprite = "ToolbarIconGroup6Focused";
+                toggleButton.hoveredBgSprite = "ToolbarIconGroup6Hovered";
 
-                // Add main toolbar button.
-                m_ToolbarIndex = toolStrip.tabCount;
-                m_ToolbarButton = toolStrip.AddUIComponent<UIButton>();
+                toggleButton.parent.height = 1f;
 
-                // Load icon.
-                if (m_atlas == null)
-                {
-                    m_atlas = PublicTransportInstance.LoadResources();
-                }
-                if (m_atlas != null)
-                {
-                    m_ToolbarButton.atlas = m_atlas;
-                    m_ToolbarButton.normalBgSprite = "BusImageInverted48x48";
-                }
-                else
-                {
-                    // Use old icon if load fails.
-                    m_ToolbarButton.normalBgSprite = "IconPolicyFreePublicTransport";
-                }
-                m_ToolbarButton.focusedFgSprite = "ToolbarIconGroup6Focused";
-                m_ToolbarButton.hoveredFgSprite = "ToolbarIconGroup6Hovered";
-                m_ToolbarButton.size = new Vector2(43f, 47f);
-                m_ToolbarButton.name = ITransportInfoMain.ModName;
-                m_ToolbarButton.tooltip = ITransportInfoMain.Title;
-                m_ToolbarButton.relativePosition = new Vector3(0, 5);
-
-                toolStrip.AddTab("Transport Tool", m_ToolbarButton.gameObject, null, null);
-
-                FieldInfo m_ObjectIndex = typeof(MainToolbar).GetField("m_ObjectIndex", BindingFlags.Instance | BindingFlags.NonPublic);
-                m_ObjectIndex.SetValue(ToolsModifierControl.mainToolbar, (int)m_ObjectIndex.GetValue(ToolsModifierControl.mainToolbar) + 1);
-
-                Locale locale = (Locale)typeof(LocaleManager).GetField("m_Locale", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(LocaleManager.instance);
-                Locale.Key key = new Locale.Key
-                {
-                    m_Identifier = "TUTORIAL_ADVISER_TITLE",
-                    m_Key = m_ToolbarButton.name
-                };
-                if (!locale.Exists(key))
-                {
-                    locale.AddLocalizedString(key, m_ToolbarButton.name);
-                }
-                key = new Locale.Key
-                {
-                    m_Identifier = "TUTORIAL_ADVISER",
-                    m_Key = m_ToolbarButton.name
-                };
-                if (!locale.Exists(key))
-                {
-                    locale.AddLocalizedString(key, "");
-                }
-
-                oView.FindUIComponent<UITabContainer>("TSContainer").AddUIComponent<UIPanel>().color = new Color32(0, 0, 0, 0);
+                IncrementObjectIndex();
             }
+            else
+            {
+                Debug.Log("toggleButton is null.");
+            }
+
+            return new ToggleButtonComponents(null, tabStripPage, mainToolbarButtonTemplate, toggleButton, null);
+        }
+
+        private void DestroyToggleButtonComponents(ToggleButtonComponents toggleButtonComponents)
+        {
+            DecrementObjectIndex();
+
+            UnityEngine.Object.Destroy(toggleButtonComponents.ToggleButton.gameObject);
+            UnityEngine.Object.Destroy(toggleButtonComponents.MainToolbarButtonTemplate.gameObject);
+            UnityEngine.Object.Destroy(toggleButtonComponents.TabStripPage.gameObject);
         }
 
         public void OnSelectedIndexChanged(UIComponent oComponent, int iSelectedIndex)
         {
-            if (m_ToolbarButton != null && m_ToolbarButton.isVisible && iSelectedIndex == m_ToolbarIndex)
+            if (m_toggleButtonComponents != null && m_toggleButtonComponents.ToggleButton.isVisible && IsToolbarButton(iSelectedIndex))
             {
                 PublicTransportInstance.ShowMainPanel();
             }
@@ -168,44 +161,86 @@ namespace PublicTransportInfo
 
         public void Show()
         {
-            if (m_ToolbarButton == null)
+            if (m_toggleButtonComponents == null)
             {
                 AddToolbarButton();
             }
             else
             {
-                m_ToolbarButton.isVisible = true;
+                m_toggleButtonComponents.ToggleButton.isVisible = true;
             }
         }
 
         public void Hide()
         {
-            if (m_ToolbarButton != null)
+            if (m_toggleButtonComponents != null)
             {
-                m_ToolbarButton.isVisible = false;
+                m_toggleButtonComponents.ToggleButton.isVisible = false;
 
                 // Seem to need to destroy tab as well
-                Destroy();
+                //Destroy();
             }
+        }
+
+        private void IncrementObjectIndex()
+        {
+            FieldInfo m_ObjectIndex = typeof(MainToolbar).GetField("m_ObjectIndex", BindingFlags.Instance | BindingFlags.NonPublic);
+            m_ObjectIndex.SetValue(ToolsModifierControl.mainToolbar, (int)m_ObjectIndex.GetValue(ToolsModifierControl.mainToolbar) + 1);
+        }
+
+        private void DecrementObjectIndex()
+        {
+            FieldInfo m_ObjectIndex = typeof(MainToolbar).GetField("m_ObjectIndex", BindingFlags.Instance | BindingFlags.NonPublic);
+            m_ObjectIndex.SetValue(ToolsModifierControl.mainToolbar, (int)m_ObjectIndex.GetValue(ToolsModifierControl.mainToolbar) - 1);
+        }
+
+        private UITabstrip? GetMainToolStrip()
+        {
+            return ToolsModifierControl.mainToolbar.component as UITabstrip;
+        }
+
+        private bool IsToolbarButton(int iIndex)
+        {
+            if (iIndex != -1)
+            {
+                UITabstrip? toolStrip = GetMainToolStrip();
+                if (toolStrip != null)
+                {
+                    return toolStrip.tabs[iIndex].name.Contains(kToggleButton);
+                }
+            }
+
+            return false;
+        }
+
+        private int FindButtonIndex()
+        {
+            UITabstrip? toolStrip = GetMainToolStrip();
+            if (toolStrip != null)
+            {
+                // Start from the end as our button will be added close to the end of the tabs
+                for (int i = toolStrip.tabs.Count - 1; i >= 0; --i)
+                {
+                    UIComponent tab = toolStrip.tabs[i];
+                    if (tab.name.Contains(kToggleButton))
+                    {
+                        return i;
+                    }
+                }
+            }
+
+            return -1;
         }
 
         public void Destroy()
         {
-            if (m_ToolbarButton != null)
+            // Remove event handler
+            if (m_toggleButtonComponents != null)
             {
-                // Delete main button
-                UIView oView = UIView.GetAView();
-                UITabstrip toolStrip = oView.FindUIComponent<UITabstrip>("MainToolstrip");
-                if (toolStrip != null)
-                {
-                    //toolStrip.tabs[s_ToolbarIndex].Hide();
-                    toolStrip.tabs.RemoveAt(m_ToolbarIndex);
-                    Object.Destroy(m_ToolbarButton);
-                    m_ToolbarButton = null;
-                    m_ToolbarIndex = -1;
-                }
+                GetMainToolStrip().eventSelectedIndexChanged -= OnSelectedIndexChanged;
+                DestroyToggleButtonComponents(m_toggleButtonComponents);
+                m_toggleButtonComponents = null;
             }
-            m_atlas = null; // Dont destroy this here as it is shared
         }
     }
 }

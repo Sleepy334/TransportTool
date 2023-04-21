@@ -3,7 +3,9 @@ using ColossalFramework.UI;
 using PublicTransportInfo.Util;
 using SleepyCommon;
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using UnityEngine;
 
@@ -21,9 +23,11 @@ namespace PublicTransportInfo
 
         private UITitleBar? m_title = null;
         private ListView? m_listIssues = null;
+        private Coroutine? m_coroutine = null;
 
         public LineIssuePanel() : base()
         {
+            m_coroutine = StartCoroutine(UpdatePanelCoroutine(4));
         }
 
         public override void Start()
@@ -116,7 +120,40 @@ namespace PublicTransportInfo
         {
             if (LineIssueManager.Instance != null)
             {
-                return LineIssueManager.Instance.GetVisibleLineIssues();
+                List<LineIssue> issues = LineIssueManager.Instance.GetVisibleLineIssues();
+                issues.Sort();
+                
+                // We separate the resolved items from the current ones
+                List<LineIssue> result = new List<LineIssue>();
+                
+                if (issues.Count > 0)
+                {
+                    // Add current issues
+                    foreach (LineIssue issue in issues)
+                    {
+                        if (!issue.IsResolved())
+                        {
+                            result.Add(issue);
+                        }
+                    }
+
+                    // Add a separator
+                    if (result.Count > 0)
+                    {
+                        result.Add(new LineIssueSeparator());
+                    }
+
+                    // Add resolved issues
+                    foreach (LineIssue issue in issues)
+                    {
+                        if (issue.IsResolved())
+                        {
+                            result.Add(issue);
+                        }
+                    }
+                }
+
+                return result;
             }
             else
             {
@@ -124,14 +161,25 @@ namespace PublicTransportInfo
             }
         }
 
+        IEnumerator UpdatePanelCoroutine(int seconds)
+        {
+            while (true)
+            {
+                yield return new WaitForSeconds(seconds);
+
+                if (!SimulationManager.instance.SimulationPaused)
+                {
+                    UpdatePanel();
+                }
+            }
+        }
+
         public void UpdatePanel()
         {
-            if (m_listIssues != null && m_listIssues.GetList() != null) {
+            if (isVisible && m_listIssues != null && m_listIssues.GetList() != null) {
                 List<LineIssue> list = GetLineIssues();
                 if (list != null)
                 {
-                    list.Sort();
-
                     m_listIssues.GetList().rowsData = new FastList<object>
                     {
                         m_buffer = list.ToArray(),

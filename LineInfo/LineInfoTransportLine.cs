@@ -1,7 +1,9 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
 using PublicTransportInfo.Util;
+using System;
 using System.Collections.Generic;
+using System.Reflection;
 using UnityEngine;
 using static TransportInfo;
 
@@ -10,12 +12,11 @@ namespace PublicTransportInfo
     public class LineInfoTransportLine :  LineInfoBase
     {
         private TransportType m_eType;
-        private int m_iStops;
+        private List<ushort>? m_stops = null;
 
         public LineInfoTransportLine(TransportType transportType) : base()
         {
             m_eType = transportType;
-            m_iStops = 0;
         }
 
         public override TransportType GetTransportType()
@@ -30,18 +31,42 @@ namespace PublicTransportInfo
 
         public override int GetStopCount()
         {
-            return m_iStops;
+            return GetStops().Count;
         }
+
         public override List<ushort> GetStops()
         {
-            List<ushort> list = new List<ushort>();
-            TransportLine oLine = TransportManager.instance.m_lines.m_buffer[m_iLineId];
-            m_iStops = oLine.CountStops((ushort)m_iLineId);
-            for (int i = 0; i < m_iStops; i++)
+            if (m_stops == null)
             {
-                list.Add(oLine.GetStop(i));
+                m_stops = new List<ushort>();
+
+                TransportLine oLine = TransportManager.instance.m_lines.m_buffer[m_iLineId];
+                if (oLine.m_flags != 0)
+                {
+                    // Enumerate stops
+                    int iLoopCount = 0;
+                    ushort firstStop = oLine.m_stops;
+                    ushort stop = firstStop;
+                    while (stop != 0)
+                    {
+                        m_stops.Add(stop);
+
+                        stop = TransportLine.GetNextStop(stop);
+                        if (stop == firstStop)
+                        {
+                            break;
+                        }
+
+                        if (++iLoopCount >= 32768)
+                        {
+                            CODebugBase<LogChannel>.Error(LogChannel.Core, "Invalid list detected!\n" + Environment.StackTrace);
+                            break;
+                        }
+                    }
+                }
             }
-            return list;
+            
+            return m_stops;
         }
 
         public override LineIssueDetector? GetLineIssueDetector()
@@ -56,10 +81,11 @@ namespace PublicTransportInfo
             }
         }
 
-        public override void UpdateInfo()
+        public override void LoadInfo()
         {
             m_color = TransportManagerUtils.GetSafeLineColor(m_iLineId);
-            base.UpdateInfo();
+            m_stops = null;
+            base.LoadInfo();
         }
 
         protected override void LoadVehicleInfo()
@@ -68,7 +94,6 @@ namespace PublicTransportInfo
             m_iPassengers = 0;
             m_iCapacity = 0;
 
-            List<ushort> stops = GetStops();
             int iCapacity;
             TransportLine oLine = TransportManager.instance.m_lines.m_buffer[m_iLineId];
             m_iVehicleCount = oLine.CountVehicles((ushort)m_iLineId);
@@ -85,7 +110,7 @@ namespace PublicTransportInfo
                 oData.m_usVehicleId = usVehicleId;
                 oData.m_iPassengers = iPassengers;
                 oData.m_iCapacity = iCapacity;
-                oData.m_iNextStop = stops.IndexOf(oVehicle.m_targetBuilding) + 1;
+                oData.m_iNextStop = GetStops().IndexOf(oVehicle.m_targetBuilding) + 1;
                 m_vehicleDatas.Add(oData);
             }
         }

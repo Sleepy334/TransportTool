@@ -6,7 +6,7 @@ namespace PublicTransportInfo
 {
     public class PublicTransportInstance : MonoBehaviour
     { 
-        internal static PublicTransportInfoPanel? s_mainPanel = null;
+        internal static MainPanel? s_mainPanel = null;
         internal static LineIssuePanel? s_LineIssuePanel2 = null;
         internal static MainToolbarButton? s_ToolbarButton = null;
         private static UITextureAtlas? s_atlas = null;
@@ -25,7 +25,7 @@ namespace PublicTransportInfo
         {
             if (PublicTransportLoader.isGameLoaded)
             {
-                s_mainPanel = UIView.GetAView().AddUIComponent(typeof(PublicTransportInfoPanel)) as PublicTransportInfoPanel;
+                s_mainPanel = UIView.GetAView().AddUIComponent(typeof(MainPanel)) as MainPanel;
 
                 if (ModSettings.GetSettings().MainToolbarButton)
                 {
@@ -47,7 +47,7 @@ namespace PublicTransportInfo
                 if (s_mainPanel == null)
                 {
                     // Creating GUI
-                    s_mainPanel = UIView.GetAView().AddUIComponent(typeof(PublicTransportInfoPanel)) as PublicTransportInfoPanel;
+                    s_mainPanel = UIView.GetAView().AddUIComponent(typeof(MainPanel)) as MainPanel;
                 }
 
                 if (s_mainPanel != null)
@@ -132,14 +132,6 @@ namespace PublicTransportInfo
                 {
                     ShowLineIssuePanel(-1);
                 }
-            }
-        }
-
-        public static void UpdateMainPanel()
-        {
-            if (s_mainPanel != null && s_mainPanel.isVisible)
-            {
-                s_mainPanel.UpdateLineData();
             }
         }
 

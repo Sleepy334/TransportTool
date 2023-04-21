@@ -133,11 +133,11 @@ namespace PublicTransportInfo
                 m_data = rowData;
                 if (m_lblTime != null)
                 {
-                    m_lblTime.text = rowData.m_CreationTime.ToString("h:mm:ss");
+                    m_lblTime.text = rowData.GetCreationTime();
                 }
                 if (m_lblType != null)
                 {
-                    m_lblType.text = rowData.m_transportType.ToString();
+                    m_lblType.text = rowData.GetTransportType();
                 }
                 if (m_lblName != null)
                 {
