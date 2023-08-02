@@ -1,8 +1,4 @@
-﻿using ColossalFramework.UI;
-using PublicTransportInfo.Util;
-using SleepyCommon;
-using System;
-using System.Collections.Generic;
+﻿using System;
 
 namespace PublicTransportInfo
 {

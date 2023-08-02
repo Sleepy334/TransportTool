@@ -1,11 +1,9 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
-using PublicTransportInfo.Util;
 using SleepyCommon;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using UnityEngine;
 using static PublicTransportInfo.ListViewRowComparer;

@@ -1,5 +1,4 @@
 ﻿using ICities;
-using PublicTransportInfo.Util;
 
 namespace PublicTransportInfo
 {
@@ -7,7 +6,7 @@ namespace PublicTransportInfo
     {
 		public static string ModName => "TransportTool " + Version;
 
-		private static string Version = "v2.5.2";
+		private static string Version = "v2.5.4";
 		public static string Title => "Transport Tool" + " " + Version;
 
 		public static bool IsEnabled = false;
@@ -27,8 +26,6 @@ namespace PublicTransportInfo
 		public void OnEnabled()
 		{
 			IsEnabled = true;
-
-			Localization.LoadAllLanguageFiles();
 		}
 
 		public void OnDisabled()

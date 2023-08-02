@@ -1,12 +1,8 @@
-﻿using ColossalFramework;
-using ColossalFramework.UI;
-using PublicTransportInfo.Util;
+﻿using ColossalFramework.UI;
 using SleepyCommon;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using UnityEngine;
 
 namespace PublicTransportInfo

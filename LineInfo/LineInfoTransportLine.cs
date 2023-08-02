@@ -1,6 +1,5 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
-using PublicTransportInfo.Util;
 using System;
 using System.Collections.Generic;
 using System.Reflection;

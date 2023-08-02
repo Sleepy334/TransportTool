@@ -1,7 +1,5 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
-using PublicTransportInfo.Util;
-using System;
 using UnityEngine;
 
 namespace PublicTransportInfo

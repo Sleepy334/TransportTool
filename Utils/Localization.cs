@@ -6,47 +6,30 @@ using System.Text.RegularExpressions;
 using ColossalFramework.Globalization;
 using ColossalFramework.Plugins;
 
-namespace PublicTransportInfo.Util
+namespace PublicTransportInfo
 {
     public class Localization
     {
         public const string SYSTEM_DEFAULT = "System Default";
 
-        private static readonly Dictionary<string, Locale> localeStore = new Dictionary<string, Locale>();
+        private static readonly Dictionary<string, Locale> s_localeStore = new Dictionary<string, Locale>();
+        private static bool s_bInitialised = false;
 
-        public static void LoadAllLanguageFiles()
+        public static string Get(string sKey)
         {
-            string sPath = LocalePath();
-            if (Directory.Exists(sPath))
+            if (!s_bInitialised)
             {
-                // Load each file in directory and attempt to deserialise as a translation file.
-                string[] localFiles = Directory.GetFiles(sPath);
-                foreach (string file in localFiles)
-                {
-                    Debug.Log("Locales file: " + file);
-                    if (file.EndsWith(".csv"))
-                    {
-                        Locale locale = LocaleFromFile(file);
-
-                        string sLanguage = locale.Get(new Locale.Key { m_Identifier = "CODE" });
-                        if (!string.IsNullOrEmpty(sLanguage) && !localeStore.ContainsKey(sLanguage))
-                        {
-                            localeStore[sLanguage] = locale;
-                        }
-                    }
-                }
-                Debug.Log("Locales loaded: " + localeStore.Count);
-            } 
-            else
-            {
-                Debug.Log("Locales directory not found: " + LocalePath());
-            }  
-
-            // Load en from resources so we have at least 1 language
-            if (localeStore.Count == 0)
-            {
-                localeStore.Add("en", LocaleFromResource("PublicTransportInfo.Locales.en.csv"));
+                s_bInitialised = true;
+                LoadAllLanguageFiles();
             }
+
+            string sText = GetValue(sKey);
+            if (string.IsNullOrEmpty(sText) || sText.Contains(sKey))
+            {
+                Debug.Log("LOCALIZATION Couldn't find: " + sKey);
+            }
+            sText = sText.Replace("\\r\\n", "\r\n");
+            return sText;
         }
 
         public static string[] GetLoadedLanguages()
@@ -54,7 +37,7 @@ namespace PublicTransportInfo.Util
             List<string> languages = new List<string>();
 
             languages.Add(SYSTEM_DEFAULT);
-            foreach (KeyValuePair<string, Locale> kvp in localeStore)
+            foreach (KeyValuePair<string, Locale> kvp in s_localeStore)
             {
                 Locale locale = kvp.Value;
                 string sCode = locale.Get(new Locale.Key { m_Identifier = "CODE" });
@@ -70,7 +53,7 @@ namespace PublicTransportInfo.Util
             List<string> languages = new List<string>();
 
             languages.Add(SYSTEM_DEFAULT);
-            foreach (KeyValuePair<string, Locale> kvp in localeStore)
+            foreach (KeyValuePair<string, Locale> kvp in s_localeStore)
             {
                 Locale locale = kvp.Value;
                 string sCode = locale.Get(new Locale.Key { m_Identifier = "CODE" });
@@ -86,26 +69,78 @@ namespace PublicTransportInfo.Util
             return Math.Max(0, languages.IndexOf(sCode));
         }
 
+        private static void LoadAllLanguageFiles()
+        {
+            string sPath = LocalePath();
+            if (!string.IsNullOrEmpty(sPath) && Directory.Exists(sPath))
+            {
+                // Load each file in directory and attempt to deserialise as a translation file.
+                string[] localFiles = Directory.GetFiles(sPath);
+                foreach (string file in localFiles)
+                {
+                    if (file.EndsWith(".csv"))
+                    {
+                        Locale locale = LocaleFromFile(file);
+
+                        string sLanguage = locale.Get(new Locale.Key { m_Identifier = "CODE" });
+                        if (!string.IsNullOrEmpty(sLanguage) && !s_localeStore.ContainsKey(sLanguage))
+                        {
+                            s_localeStore[sLanguage] = locale;
+                        }
+                    }
+                }
+                Debug.Log("Locales loaded: " + s_localeStore.Count);
+            }
+            else
+            {
+                Debug.Log("Locales directory not found: " + LocalePath());
+            }
+
+            // Load en from resources so we have at least 1 language
+            if (s_localeStore.Count == 0)
+            {
+                s_localeStore.Add("en", LocaleFromResource(Assembly.GetExecutingAssembly().GetName().Name + ".Locales.en.csv"));
+            }
+        }
+
         private static Locale LocaleFromFile(string file)
         {
             var locale = new Locale();
             if (File.Exists(file))
             {
                 Regex CSVParser = new Regex(",(?=(?:[^\"]*\"[^\"]*\")*(?![^\"]*\"))");
-                using (var reader = new StreamReader(File.OpenRead(file)))
+                try
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    using (FileStream fileStream = File.OpenRead(file)) 
                     {
-                        string[] fields = CSVParser.Split(line);
-                        if (fields.Length == 2)
+                        if (fileStream is not null)
                         {
-                            locale.AddLocalizedString(new Locale.Key { m_Identifier = fields[0].Trim('"') }, fields[1].Trim('"'));
+                            using (var reader = new StreamReader(fileStream))
+                            {
+                                string line;
+                                while ((line = reader.ReadLine()) is not null)
+                                {
+                                    string[] fields = CSVParser.Split(line);
+                                    if (fields.Length == 2)
+                                    {
+                                        locale.AddLocalizedString(new Locale.Key { m_Identifier = Trim(fields[0]) }, Trim(fields[1]));
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            Debug.LogError("Unable to open localization file: " + file);
                         }
                     }
+                    
+                }
+                catch (Exception e)
+                {
+                    Debug.LogError("Unable to load localization file: " + file + " Error: " + e.ToString());
                 }
             }
-            
+
             return locale;
         }
 
@@ -117,17 +152,24 @@ namespace PublicTransportInfo.Util
 
             using (Stream stream = assembly.GetManifestResourceStream(resource))
             {
-                using (StreamReader reader = new StreamReader(stream))
+                if (stream is not null)
                 {
-                    string line;
-                    while ((line = reader.ReadLine()) != null)
+                    using (StreamReader reader = new StreamReader(stream))
                     {
-                        string[] fields = CSVParser.Split(line);
-                        if (fields.Length == 2)
+                        string line;
+                        while ((line = reader.ReadLine()) is not null)
                         {
-                            locale.AddLocalizedString(new Locale.Key { m_Identifier = fields[0].Trim('"') }, fields[1].Trim('"'));
+                            string[] fields = CSVParser.Split(line);
+                            if (fields.Length == 2)
+                            {
+                                locale.AddLocalizedString(new Locale.Key { m_Identifier = Trim(fields[0]) }, Trim(fields[1]));
+                            }
                         }
                     }
+                }
+                else
+                {
+                    Debug.Log("Resource locale file not found.");
                 }
             }
 
@@ -136,36 +178,40 @@ namespace PublicTransportInfo.Util
 
         private static string LocalePath()
         {
-            var modPath = PluginManager.instance.FindPluginInfo(Assembly.GetExecutingAssembly()).modPath;
-            return Path.Combine(modPath, "Locales\\");
+            PluginManager.PluginInfo pluginInfo = PluginManager.instance.FindPluginInfo(Assembly.GetExecutingAssembly());
+            if (pluginInfo is not null && !string.IsNullOrEmpty(pluginInfo.modPath))
+            {
+                return Path.Combine(pluginInfo.modPath, "Locales/");
+            }
+            return "";
         }
 
         private static string GetValue(string id)
         {
-            string sLanguage = ModSettings.GetSettings().PreferredLanguage;
+            string sLanguage = (ModSettings.GetSettings() is not null) ? ModSettings.GetSettings().PreferredLanguage : SYSTEM_DEFAULT;
+
             if (string.IsNullOrEmpty(sLanguage) || sLanguage == SYSTEM_DEFAULT)
             {
                 sLanguage = LocaleManager.instance.language ?? "en";
             }
-            if (localeStore.ContainsKey(sLanguage))
+
+            if (s_localeStore.ContainsKey(sLanguage))
             {
-                return localeStore[sLanguage].Get(new Locale.Key { m_Identifier = id });
-            } 
-            else
-            {
-                // We should at least have english due to file in resources.
-                return localeStore["en"].Get(new Locale.Key { m_Identifier = id });
+                return s_localeStore[sLanguage].Get(new Locale.Key { m_Identifier = id });
             }
+
+            // We should at least have english due to file in resources.
+            if (s_localeStore.ContainsKey("en"))
+            {
+                return s_localeStore["en"].Get(new Locale.Key { m_Identifier = id });
+            }
+
+            return $"TRANSLATION_NOT_FOUND:{id}";
         }
 
-        public static string Get(string sKey)
+        private static string Trim(string s)
         {
-            string sText = GetValue(sKey);
-            if (string.IsNullOrEmpty(sText) || sText.Contains(sKey))
-            {
-                Debug.Log("LOCALIZATION Couldn't find: " + sKey);
-            }
-            return sText;
+            return s.Trim().Trim('"');
         }
     }
 }
