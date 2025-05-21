@@ -10,6 +10,8 @@ namespace PublicTransportInfo
     {
         public const float fBUITTON_WIDTH = 32.0f;
         const float fBUITTON_HEIGHT = 22.0f;
+        private int m_iTabCount = 0;
+        private int m_selectedIndex = -1;
 
         public class TabStripSelectionChangedArgs : EventArgs
         {
@@ -22,8 +24,35 @@ namespace PublicTransportInfo
         {
         }
 
+        public int TabCount { get { return m_iTabCount; } }
+
+        public int SelectedIndex { 
+            get 
+            { 
+                return m_selectedIndex; 
+            } 
+            set
+            {
+                // Select correct tab button
+                int iIndex = 0;
+                foreach (UIComponent componentTab in components)
+                {
+                    if (componentTab != null && componentTab is UIButton)
+                    {
+                        UIButton btnTab = (UIButton)componentTab;
+                        btnTab.isEnabled = (iIndex != value);
+                        iIndex++;
+                    }
+                }
+                m_selectedIndex = value;
+            }
+        }
+
         public void Clear()
         {
+            m_iTabCount = 0;
+            m_selectedIndex = -1;
+
             if (components == null)
             {
                 return;
@@ -35,19 +64,6 @@ namespace PublicTransportInfo
             }
 
             m_ChildComponents = PoolList<UIComponent>.Obtain();
-        }
-
-        public void SelectTab(PublicTransportType eType)
-        {
-            // Select correct tab button
-            foreach (UIComponent componentTab in components)
-            {
-                if (componentTab != null && componentTab is UIButton)
-                {
-                    UIButton btnTab = (UIButton)componentTab;
-                    btnTab.isEnabled = (btnTab.name != eType.ToString());
-                }
-            }
         }
 
         public void AddTab(PublicTransportType eTransportType)
@@ -90,6 +106,8 @@ namespace PublicTransportInfo
                 spriteToolbar.spriteName = vehicleTypeIcon;
                 spriteToolbar.CenterToParent();
             }
+
+            m_iTabCount++;
         }
 
         protected virtual void OnSelectionChangedEventHandler(TabStripSelectionChangedArgs e)

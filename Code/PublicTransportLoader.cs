@@ -1,6 +1,5 @@
 ﻿using ICities;
 using System;
-using UnifiedUI.Helpers;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -9,7 +8,9 @@ namespace PublicTransportInfo
     {
         private static PublicTransportInstance? instance = null;
         public static bool isGameLoaded = false;
+        private GameObject? m_keyboardShortcutGameObject = null;
 
+        // ----------------------------------------------------------------------------------------
         private static bool ActiveInMode(LoadMode mode)
         {
             switch (mode)
@@ -39,11 +40,13 @@ namespace PublicTransportInfo
 
                 instance = new GameObject("PublicTransportInfo").AddComponent<PublicTransportInstance>();
 
-                if (PublicTransportInstance.s_mainPanel == null)
+                if (m_keyboardShortcutGameObject is null)
                 {
-                    PublicTransportInstance.Create();
+                    m_keyboardShortcutGameObject = new GameObject("KeyboardShortcuts");
+                    m_keyboardShortcutGameObject.AddComponent<KeyboardShortcuts>();
                 }
 
+                PublicTransportInstance.Create();
                 LineIssueManager.Init();
                 Patcher.PatchAll();
             }
@@ -53,27 +56,37 @@ namespace PublicTransportInfo
         public override void OnLevelUnloading()
         {
             Debug.Log("OnLevelUnloading");
-            base.OnLevelUnloading();
             isGameLoaded = false;
 
             try
             {
+                // Remove keyboard handler
+                if (m_keyboardShortcutGameObject is not null)
+                {
+                    GameObject.Destroy(m_keyboardShortcutGameObject.gameObject);
+                    m_keyboardShortcutGameObject = null;
+                }
+
                 if (instance != null)
                 {
+                    PublicTransportInstance.Destroy();
+
                     GameObject.Destroy(instance.gameObject);
+                    instance = null;
                 }
             }
             catch (Exception e)
             {
                 PublicTransportInfo.Debug.Log(e);
             }
+
+            base.OnLevelUnloading();
         }
 
         // called when unloading finished
         public override void OnReleased()
         {
             base.OnReleased();
-            PublicTransportInstance.Destroy();
             Patcher.UnpatchAll();
         }
     }

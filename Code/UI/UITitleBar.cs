@@ -5,7 +5,8 @@ namespace PublicTransportInfo
 {
     public class UITitleBar : UIPanel
     {
-        const int iTITLE_HEIGHT = 35;
+        const int iTITLE_HEIGHT = 36;
+        const int iBUTTON_HEIGHT = 35;
         const int iBUTTON_MARGIN = 35;
 
         private UISprite? m_icon = null;
@@ -64,12 +65,24 @@ namespace PublicTransportInfo
 
         private void SetupControls(string sTitle)
         {
-            width = parent.width - 8;
+            width = parent.width;
             height = iTITLE_HEIGHT;
             isVisible = true;
             canFocus = true;
             isInteractive = true;
             relativePosition = Vector3.zero;
+            backgroundSprite = "ButtonMenuDisabled";
+
+            m_icon = AddUIComponent<UISprite>();
+            if (m_icon is not null)
+            {
+                m_icon.atlas = PublicTransportInstance.LoadResources();
+                m_icon.spriteName = "BusImageInverted48x48";
+                m_icon.autoSize = false;
+                m_icon.width = iBUTTON_HEIGHT - 4;
+                m_icon.height = iBUTTON_HEIGHT - 4;
+                m_icon.relativePosition = new Vector3(0.0f, 2.0f);
+            }
 
             m_title = AddUIComponent<UILabel>();
             m_title.text = sTitle;
@@ -81,8 +94,6 @@ namespace PublicTransportInfo
             if (m_close != null)
             {
                 m_close.relativePosition = new Vector3(width - fOffset, 2);
-                m_close.width = height;
-                m_close.height = height;
                 m_close.normalBgSprite = "buttonclose";
                 m_close.hoveredBgSprite = "buttonclosehover";
                 m_close.pressedBgSprite = "buttonclosepressed";

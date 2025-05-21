@@ -1,4 +1,6 @@
 ﻿using ICities;
+using System.Reflection;
+using System;
 
 namespace PublicTransportInfo
 {
@@ -6,8 +8,16 @@ namespace PublicTransportInfo
     {
 		public static string ModName => "TransportTool " + Version;
 
-		private static string Version = "v2.5.4";
-		public static string Title => "Transport Tool" + " " + Version;
+        public static string Version
+        {
+            get
+            {
+                Version version = Assembly.GetExecutingAssembly().GetName().Version;
+                return $"v{version.Major}.{version.Minor}.{version.Build}";
+            }
+        }
+
+        public static string Title => "Transport Tool" + " " + Version;
 
 		public static bool IsEnabled = false;
 

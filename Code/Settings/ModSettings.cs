@@ -161,6 +161,12 @@ namespace PublicTransportInfo
             set;
         } = Localization.SYSTEM_DEFAULT;
 
+        public bool ActivatePublicTransportInfoView
+        {
+            get;
+            set;
+        } = true;
+
         static ModSettings()
         {
             if (GameSettings.FindSettingsFileByName(SETTINGS_FILE_NAME) == null)
@@ -174,6 +180,7 @@ namespace PublicTransportInfo
             "TransportTool_Hotkey", SETTINGS_FILE_NAME,
             key: KeyCode.I, control: true, shift: false, alt: false, true);
 
+        [XmlIgnore]
         public static SavedInputKey LineIssueHotkey = new SavedInputKey(
             "TransportTool_LineIssue_Hotkey", SETTINGS_FILE_NAME,
             key: KeyCode.Alpha1, control: true, shift: false, alt: false, true);
@@ -218,7 +225,7 @@ namespace PublicTransportInfo
                 using (StreamWriter writer = new StreamWriter(SettingsFile))
                 {
                     XmlSerializer xmlSerializer = new XmlSerializer(typeof(ModSettings));
-                    xmlSerializer.Serialize(writer, ModSettings.GetSettings());
+                    xmlSerializer.Serialize(writer, this);
                 }
             }
             catch (Exception ex)

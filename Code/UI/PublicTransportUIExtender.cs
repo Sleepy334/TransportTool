@@ -1,6 +1,5 @@
 ﻿using ColossalFramework.UI;
 using ICities;
-using JetBrains.Annotations;
 using System;
 using UnityEngine;
 
@@ -55,7 +54,7 @@ namespace PublicTransportInfo
                     UIPanel pnlUiPanel = pnlPublicTransportInfoPanel.gameObject.GetComponent<UIPanel>();
                     if (pnlUiPanel != null)
                     {
-                        bool bIPT2Running = DependencyUtilities.IsPluginRunning("928128676");
+                        bool bIPT2Running = DependencyUtils.IsImprovedPublicTransport2Running();
                         if (bIPT2Running)
                         {
                             Debug.Log("IPT2 is running.");
@@ -165,7 +164,7 @@ namespace PublicTransportInfo
 
 
                     // Show Transport Tool
-                    PublicTransportInstance.ShowMainPanel();
+                    MainPanel.Instance.Show();
                 };
 
                 m_btnTransportTool.eventClick += m_btnTransportToolClick;

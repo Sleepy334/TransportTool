@@ -71,3 +71,4 @@
 "headerUsageTooltip","Voertuig gebruik %"
 "chkDisableTransparency","Transparantie van paneel uitschakelen"
 "txtDeleteresolvedDelay","Opgeloste vertraging verwijderen (seconden)"
+"chkActivatePublicTransportInfoView","Activate public transport info view when main panel visible"

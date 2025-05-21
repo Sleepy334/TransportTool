@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace PublicTransportInfo
 {
@@ -80,6 +81,9 @@ namespace PublicTransportInfo
         public abstract string GetIssueLocation();
         
         public abstract string GetIssueTooltip();
+
+        public abstract Vector3 GetPosition();
+
         public abstract void ShowIssue();
         
         public virtual void Update() {}

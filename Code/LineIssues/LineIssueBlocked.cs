@@ -93,6 +93,12 @@ namespace PublicTransportInfo
             return sTooltip;
         }
 
+        public override Vector3 GetPosition()
+        {
+            Vehicle vehicle = VehicleManager.instance.m_vehicles.m_buffer[m_vehicleId];
+            return vehicle.GetLastFramePosition();
+        }
+
         public override void Update()
         {
             // Set resolved if needed

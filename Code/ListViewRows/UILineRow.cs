@@ -7,7 +7,7 @@ namespace PublicTransportInfo
 {
     public class UILineRow : UIPanel, IUIFastListRow
     {
-        public const float fROW_HEIGHT = 35;
+        public const float fROW_HEIGHT = 26;
 
         private UIPanel? m_pnlColor = null;
         private UILabelLiveTooltip? m_lblName = null;
@@ -373,7 +373,7 @@ namespace PublicTransportInfo
 
         private void OnItemClicked(UIComponent component, UIMouseEventParameter eventParam)
         {
-            if (DependencyUtilities.IsCommuterDestinationsRunning() && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
+            if (DependencyUtils.IsCommuterDestinationsRunning() && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
             {
                 ShowWorldInfoPanelCommuterDestinations();
             }
@@ -388,7 +388,7 @@ namespace PublicTransportInfo
             try
             {
                 // Hide the main panel before showing PTWI panel.
-                PublicTransportInstance.HideMainPanel(false);
+                MainPanel.Instance.Hide();
 
                 // Shift camera to busiest stop
                 if (m_data != null)
@@ -407,7 +407,7 @@ namespace PublicTransportInfo
             try
             {
                 // Hide the main panel before showing PTWI panel.
-                PublicTransportInstance.HideMainPanel(false);
+                MainPanel.Instance.Hide();
 
                 // Shift camera to busiest stop
                 if (m_data != null)
@@ -421,11 +421,15 @@ namespace PublicTransportInfo
             }
         }
 
-        
-
         protected void OnMouseEnter(UIComponent component, UIMouseEventParameter eventParam)
         {
-            backgroundSprite = "ListItemHighlight";
+            foreach (UIComponent c in components)
+            {
+                if (c is UILabel label)
+                {
+                    label.textColor = Color.yellow;
+                }
+            }
 
             if (m_data != null)
             {
@@ -435,7 +439,13 @@ namespace PublicTransportInfo
 
         protected void OnMouseLeave(UIComponent component, UIMouseEventParameter eventParam)
         {
-            backgroundSprite = "";
+            foreach (UIComponent c in components)
+            {
+                if (c is UILabel label)
+                {
+                    label.textColor = Color.white;
+                }
+            }
 
             ClearHighlightLine();
         }
@@ -446,8 +456,8 @@ namespace PublicTransportInfo
             {
                 if (LineIssueManager.Instance.HasVisibleLineIssues())
                 {
-                    PublicTransportInstance.HideMainPanel();
-                    PublicTransportInstance.ShowLineIssuePanel(m_data.m_iLineId);
+                    MainPanel.Instance.Hide();
+                    LineIssuePanel.Instance.Show();
                 }
             }
             else

@@ -189,13 +189,25 @@ namespace PublicTransportInfo
 
         protected void OnMouseEnter(UIComponent component, UIMouseEventParameter eventParam)
         {
-            backgroundSprite = "ListItemHighlight";
+            foreach (UILabel? label in components)
+            {
+                if (label is not null)
+                {
+                    label.textColor = Color.yellow;
+                }
+            }
+
         }
 
         protected void OnMouseLeave(UIComponent component, UIMouseEventParameter eventParam)
         {
-            backgroundSprite = "InfoviewPanel";
-            color = new Color32(81, 87, 89, 225);
+            foreach (UILabel? label in components)
+            {
+                if (label is not null)
+                {
+                    label.textColor = Color.white;
+                }
+            }
         }
     }
 }

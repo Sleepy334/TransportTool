@@ -553,7 +553,7 @@ namespace PublicTransportInfo
 
         public void ShowBusiestStopCommuterDestinations()
         {
-            if (DependencyUtilities.IsCommuterDestinationsRunning())
+            if (DependencyUtils.IsCommuterDestinationsRunning())
             {
                 // Get the Commuter Destinations panel if available
                 UIPanel pnlCommuterDestination = (UIPanel)UIView.GetAView().FindUIComponent("StopDestinationInfoPanel");

@@ -36,6 +36,12 @@ namespace PublicTransportInfo
         {
             // Nothing to do.
         }
+
+        public override Vector3 GetPosition()
+        {
+            return m_despawnedPosition;
+        }
+
         public override void ShowIssue()
         {
             // Close the vehicle panel if open so we can move elsewhere.

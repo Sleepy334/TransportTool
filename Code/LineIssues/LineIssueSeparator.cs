@@ -1,4 +1,6 @@
 ﻿
+using UnityEngine;
+
 namespace PublicTransportInfo
 {
     public class LineIssueSeparator : LineIssue
@@ -21,6 +23,11 @@ namespace PublicTransportInfo
         public override string GetLineDescription()
         {
             return "";
+        }
+
+        public override Vector3 GetPosition()
+        {
+            return Vector3.zero;
         }
 
         public override IssueType GetIssueType()

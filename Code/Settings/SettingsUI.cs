@@ -66,6 +66,7 @@ namespace PublicTransportInfo
 			UIHelper oBehaviourGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBehaviour"));
 			oBehaviourGroup.AddCheckbox(Localization.Get("chkZoomInOnTarget"), oSettings.ZoomInOnTarget, OnZoomInChanged);
             oBehaviourGroup.AddCheckbox(Localization.Get("chkDisableTransparency"), oSettings.DisableTransparency, OnDisableTransparencyChanged);
+			oBehaviourGroup.AddCheckbox(Localization.Get("chkActivatePublicTransportInfoView"), oSettings.ActivatePublicTransportInfoView, (bChecked) => { oSettings.ActivatePublicTransportInfoView = bChecked; oSettings.Save(); });
 
             // Bored Slider
             UIHelper oBoredGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBoredThreshold"));
@@ -292,14 +293,14 @@ namespace PublicTransportInfo
 
 			if (PublicTransportLoader.isGameLoaded)
 			{
-				if (UnifiedUITool.Instance == null)
+				if (UnifiedUIButton.Exists)
 				{
-					UnifiedUITool.AddUnifiedUITool();
+                    UnifiedUIButton.OnUnifiedToolbarButtonChanged(); 
 				}
 				else
 				{
-					UnifiedUITool.Instance.OnUnifiedToolbarButtonChanged();
-				}
+                    UnifiedUIButton.Add();
+                }
 			}
 		}
 

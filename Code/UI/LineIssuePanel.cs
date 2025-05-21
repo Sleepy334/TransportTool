@@ -7,9 +7,10 @@ using UnityEngine;
 
 namespace PublicTransportInfo
 {
-    public class LineIssuePanel : UIPanel
+    public class LineIssuePanel : UIMainPanel<LineIssuePanel>
     {
         public const float fTEXT_SCALE = 0.8f;
+        public const int Margin = 10;
 
         const int iMARGIN = 8;
         public const int iCOLUMN_WIDTH_TIME = 60;
@@ -28,6 +29,7 @@ namespace PublicTransportInfo
 
         public override void Start()
         {
+            Debug.Log("Start");
             base.Start();
             name = "LineIssuePanel";
             width = 740;
@@ -36,15 +38,12 @@ namespace PublicTransportInfo
             {
                 opacity = 0.95f;
             }
-            padding = new RectOffset(iMARGIN, iMARGIN, 4, 4);
-            autoLayout = true;
-            autoLayoutDirection = LayoutDirection.Vertical;
-            backgroundSprite = "UnlockingPanel2";
+            backgroundSprite = "SubcategoriesPanel";
             canFocus = true;
             isInteractive = true;
             isVisible = false;
             playAudioEvents = true;
-            m_ClipChildren = true;
+            clipChildren = true;
             eventPositionChanged += (sender, e) =>
             {
                 ModSettings settings = ModSettings.GetSettings();
@@ -68,8 +67,19 @@ namespace PublicTransportInfo
             m_title.SetOnclickHandler(OnCloseClick);
             m_title.title = Localization.Get("titleLineIssuesPanel");
 
+            UIPanel mainPanel = AddUIComponent<UIPanel>();
+            if (mainPanel != null)
+            {
+                mainPanel.width = width;
+                mainPanel.height = height - m_title.height;
+                mainPanel.padding = new RectOffset(Margin, Margin, 0, Margin);
+                mainPanel.relativePosition = new Vector3(0f, m_title.height);
+                mainPanel.autoLayout = true;
+                mainPanel.autoLayoutDirection = LayoutDirection.Vertical;
+            }
+
             // Issue list
-            m_listIssues = ListView.Create<UIIssueRow>(this, new Color32(81, 87, 89, 225), 0.8f, ListView.iROW_HEIGHT, width - 2*iMARGIN, height - m_title.height - 10);
+            m_listIssues = ListView.Create<UIIssueRow>(mainPanel, new Color32(81, 87, 89, 225), 0.8f, ListView.iROW_HEIGHT, width - 2*iMARGIN, height - m_title.height - 10);
             if (m_listIssues != null)
             {
                 m_listIssues.AddColumn(ListViewRowComparer.Columns.COLUMN_TIME, Localization.Get("listIssuesColumn1"), Localization.Get("listIssuesColumn1Tooltip"), iCOLUMN_WIDTH_TIME, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
@@ -94,6 +104,7 @@ namespace PublicTransportInfo
 
         new public void Show()
         {
+            Debug.Log("Show");
             base.Show();
             UpdatePanel();
         }

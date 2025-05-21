@@ -62,6 +62,12 @@ namespace PublicTransportInfo
             return $"{GetTransportType()}:{GetLineDescription()} - {Localization.Get("txtStop")}{m_iStopNumber} - {m_eProblem}";
         }
 
+        public override Vector3 GetPosition()
+        {
+            NetNode netNode = NetManager.instance.m_nodes.m_buffer[m_usStop];
+            return netNode.m_position;
+        }
+
         public List<ushort> GetStopList()
         {
             List<ushort> oList = new List<ushort>();

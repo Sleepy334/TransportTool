@@ -1,6 +1,7 @@
 ﻿using ColossalFramework.UI;
 using System;
 using System.Reflection;
+using UnifiedUI.GUI;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -12,12 +13,38 @@ namespace PublicTransportInfo
         private static readonly string kMainToolbarSeparatorTemplate = "MainToolbarSeparator";
         private static readonly string kMainToolbarButtonTemplate = "MainToolbarButtonTemplate";
         private static readonly string kToggleButton = "TransportTool";
+        
+        // Instance object
+        private static MainToolbarButton? s_ToolbarButton = null;
+
+
+        // ----------------------------------------------------------------------------------------
+        public static MainToolbarButton Instance
+        {
+            get
+            {
+                if (s_ToolbarButton == null)
+                {
+                    s_ToolbarButton = new MainToolbarButton();
+                }
+
+                return s_ToolbarButton;
+            }
+        }
+
+        public static bool Exists
+        {
+            get
+            {
+                return s_ToolbarButton is not null;
+            }
+        }
 
         public MainToolbarButton()
         {
         }
 
-        public void AddToolbarButton()
+        public void Add()
         {
             if (m_toggleButtonComponents == null)
             {
@@ -151,11 +178,11 @@ namespace PublicTransportInfo
         {
             if (m_toggleButtonComponents != null && m_toggleButtonComponents.ToggleButton.isVisible && IsToolbarButton(iSelectedIndex))
             {
-                PublicTransportInstance.ShowMainPanel();
+                MainPanel.Instance.Show();
             }
-            else
+            else if (MainPanel.IsVisible()) 
             {
-                PublicTransportInstance.HideMainPanel();
+                MainPanel.Instance.Hide();
             }
         }
 
@@ -163,7 +190,7 @@ namespace PublicTransportInfo
         {
             if (m_toggleButtonComponents == null)
             {
-                AddToolbarButton();
+                Add();
             }
             else
             {
@@ -196,7 +223,11 @@ namespace PublicTransportInfo
 
         private UITabstrip? GetMainToolStrip()
         {
-            return ToolsModifierControl.mainToolbar.component as UITabstrip;
+            if (ToolsModifierControl.mainToolbar is not null)
+            {
+                return ToolsModifierControl.mainToolbar.component as UITabstrip;
+            }
+            return null;
         }
 
         private bool IsToolbarButton(int iIndex)
@@ -237,10 +268,16 @@ namespace PublicTransportInfo
             // Remove event handler
             if (m_toggleButtonComponents != null)
             {
-                GetMainToolStrip().eventSelectedIndexChanged -= OnSelectedIndexChanged;
+                UITabstrip? toolStrip = GetMainToolStrip();
+                if (toolStrip != null)
+                {
+                    toolStrip.eventSelectedIndexChanged -= OnSelectedIndexChanged;
+                }
                 DestroyToggleButtonComponents(m_toggleButtonComponents);
                 m_toggleButtonComponents = null;
             }
+
+            s_ToolbarButton = null;
         }
     }
 }

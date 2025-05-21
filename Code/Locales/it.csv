@@ -71,3 +71,4 @@
 "headerUsageTooltip","Utilizzo del veicolo %"
 "chkDisableTransparency","Disattivare Trasparenza Pannello"
 "txtDeleteresolvedDelay","Cancella Ritardo Risolto (Secondi)"
+"chkActivatePublicTransportInfoView","Activate public transport info view when main panel visible"

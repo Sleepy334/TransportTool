@@ -95,13 +95,13 @@ namespace PublicTransportInfo
                 {
                     m_LineDetectors.Clear();
                 }
-                if (PublicTransportInstance.s_ToolbarButton != null)
+                if (MainToolbarButton.Exists)
                 {
-                    PublicTransportInstance.s_ToolbarButton.ShowWarningLevel(m_issueLevel);
+                    MainToolbarButton.Instance.ShowWarningLevel(m_issueLevel);
                 }
-                if (UnifiedUITool.Instance != null)
+                if (UnifiedUIButton.Exists)
                 {
-                    UnifiedUITool.Instance.ShowWarningLevel(m_issueLevel);
+                    UnifiedUIButton.ShowWarningLevel(m_issueLevel);
                 }
             }
         }
@@ -168,9 +168,9 @@ namespace PublicTransportInfo
                 {
                     m_issueLevel = LineIssue.IssueLevel.ISSUE_WARNING;
 
-                    if (PublicTransportInstance.s_mainPanel != null)
+                    if (MainPanel.Exists)
                     {
-                        PublicTransportInstance.s_mainPanel.PlayWarningSound();
+                        MainPanel.Instance.PlayWarningSound();
                     }
                 }
             }
@@ -183,14 +183,14 @@ namespace PublicTransportInfo
                 m_issueLevel = LineIssue.IssueLevel.ISSUE_NONE;                 
             }
 
-            if (PublicTransportInstance.s_ToolbarButton != null)
+            if (MainToolbarButton.Exists)
             {
-                PublicTransportInstance.s_ToolbarButton.ShowWarningLevel(m_issueLevel);
+                MainToolbarButton.Instance.ShowWarningLevel(m_issueLevel);
             }
 
-            if (UnifiedUITool.Instance != null)
+            if (UnifiedUIButton.Exists)
             {
-                UnifiedUITool.Instance.ShowWarningLevel(m_issueLevel);
+                UnifiedUIButton.ShowWarningLevel(m_issueLevel);
             }
         }
 
@@ -267,7 +267,7 @@ namespace PublicTransportInfo
             if (bAdded && bUpdate)
             {
                 UpdateWarningIcons();
-                UpdateLineIssuePanel();
+                LineIssuePanel.Instance.UpdatePanel();
             }
         }
 
@@ -298,7 +298,10 @@ namespace PublicTransportInfo
                 }
             }
 
-            UpdateLineIssuePanel();
+            if (LineIssuePanel.Exists)
+            {
+                LineIssuePanel.Instance.UpdatePanel();
+            }
         }
 
         public void RemoveResolvedIssues()
@@ -323,14 +326,6 @@ namespace PublicTransportInfo
         {
             UpdateLineIssues();
             return GetVisibleLineIssues().Count > 0;
-        }
-
-        public void UpdateLineIssuePanel()
-        {
-            if (PublicTransportInstance.s_LineIssuePanel2 != null && PublicTransportInstance.s_LineIssuePanel2.isVisible)
-            {
-                PublicTransportInstance.UpdateLineIssuePanel();
-            }
         }
 
         public string GetTooltip()

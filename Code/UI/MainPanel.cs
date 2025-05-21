@@ -10,9 +10,9 @@ using static PublicTransportInfo.ListViewRowComparer;
 
 namespace PublicTransportInfo
 {
-    public class MainPanel : UIPanel
+    public class MainPanel : UIMainPanel<MainPanel>
     {
-        public const float fTEXT_SCALE = 1.0f;
+        public const float fTEXT_SCALE = 0.9f;
 
         public const float PanelWidth = 1000;
         public const float PanelHeight = 600;
@@ -34,7 +34,7 @@ namespace PublicTransportInfo
         private UILabel? m_lblOverview = null;
         private UITitleBar? m_title = null;
 
-        private HashSet<PublicTransportType> m_TransportList;
+        private List<PublicTransportType> m_TransportList;
         private PublicTransportType m_SelectedTransportType;
 
         public static bool m_bLoadingLines = false;
@@ -42,9 +42,10 @@ namespace PublicTransportInfo
         private AudioClip? s_warningSound = null;
         private Coroutine? m_coroutine = null;
 
+        // ----------------------------------------------------------------------------------------
         public MainPanel() : base()
         {
-            m_TransportList = new HashSet<PublicTransportType>();
+            m_TransportList = new List<PublicTransportType>();
             m_SelectedTransportType = PublicTransportType.Bus;
             m_tabStrip = null;
             m_coroutine = StartCoroutine(UpdatePanelCoroutine(4));
@@ -140,7 +141,9 @@ namespace PublicTransportInfo
                 }
             }
 
+            isVisible = true;
             LoadTransportLineTabs();
+            UpdatePanel();
         }
 
         public void ListViewColumnClickEvent()
@@ -152,12 +155,12 @@ namespace PublicTransportInfo
 
         public void OnIssuesClick(UIComponent component, UIMouseEventParameter eventParam)
         {
-            PublicTransportInstance.ToggleLineIssuePanel();
+            LineIssuePanel.TogglePanel();
         }
 
         public void OnCloseClick(UIComponent component, UIMouseEventParameter eventParam)
         {
-            PublicTransportInstance.HideMainPanel();
+            Hide();
         }
 
         public void LoadTransportLineTabs()
@@ -165,13 +168,17 @@ namespace PublicTransportInfo
             if (m_tabStrip != null)
             {
                 HashSet<PublicTransportType> oLineTypes = LineInfoLoader.GetLineTypes();
-                if (m_TransportList != oLineTypes)
+                if (!m_TransportList.SequenceEqual(oLineTypes))
                 {
                     // Clearing tab strip also destroys m_lblOverview;
                     m_tabStrip.Clear();
                     m_lblOverview = null;
-                    m_TransportList = oLineTypes;
 
+                    // Store tabs
+                    m_TransportList = oLineTypes.ToList();
+                    m_TransportList.Sort();
+
+                    // Add each tab that has transport lines
                     foreach (PublicTransportType eType in Enum.GetValues(typeof(PublicTransportType)))
                     {
                         if (m_TransportList.Contains(eType))
@@ -183,19 +190,34 @@ namespace PublicTransportInfo
                     // Select first transport type if current selection is invalid 
                     if (m_TransportList != null && !m_TransportList.Contains(m_SelectedTransportType) && m_TransportList.Count() > 0)
                     {
-                        List<PublicTransportType> list = m_TransportList.ToList();
-                        list.Sort();
-                        m_SelectedTransportType = list[0];
-
-                        // Select correct tab button
-                        m_tabStrip.SelectTab(m_SelectedTransportType);
+                        m_SelectedTransportType = m_TransportList.First();
                     }
 
+                    // Select correct tab button
+                    m_tabStrip.SelectedIndex = GetCurrentIndex();
+                    
                     AddOverviewLabelToTabStrip();
 
                     m_tabStrip.ResetLayout();
                 }
             }
+        }
+
+        private int GetCurrentIndex()
+        {
+            int index = 0;
+
+            foreach (PublicTransportType eType in m_TransportList)
+            {
+                if (m_SelectedTransportType == eType)
+                {
+                    return index;
+                }
+
+                index++;
+            }
+
+            return -1;
         }
 
         public void OnTabSelectionChanged(object sender, EventArgs e)
@@ -211,47 +233,64 @@ namespace PublicTransportInfo
 
         }
 
-        public void ShowPanel()
+        protected override void OnVisibilityChanged()
         {
-            if (!isVisible)
+            // Setup panel if we haven't already.
+            if (isVisible)
             {
                 PlayClickSound(this);
 
                 if (m_ListView != null)
                 {
-                    // Turn on public transport mode so you can see the lines
-                    Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
-                    UIView.library.Hide("PublicTransportInfoViewPanel");
-
                     LoadTransportLineTabs();
 
-                    LineIssue.IssueLevel eLevel;
-                    if (LineIssueManager.Instance != null)
-                    {
-                        ushort usLineId = LineIssueManager.Instance.GetHighestLineWarningIcons(out eLevel);
-                        if (usLineId != 0 && eLevel != LineIssue.IssueLevel.ISSUE_NONE)
-                        {
-                            // Open tab for this line
-                            TransportLine oLine = TransportManager.instance.m_lines.m_buffer[usLineId];
-                            TransportInfo.TransportType eType = oLine.Info.m_transportType;
-                            PublicTransportType eTransportType = PublicTransportTypeUtils.Convert(eType);
-                            SetSelectedTransportType(eTransportType, false);
-                        }
-                        else
-                        {
-                            SetSelectedTransportType(m_SelectedTransportType, false);
-                        }
-                    }
+                    // Just load previous mode.
+                    SetSelectedTransportType(m_SelectedTransportType, false);
                 }
 
-                Show();
+                // Turn on public transport mode so you can see the lines
+                if (ModSettings.GetSettings().ActivatePublicTransportInfoView)
+                {
+                    Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
+                    UIView.library.Hide("PublicTransportInfoViewPanel");
+                }
+
+                if (MainToolbarButton.Exists)
+                {
+                    MainToolbarButton.Instance.Enable();
+                }
+
+                if (UnifiedUIButton.Exists)
+                {
+                    UnifiedUIButton.Instance.Enable();
+                }
+
                 UpdatePanel();
             }
+            else
+            {
+                PlayClickSound(this);
+                m_ListView?.Clear();
+
+                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.None, InfoManager.SubInfoMode.Default);
+
+                if (MainToolbarButton.Exists)
+                {
+                    MainToolbarButton.Instance.Disable();
+                }
+
+                if (UnifiedUIButton.Exists)
+                {
+                    UnifiedUIButton.Instance.Disable();
+                }
+            }
+
+            base.OnVisibilityChanged();
         }
 
         public void PlayWarningSound()
         {
-            if (PublicTransportInstance.s_mainPanel != null && ModSettings.GetSettings().PlaySoundForWarnings)
+            if (ModSettings.GetSettings().PlaySoundForWarnings)
             {
                 if (s_warningSound == null)
                 {
@@ -263,35 +302,23 @@ namespace PublicTransportInfo
             }
         }
 
-        public void HidePanel(bool bClearInfoMode = true)
-        {
-            PlayClickSound(this);
-            if (bClearInfoMode)
-            {
-                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.None, InfoManager.SubInfoMode.Default);
-            }
-            Hide();
-            m_ListView?.Clear();
-        }
-
         public void SetSelectedTransportType(PublicTransportType eType, bool bUpdatePanel = true)
         {
             if (m_bLoadingLines)
             {
                 return;
             }
-            
-            if (m_SelectedTransportType != eType)
+
+            m_SelectedTransportType = eType;
+
+            if (m_tabStrip is not null)
             {
-                m_SelectedTransportType = eType;
+                m_tabStrip.SelectedIndex = GetCurrentIndex();
+            }
 
-                // Select correct tab button
-                m_tabStrip?.SelectTab(m_SelectedTransportType);
-
-                if (bUpdatePanel)
-                {
-                    UpdatePanel();
-                }
+            if (bUpdatePanel)
+            {
+                UpdatePanel();
             }
         }
 

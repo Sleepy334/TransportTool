@@ -71,3 +71,4 @@
 "headerUsageTooltip","Vehicle usage %"
 "chkDisableTransparency","Disable Panel Transparency"
 "txtDeleteresolvedDelay","Delete Resolved Delay (Seconds)"
+"chkActivatePublicTransportInfoView","Activate public transport info view when main panel visible"
