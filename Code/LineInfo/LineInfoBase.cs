@@ -1,9 +1,12 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using PublicTransportInfo.UI.ListView;
+using SleepyCommon;
 using System;
 using System.Collections.Generic;
 using System.Reflection;
 using UnityEngine;
+using static RenderManager;
 using static TransportInfo;
 
 namespace PublicTransportInfo
@@ -27,7 +30,6 @@ namespace PublicTransportInfo
             public int m_iBoredCount;
         }
 
-        public int m_iLineId;
         public Color32 m_color;
         public int m_iPassengers;
         public int m_iCapacity;
@@ -43,6 +45,17 @@ namespace PublicTransportInfo
         protected List<LineData> m_stopPassengerCount;
         protected List<VehicleData> m_vehicleDatas;
 
+        // ----------------------------------------------------------------------------------------
+        public abstract TransportType GetTransportType();
+        public abstract int GetLineId();
+        public abstract int GetStopCount();
+        public abstract List<ushort> GetStops();
+        public abstract LineIssueDetector? GetLineIssueDetector();
+        protected abstract void LoadVehicleInfo(); 
+        public abstract bool IsWorldInfoPanelVisible();
+        public abstract void ShowStopWorldInfoPanel(ushort stopNodeId);
+
+        // ----------------------------------------------------------------------------------------
         public LineInfoBase()
         {
             m_iPassengers = 0;
@@ -57,98 +70,31 @@ namespace PublicTransportInfo
             m_vehicleDatas = new List<VehicleData>();
         }
 
-        public abstract TransportType GetTransportType();
-        public abstract int GetStopCount();
-        public abstract List<ushort> GetStops();
-        public abstract LineIssueDetector? GetLineIssueDetector();
-        public abstract void ShowBusiestStop();
-        public abstract string GetLineName();
-
-        protected abstract void LoadVehicleInfo();
-
-        public static int ComparatorBase(int iResult, LineInfoBase oLine1, LineInfoBase oLine2)
+        public virtual string GetLineName()
         {
-            if (iResult == 0)
-            {
-                iResult = oLine2.m_iLineId - oLine1.m_iLineId;
-            }
-            return iResult;
+            return TransportManagerUtils.GetSafeLineName(GetTransportType(), GetLineId());
         }
 
-        public static int ComparatorName(LineInfoBase oLine1, LineInfoBase oLine2)
+        public virtual StopInfo GetStopInfo()
         {
-            return ComparatorBase(oLine1.GetLineName().CompareTo(oLine2.GetLineName()), oLine1, oLine2);
+            StopInfo info = new StopInfo();
+            info.m_transportType = GetTransportType();
+            info.m_currentLineId = GetLineId();
+            info.m_stopNumber = m_iBusiestStopNumber;
+            info.m_currentStopId = m_usBusiestStopId;
+            return info;
         }
 
-        public static int ComparatorStops(LineInfoBase oLine1, LineInfoBase oLine2)
+        public virtual ushort GetBusiestStop()
         {
-            return ComparatorBase(oLine1.GetStopCount().CompareTo(oLine2.GetStopCount()), oLine1, oLine2);
+            return m_usBusiestStopId;
         }
 
-        public static int ComparatorVehicles(LineInfoBase oLine1, LineInfoBase oLine2)
+        public virtual ushort GetNextStop(ushort stopId, out int stopNumber)
         {
-            return ComparatorBase(oLine1.m_iVehicleCount.CompareTo(oLine2.m_iVehicleCount), oLine1, oLine2);
-        }
-
-        public static int ComparatorPassengers(LineInfoBase oLine1, LineInfoBase oLine2)
-        {
-            return ComparatorBase(oLine1.m_iPassengers.CompareTo(oLine2.m_iPassengers), oLine1, oLine2);
-        }
-
-        public static int ComparatorUsage(LineInfoBase oLine1, LineInfoBase oLine2)
-        {
-            return ComparatorBase(oLine1.GetUsage().CompareTo(oLine2.GetUsage()), oLine1, oLine2);
-        }
-
-        public static int ComparatorWaiting(LineInfoBase oLine1, LineInfoBase oLine2)
-        {
-            return ComparatorBase(oLine1.m_iWaiting.CompareTo(oLine2.m_iWaiting), oLine1, oLine2);
-        }
-
-        public static int ComparatorBusiest(LineInfoBase oLine1, LineInfoBase oLine2)
-        {
-            return ComparatorBase(oLine1.m_iBusiest.CompareTo(oLine2.m_iBusiest), oLine1, oLine2);
-        }
-
-        public static int ComparatorBored(LineInfoBase oLine1, LineInfoBase oLine2)
-        {
-            return ComparatorBase(oLine1.m_iBored.CompareTo(oLine2.m_iBored), oLine1, oLine2);
-        }
-
-        public static Comparison<LineInfoBase> GetComparator(ListViewRowComparer.Columns eSortColumn)
-        {
-            switch (eSortColumn)
-            {
-                case ListViewRowComparer.Columns.COLUMN_NAME:
-                    return LineInfoBase.ComparatorName;
-                case ListViewRowComparer.Columns.COLUMN_STOPS:
-                    return LineInfoBase.ComparatorStops;
-                case ListViewRowComparer.Columns.COLUMN_VEHICLES:
-                    return LineInfoBase.ComparatorVehicles;
-                case ListViewRowComparer.Columns.COLUMN_PASSENGERS:
-                    return LineInfoBase.ComparatorPassengers;
-                case ListViewRowComparer.Columns.COLUMN_VEHICLE_USAGE:
-                    return LineInfoBase.ComparatorUsage;
-                case ListViewRowComparer.Columns.COLUMN_WAITING:
-                    return LineInfoBase.ComparatorWaiting;
-                case ListViewRowComparer.Columns.COLUMN_BUSIEST:
-                    return LineInfoBase.ComparatorBusiest;
-                case ListViewRowComparer.Columns.COLUMN_BORED:
-                    return LineInfoBase.ComparatorBored;
-            }
-
-            return LineInfoBase.ComparatorName;
-        }
-
-        public static int CompareTo(ListViewRowComparer.Columns eSortColumn, LineInfoBase oFirst, LineInfoBase oSecond)
-        {
-            Comparison<LineInfoBase> SortComparison = GetComparator(eSortColumn);
-            return SortComparison(oFirst, oSecond);
-        }
-
-        public int CompareTo(LineInfoBase obj)
-        {
-            return ComparatorName(this, obj);
+            ushort uiNextStop =  TransportLine.GetNextStop(stopId);
+            stopNumber = GetStops().IndexOf(uiNextStop) + 1;
+            return uiNextStop;
         }
 
         protected static int GetVehiclePassengerCount(ushort usVehicleId, out int iCapacity)
@@ -180,7 +126,7 @@ namespace PublicTransportInfo
             LoadVehicleInfo();
 
             // Get issue level for this line
-            m_eLevel = LineIssueManager.Instance.GetLineWarningLevel((ushort) m_iLineId, out m_lineIssueTooltip);
+            m_eLevel = LineIssueManager.Instance.GetLineWarningLevel((ushort) GetLineId(), out m_lineIssueTooltip);
         }
 
         protected virtual void LoadLineInfo()
@@ -326,7 +272,7 @@ namespace PublicTransportInfo
 
             if (iStopsToShow > 0 && m_stopPassengerCount != null)
             {
-                TransportLine oLine = Singleton<TransportManager>.instance.m_lines.m_buffer[m_iLineId];
+                TransportLine oLine = Singleton<TransportManager>.instance.m_lines.m_buffer[GetLineId()];
 
                 m_stopPassengerCount.Sort((x, y) =>
                 {
@@ -551,28 +497,90 @@ namespace PublicTransportInfo
             return "";
         }
 
-        public void ShowBusiestStopCommuterDestinations()
+        // ----------------------------------------------------------------------------------------
+        public static int ComparatorBase(int iResult, LineInfoBase oLine1, LineInfoBase oLine2)
         {
-            if (DependencyUtils.IsCommuterDestinationsRunning())
+            if (iResult == 0)
             {
-                // Get the Commuter Destinations panel if available
-                UIPanel pnlCommuterDestination = (UIPanel)UIView.GetAView().FindUIComponent("StopDestinationInfoPanel");
-                if (pnlCommuterDestination != null)
-                {
-                    // Find the Show function with reflection so we dont need to add CSLCommuterDestination.dll as dependency and risk loading issues.
-                    // public void StopDestinationInfoPanel.Show(ushort stopId)
-                    MethodInfo methodShow = pnlCommuterDestination.GetType().GetMethod("Show", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(ushort) }, null);
-                    if (methodShow != null)
-                    {
-                        object[] parametersArray = new object[] { m_usBusiestStopId };
-                        methodShow.Invoke(pnlCommuterDestination, parametersArray);
-                    } 
-                    else
-                    {
-                        Debug.Log("CSLShowCommuterDestination.StopDestinationInfoPanel.Show(ushort usStopId) not found.");
-                    }
-                }
+                iResult = oLine2.GetLineId() - oLine1.GetLineId();
             }
+            return iResult;
+        }
+
+        public static int ComparatorName(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.GetLineName().CompareTo(oLine2.GetLineName()), oLine1, oLine2);
+        }
+
+        public static int ComparatorStops(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.GetStopCount().CompareTo(oLine2.GetStopCount()), oLine1, oLine2);
+        }
+
+        public static int ComparatorVehicles(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.m_iVehicleCount.CompareTo(oLine2.m_iVehicleCount), oLine1, oLine2);
+        }
+
+        public static int ComparatorPassengers(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.m_iPassengers.CompareTo(oLine2.m_iPassengers), oLine1, oLine2);
+        }
+
+        public static int ComparatorUsage(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.GetUsage().CompareTo(oLine2.GetUsage()), oLine1, oLine2);
+        }
+
+        public static int ComparatorWaiting(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.m_iWaiting.CompareTo(oLine2.m_iWaiting), oLine1, oLine2);
+        }
+
+        public static int ComparatorBusiest(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.m_iBusiest.CompareTo(oLine2.m_iBusiest), oLine1, oLine2);
+        }
+
+        public static int ComparatorBored(LineInfoBase oLine1, LineInfoBase oLine2)
+        {
+            return ComparatorBase(oLine1.m_iBored.CompareTo(oLine2.m_iBored), oLine1, oLine2);
+        }
+
+        public static Comparison<LineInfoBase> GetComparator(ListViewRowComparer.Columns eSortColumn)
+        {
+            switch (eSortColumn)
+            {
+                case ListViewRowComparer.Columns.COLUMN_NAME:
+                    return LineInfoBase.ComparatorName;
+                case ListViewRowComparer.Columns.COLUMN_STOPS:
+                    return LineInfoBase.ComparatorStops;
+                case ListViewRowComparer.Columns.COLUMN_VEHICLES:
+                    return LineInfoBase.ComparatorVehicles;
+                case ListViewRowComparer.Columns.COLUMN_PASSENGERS:
+                    return LineInfoBase.ComparatorPassengers;
+                case ListViewRowComparer.Columns.COLUMN_VEHICLE_USAGE:
+                    return LineInfoBase.ComparatorUsage;
+                case ListViewRowComparer.Columns.COLUMN_WAITING:
+                    return LineInfoBase.ComparatorWaiting;
+                case ListViewRowComparer.Columns.COLUMN_BUSIEST:
+                    return LineInfoBase.ComparatorBusiest;
+                case ListViewRowComparer.Columns.COLUMN_BORED:
+                    return LineInfoBase.ComparatorBored;
+            }
+
+            return LineInfoBase.ComparatorName;
+        }
+
+        public static int CompareTo(ListViewRowComparer.Columns eSortColumn, LineInfoBase oFirst, LineInfoBase oSecond)
+        {
+            Comparison<LineInfoBase> SortComparison = GetComparator(eSortColumn);
+            return SortComparison(oFirst, oSecond);
+        }
+
+        public int CompareTo(LineInfoBase obj)
+        {
+            return ComparatorName(this, obj);
         }
     }
 }

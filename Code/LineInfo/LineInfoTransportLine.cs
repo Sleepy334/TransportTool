@@ -1,19 +1,20 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using SleepyCommon;
 using System;
 using System.Collections.Generic;
-using System.Reflection;
-using UnityEngine;
 using static TransportInfo;
 
 namespace PublicTransportInfo
 {
     public class LineInfoTransportLine :  LineInfoBase
     {
+        public int m_iLineId = 0;
         private TransportType m_eType;
         private List<ushort>? m_stops = null;
 
-        public LineInfoTransportLine(TransportType transportType) : base()
+        public LineInfoTransportLine(TransportType transportType) : 
+            base()
         {
             m_eType = transportType;
         }
@@ -22,10 +23,9 @@ namespace PublicTransportInfo
         {
             return m_eType;
         }
-
-        public override string GetLineName()
+        public override int GetLineId()
         {
-            return TransportManagerUtils.GetSafeLineName(m_iLineId);
+            return m_iLineId;
         }
 
         public override int GetStopCount()
@@ -113,22 +113,6 @@ namespace PublicTransportInfo
                 m_vehicleDatas.Add(oData);
             }
         }
-
-        public override void ShowBusiestStop()
-        {
-            // Turn on public transport mode so you can see the lines
-            Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
-            UIView.library.Hide("PublicTransportInfoViewPanel");
-
-            // Zoom in on busiest stop
-            ModSettings oSettings = ModSettings.GetSettings();
-            InstanceID oInstanceId = new InstanceID { TransportLine = (ushort)m_iLineId };
-            Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_usBusiestStopId].m_position;
-            PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, oSettings.ZoomInOnTarget);
-
-            // Open transport line panel
-            WorldInfoPanel.Show<PublicTransportWorldInfoPanel>(oStopPosition, oInstanceId);
-        }
         
         public override string GetPassengersTooltip()
         {
@@ -137,6 +121,23 @@ namespace PublicTransportInfo
             int iResidentCount = (int)oLine.m_passengers.m_residentPassengers.m_averageCount;
             int total = iTouristCount + iResidentCount;
             return Localization.Get("txtWeeklyPassengers") + total + "\r\n" + Localization.Get("txtResidents") + ": " + iResidentCount + "\r\n" + Localization.Get("txtTourists") + ": " + iTouristCount;
+        }
+
+        public override bool IsWorldInfoPanelVisible()
+        {
+            return TransportManagerUtils.IsPublicTransportWorldInfoPanelVisible();
+        }
+
+        public override void ShowStopWorldInfoPanel(ushort stopNodeId)
+        {
+            NetNode node = Singleton<NetManager>.instance.m_nodes.m_buffer[stopNodeId];
+            if (node.m_flags != 0)
+            {
+                WorldInfoPanel.Show<PublicTransportWorldInfoPanel>(node.m_position, new InstanceID { TransportLine = (ushort)GetLineId() });
+
+                // Bring to front
+                MainPanel.Instance.SendToBack();
+            }
         }
 
         public override int CompareVehicleDataProgress(VehicleData x, VehicleData y)

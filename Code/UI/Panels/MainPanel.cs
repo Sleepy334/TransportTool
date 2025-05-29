@@ -1,12 +1,15 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using PublicTransportInfo.UI;
+using PublicTransportInfo.UI.ListView;
+using PublicTransportInfo.UI.ListViewRows;
 using SleepyCommon;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using static PublicTransportInfo.ListViewRowComparer;
+using static PublicTransportInfo.UI.ListView.ListViewRowComparer;
 
 namespace PublicTransportInfo
 {
@@ -30,7 +33,7 @@ namespace PublicTransportInfo
         public const int iCOLUMN_WIDTH_BORED = 70;
 
         private TabStrip? m_tabStrip;
-        private ListView? m_ListView = null;
+        private UIListView? m_ListView = null;
         private UILabel? m_lblOverview = null;
         private UITitleBar? m_title = null;
 
@@ -41,6 +44,12 @@ namespace PublicTransportInfo
 
         private AudioClip? s_warningSound = null;
         private Coroutine? m_coroutine = null;
+        private CitizenDestinationRenderer? m_renderer = null;
+
+
+        // Currently viewed line info
+        private StopInfo m_stopInfo = new StopInfo();
+        private UIInfoLabel? m_infoLabel = null;
 
         // ----------------------------------------------------------------------------------------
         public MainPanel() : base()
@@ -49,11 +58,12 @@ namespace PublicTransportInfo
             m_SelectedTransportType = PublicTransportType.Bus;
             m_tabStrip = null;
             m_coroutine = StartCoroutine(UpdatePanelCoroutine(4));
+            m_renderer = new CitizenDestinationRenderer();
         }
 
         public override void Start()
         {
-            //base.Start();
+            base.Start();
             name = "PublicTransportInfoPanel";
             width = PanelWidth;
             height = PanelHeight;
@@ -75,9 +85,14 @@ namespace PublicTransportInfo
             m_title = AddUIComponent<UITitleBar>();
             if (m_title != null)
             {
-                m_title.SetOnclickHandler(OnCloseClick);
-                m_title.SetIssuesHandler(OnIssuesClick);
-                m_title.title = ITransportInfoMain.Title;
+                m_title.Setup(TransportToolMod.Instance.Name, PublicTransportInstance.LoadResources(), OnCloseClick);
+                m_title.AddButton("btnIssues", atlas, "IconWarning", "Show Issues Panel", OnIssuesClick);
+                m_title.AddButton("btnHighlight", atlas, "InfoIconLevel", "Highlight Waiting Citizen De", OnHighlightClick);
+                m_title.AddButton("btnInfoView", atlas, "InfoIconPublicTransport", "Toggle Public Transport Info View", OnInfoClick);
+                m_title.SetupButtons();
+
+                UpdateInfoButtonIcon();
+                UpdateHighlightButtonIcon();
             }
 
             UIPanel mainPanel = AddUIComponent<UIPanel>();
@@ -96,7 +111,7 @@ namespace PublicTransportInfo
             {
                 m_tabStrip.backgroundSprite = "GenericPanel";
                 m_tabStrip.name = "tabStrip";
-                m_tabStrip.width = width - (Margin * 2);
+                m_tabStrip.width = width - Margin * 2;
                 m_tabStrip.height = 40;
                 m_tabStrip.autoLayoutDirection = LayoutDirection.Horizontal;
                 m_tabStrip.autoLayoutStart = LayoutStart.TopLeft;
@@ -107,7 +122,7 @@ namespace PublicTransportInfo
             }
             else
             {
-                Debug.Log("m_tabStrip is null");
+                CDebug.Log("m_tabStrip is null");
                 return;
             }
 
@@ -119,7 +134,7 @@ namespace PublicTransportInfo
                 tabPanel.height = height - m_title.height - m_tabStrip.height - Margin;
                 tabPanel.autoLayout = true;
 
-                m_ListView = ListView.Create<UILineRow>(tabPanel, Color.white, fTEXT_SCALE, UILineRow.fROW_HEIGHT, tabPanel.width, tabPanel.height);
+                m_ListView = UIListView.Create<UILineRow>(tabPanel, Color.white, fTEXT_SCALE, UILineRow.fROW_HEIGHT, tabPanel.width, tabPanel.height);
                 if (m_ListView != null)
                 {
                     m_ListView.width = tabPanel.width;
@@ -137,9 +152,11 @@ namespace PublicTransportInfo
                 }
                 else
                 {
-                    Debug.LogError("listView is null");
+                    CDebug.LogError("listView is null");
                 }
             }
+
+            m_infoLabel = new UIInfoLabel(this);
 
             isVisible = true;
             LoadTransportLineTabs();
@@ -156,6 +173,82 @@ namespace PublicTransportInfo
         public void OnIssuesClick(UIComponent component, UIMouseEventParameter eventParam)
         {
             LineIssuePanel.TogglePanel();
+        }
+
+        public void OnHighlightClick(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            ModSettings.GetSettings().HighlightCitizenDestination = !ModSettings.GetSettings().HighlightCitizenDestination;
+            ModSettings.GetSettings().Save();
+            UpdateHighlightButtonIcon();
+        }
+
+        public void OnInfoClick(UIComponent component, UIMouseEventParameter eventParam)
+        {
+            ModSettings.GetSettings().ActivatePublicTransportInfoView = !ModSettings.GetSettings().ActivatePublicTransportInfoView;
+            ModSettings.GetSettings().Save();
+
+            // Turn on public transport mode so you can see the lines
+            
+            if (ModSettings.GetSettings().ActivatePublicTransportInfoView)
+            {
+                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
+                UIView.library.Hide("PublicTransportInfoViewPanel");
+            }
+            else
+            {
+                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.None, InfoManager.SubInfoMode.Default);
+            }
+            
+
+            UpdateInfoButtonIcon();
+        }
+
+        public void UpdateInfoButtonIcon()
+        {
+            if (m_title is not null)
+            {
+                string sIcon = "";
+                string sTooltip = Localization.Get("tooltipActivatePublicTransportInfoView");
+
+                if (ModSettings.GetSettings().ActivatePublicTransportInfoView)
+                {
+                    sIcon = "InfoIconPublicTransportPressed";
+                    sTooltip += ": On";
+                }
+                else
+                {
+                    sIcon = "InfoIconPublicTransport";
+                    sTooltip += ": Off";
+                }
+
+                m_title.Buttons[2].normalBgSprite = sIcon;
+                m_title.Buttons[2].tooltip = sTooltip;
+                m_title.Buttons[2].RefreshTooltip();
+            }
+        }
+
+        public void UpdateHighlightButtonIcon()
+        {
+            if (m_title is not null)
+            {
+                string sIcon = "";
+                string sTooltip = "";
+
+                if (ModSettings.GetSettings().HighlightCitizenDestination)
+                {
+                    sIcon = "InfoIconLevel";
+                    sTooltip = Localization.Get("tooltipHighlightDestinationOn");
+                }
+                else
+                {
+                    sIcon = "InfoIconLevelPressed";
+                    sTooltip = Localization.Get("tooltipHighlightDestinationOff");
+                }
+
+                m_title.Buttons[1].normalBgSprite = sIcon;
+                m_title.Buttons[1].tooltip = sTooltip;
+                m_title.Buttons[1].RefreshTooltip();
+            }
         }
 
         public void OnCloseClick(UIComponent component, UIMouseEventParameter eventParam)
@@ -229,8 +322,10 @@ namespace PublicTransportInfo
                 {
                     SetSelectedTransportType(eArgs.m_eType);
                 }
+                
             }
 
+            ResetCurrentStop();
         }
 
         protected override void OnVisibilityChanged()
@@ -272,7 +367,11 @@ namespace PublicTransportInfo
                 PlayClickSound(this);
                 m_ListView?.Clear();
 
-                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.None, InfoManager.SubInfoMode.Default);
+                if (ModSettings.GetSettings().ActivatePublicTransportInfoView && 
+                    !TransportManagerUtils.IsPublicTransportWorldInfoPanelVisible())
+                {
+                    Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.None, InfoManager.SubInfoMode.Default);
+                }
 
                 if (MainToolbarButton.Exists)
                 {
@@ -283,7 +382,14 @@ namespace PublicTransportInfo
                 {
                     UnifiedUIButton.Instance.Disable();
                 }
+
+                if (m_infoLabel is not null)
+                {
+                    m_infoLabel.Hide();
+                }
             }
+
+            ResetCurrentStop();
 
             base.OnVisibilityChanged();
         }
@@ -374,12 +480,12 @@ namespace PublicTransportInfo
 
                     if (m_title != null)
                     {
-                        m_title.title = "[" + m_SelectedTransportType.ToString() + ":" + iLineCount + "] " + ITransportInfoMain.Title;
+                        m_title.title = "[" + m_SelectedTransportType.ToString() + ":" + iLineCount + "] " + TransportToolMod.Instance.Name;
                     }
                 }
                 else
                 {
-                    Debug.Log("m_ListView is null");
+                    CDebug.Log("m_ListView is null");
                 }
 
                 // Update overview label
@@ -387,12 +493,14 @@ namespace PublicTransportInfo
             }
             catch (Exception ex)
             {
-                Debug.Log(ex);
+                CDebug.Log(ex);
             }
             finally
             {
                 m_bLoadingLines = false;
             }
+
+            ShowInfo();
         }
 
         public void AddOverviewLabelToTabStrip()
@@ -411,17 +519,17 @@ namespace PublicTransportInfo
                     m_lblOverview.textAlignment = UIHorizontalAlignment.Right;
                     m_lblOverview.autoSize = false;
                     m_lblOverview.height = m_tabStrip.height - 8; // 4 padding top and bottom
-                    int iButtonWidth = (iButtonCount * 46 + 4 + 10);
+                    int iButtonWidth = iButtonCount * 46 + 4 + 10;
                     m_lblOverview.width = m_tabStrip.width - iButtonWidth;
 
                     // DEBUG HELP
-                    //Debug.Log("Overview width: " + m_lblOverview.width + "iButtonWidth: " + iButtonWidth);
+                    //CDebug.Log("Overview width: " + m_lblOverview.width + "iButtonWidth: " + iButtonWidth);
                     //m_lblOverview.backgroundSprite = "InfoviewPanel";
                     //m_lblOverview.color = Color.red;
                 }
                 else
                 {
-                    Debug.LogError("m_lblOverview is null");
+                    CDebug.LogError("m_lblOverview is null");
                 }
             }
         }
@@ -447,7 +555,7 @@ namespace PublicTransportInfo
             }
             else
             {
-                Debug.LogError("m_lblOverview is null"); 
+                CDebug.LogError("m_lblOverview is null"); 
             }
         }
 
@@ -460,6 +568,55 @@ namespace PublicTransportInfo
             if (m_title != null)
             {
                 Destroy(m_title.gameObject);
+            }
+        }
+
+        public StopInfo GetStopInfo()
+        {
+            return m_stopInfo;
+        }
+
+        public void SetCurrentStop(StopInfo info)
+        {
+            if (info.m_currentStopId != 0 && !m_stopInfo.Equals(info))
+            {
+                m_stopInfo = info;
+                UpdatePanel();
+            }
+        }
+
+        public void ResetCurrentStop()
+        {
+            m_stopInfo.Reset();
+            UpdatePanel();
+        }
+
+        public void ShowInfo()
+        {
+            if (m_infoLabel is not null && 
+                !(TransportManagerUtils.IsPublicTransportWorldInfoPanelVisible() || TransportManagerUtils.IsCityServiceWorldInfoPanelVisible()))
+            {
+                if (m_stopInfo.m_currentStopId != 0)
+                {
+                    // Show label
+                    int iStopPassengerCount = TransportManagerUtils.CalculatePassengerCount(m_stopInfo.m_currentStopId, m_stopInfo.m_transportType, out int iBored);
+                    string sLineName = TransportManagerUtils.GetSafeLineName(m_stopInfo.m_transportType, m_stopInfo.m_currentLineId);
+                    m_infoLabel.text = $"<color #FFFFFF>{sLineName}</color>\nTransport Type: {m_stopInfo.m_transportType}\nStop: {m_stopInfo.m_stopNumber}\nWaiting: {iStopPassengerCount}\nBored: {iBored}";
+                    m_infoLabel.Show();
+                }
+                else
+                {
+                    // Hide label
+                    m_infoLabel.Hide();
+                }
+            }
+        }
+
+        public void HideInfo()
+        {
+            if (m_infoLabel is not null)
+            {
+                m_infoLabel.Hide();
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using ColossalFramework.UI;
+using SleepyCommon;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -20,7 +21,7 @@ namespace PublicTransportInfo
             }
             catch (Exception e)
             {
-                Debug.Log("Exception: " + e.Message);
+                CDebug.Log("Exception: " + e.Message);
             }
         }
 
@@ -36,7 +37,7 @@ namespace PublicTransportInfo
             }
             catch (Exception e)
             {
-                Debug.Log("Exception: " + e.Message);
+                CDebug.Log("Exception: " + e.Message);
             }
         }
 

@@ -1,11 +1,12 @@
 using ColossalFramework.UI;
-using SleepyCommon;
 using UnityEngine;
 
-namespace PublicTransportInfo
+namespace PublicTransportInfo.UI.ListViewRows
 {
-    public class UIIssueRow : UIPanel, IUIFastListRow
+    public class UIIssueRow : UIListRow<LineIssue>
     {
+        public const float fROW_HEIGHT = 26;
+
         private UILabel? m_lblTime = null;
         private UILabel? m_lblType = null;
         private UILabel? m_lblName = null;
@@ -22,12 +23,13 @@ namespace PublicTransportInfo
             canFocus = true;
             isInteractive = true;
             width = parent.width;
-            height = ListView.iROW_HEIGHT;
+            height = fROW_HEIGHT;
             autoLayoutDirection = LayoutDirection.Horizontal;
             autoLayoutStart = LayoutStart.TopLeft;
             autoLayoutPadding = new RectOffset(2, 2, 2, 2);
             autoLayout = true;
             clipChildren = true;
+            fullRowSelect = true;
 
             m_lblTime = AddUIComponent<UILabel>();
             if (m_lblTime != null)
@@ -41,8 +43,6 @@ namespace PublicTransportInfo
                 m_lblTime.autoSize = false;
                 m_lblTime.height = height;
                 m_lblTime.width = LineIssuePanel.iCOLUMN_WIDTH_TIME;
-                m_lblTime.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblTime.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblTime.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblTime.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -59,8 +59,6 @@ namespace PublicTransportInfo
                 m_lblType.autoSize = false;
                 m_lblType.height = height;
                 m_lblType.width = LineIssuePanel.iCOLUMN_WIDTH_NORMAL;
-                m_lblType.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblType.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblType.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblType.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -77,8 +75,6 @@ namespace PublicTransportInfo
                 m_lblName.autoSize = false;
                 m_lblName.height = height;
                 m_lblName.width = LineIssuePanel.iCOLUMN_VEHICLE_WIDTH;
-                m_lblName.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblName.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblName.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblName.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -95,8 +91,6 @@ namespace PublicTransportInfo
                 m_lblLocation.autoSize = false;
                 m_lblLocation.height = height;
                 m_lblLocation.width = LineIssuePanel.iCOLUMN_VEHICLE_WIDTH;
-                m_lblLocation.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblLocation.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblLocation.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblLocation.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -113,101 +107,51 @@ namespace PublicTransportInfo
                 m_lblDescription.autoSize = false;
                 m_lblDescription.height = height;
                 m_lblDescription.width = LineIssuePanel.iCOLUMN_DESCRIPTION_WIDTH;
-                m_lblDescription.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblDescription.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblDescription.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblDescription.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
 
-            if (m_data != null)
+            base.AfterStart();
+        }
+
+        protected override void Display()
+        {
+            if (data != null)
             {
-                Display(m_data, false);
+                m_lblTime.text = data.GetCreationTime();
+                m_lblType.text = data.GetTransportType();
+                m_lblName.text = data.GetLineDescription().ToString();
+                m_lblLocation.text = data.GetIssueLocation();
+                m_lblDescription.text = data.GetIssueDescription();
             }
         }
 
-        public void Display(object data, bool isRowOdd)
+        protected override void Clear()
         {
-            LineIssue? rowData = (LineIssue?)data;
-            if (rowData != null)
-            {
-                m_data = rowData;
-                if (m_lblTime != null)
-                {
-                    m_lblTime.text = rowData.GetCreationTime();
-                }
-                if (m_lblType != null)
-                {
-                    m_lblType.text = rowData.GetTransportType();
-                }
-                if (m_lblName != null)
-                {
-                    m_lblName.text = rowData.GetLineDescription().ToString();
-                }
-                if (m_lblLocation != null)
-                {
-                    m_lblLocation.text = rowData.GetIssueLocation();
-                }
-                if (m_lblDescription != null)
-                {
-                    m_lblDescription.text = rowData.GetIssueDescription();
-                }
-            }
-            else
-            {
-                m_data = null;
-            }
+            m_lblTime.text = "";
+            m_lblType.text = "";
+            m_lblName.text = "";
+            m_lblLocation.text = "";
+            m_lblDescription.text = "";
         }
 
-        public void Enabled(object data)
+        protected override void ClearTooltips()
         {
+            m_lblTime.tooltip = "";
+            m_lblType.tooltip = "";
+            m_lblName.tooltip = "";
+            m_lblLocation.tooltip = "";
+            m_lblDescription.tooltip = "";
         }
 
-        public void Disabled()
+        protected override string GetTooltipText(UIComponent component)
         {
-            m_data = null;
+            return "";
         }
 
-        public void Select(bool isRowOdd)
+        protected override void OnClicked(UIComponent component)
         {
-        }
-
-        public void Deselect(bool isRowOdd)
-        {
-        }
-
-        private void OnItemClicked(UIComponent component, UIMouseEventParameter eventParam)
-        {
-            if (m_data != null)
-            {
-                m_data.ShowIssue();
-            }
-        }
-
-        private void OnTooltipEnter(UIComponent component, UIMouseEventParameter eventParam)
-        {
-        }
-
-        protected void OnMouseEnter(UIComponent component, UIMouseEventParameter eventParam)
-        {
-            foreach (UILabel? label in components)
-            {
-                if (label is not null)
-                {
-                    label.textColor = Color.yellow;
-                }
-            }
-
-        }
-
-        protected void OnMouseLeave(UIComponent component, UIMouseEventParameter eventParam)
-        {
-            foreach (UILabel? label in components)
-            {
-                if (label is not null)
-                {
-                    label.textColor = Color.white;
-                }
-            }
+            data.ShowIssue();
         }
     }
 }

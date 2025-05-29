@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SleepyCommon;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using Random = System.Random;
@@ -201,14 +202,13 @@ namespace PublicTransportInfo
                 GUI.matrix = oldMatrix;
                 GUI.skin = oldSkin;
             } catch (Exception ex) {
-                Debug.Log(ex);
+                CDebug.Log(ex);
             }
         }
 
         internal static Texture2D LoadHighlightTexture()
         {
-            using var textureStream = System.Reflection.Assembly.GetExecutingAssembly()
-                .GetManifestResourceStream("ModTools.highlight.png");
+            using var textureStream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream("ModTools.highlight.png");
             var buf = new byte[textureStream.Length];
             textureStream.Read(buf, 0, buf.Length);
             textureStream.Close();
@@ -293,7 +293,7 @@ namespace PublicTransportInfo
                 }
                 
             } catch(Exception ex) {
-                Debug.Log(ex);
+                CDebug.Log(ex);
             }
     }
 

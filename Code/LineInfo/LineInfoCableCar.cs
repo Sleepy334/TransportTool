@@ -1,8 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
-using System;
 using System.Collections.Generic;
-using UnityEngine;
 using static TransportInfo;
 
 namespace PublicTransportInfo
@@ -11,7 +9,7 @@ namespace PublicTransportInfo
     {
         public int m_iLineNumber;
         private ushort m_usFirstStopBuildingId = 0;
-        private List<ushort> m_buildings = null;
+        private List<ushort>? m_buildings = null;
 
         public LineInfoCableCar(ushort usBuildingId) : base()
         {
@@ -24,9 +22,9 @@ namespace PublicTransportInfo
             return TransportType.CableCar;
         }
 
-        public override string GetLineName()
+        public override int GetLineId()
         {
-            return "Cable Car Line " + m_iLineNumber;
+            return m_iLineNumber;
         }
 
         public override int GetStopCount()
@@ -42,6 +40,25 @@ namespace PublicTransportInfo
         public override LineIssueDetector? GetLineIssueDetector()
         {
             return null;
+        }
+
+        public override ushort GetNextStop(ushort stopId, out int stopNumber)
+        {
+            List<ushort> stops = GetStops();
+            
+            if (stops.Count > 0) 
+            {
+                int iIndex = stops.IndexOf(stopId);
+                if (iIndex != -1)
+                {
+                    int next = (iIndex + 1) % stops.Count;
+                    stopNumber = next + 1;
+                    return stops[next];
+                }
+            }
+
+            stopNumber = 0;
+            return stopId;
         }
 
         protected override void LoadVehicleInfo()
@@ -90,20 +107,6 @@ namespace PublicTransportInfo
             }
         }
 
-        public override void ShowBusiestStop()
-        {
-            ushort usBuildingId = NetNode.FindOwnerBuilding(m_usBusiestStopId, 64f);
-            if (usBuildingId != 0)
-            {
-                InstanceID oInstanceId = new InstanceID { Building = usBuildingId };
-                Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_usBusiestStopId].m_position;
-                ModSettings oSettings = ModSettings.GetSettings();
-                PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oStopPosition, oSettings.ZoomInOnTarget);
-
-                WorldInfoPanel.Show<CityServiceWorldInfoPanel>(oStopPosition, oInstanceId);
-            }
-        }
-
         public override string GetPassengersTooltip()
         {
             BuildingManager instance = Singleton<BuildingManager>.instance;
@@ -144,6 +147,25 @@ namespace PublicTransportInfo
             {
                 return x.m_iPassengers - y.m_iPassengers;
             }
+        }
+
+        public override bool IsWorldInfoPanelVisible()
+        {
+            return TransportManagerUtils.IsCityServiceWorldInfoPanelVisible();
+        }
+
+        public override void ShowStopWorldInfoPanel(ushort stopNodeId)
+        {
+            ushort usBuildingId = NetNode.FindOwnerBuilding(stopNodeId, 64f);
+            if (usBuildingId != 0)
+            {
+                Building building = BuildingManager.instance.m_buildings.m_buffer[usBuildingId];
+
+                WorldInfoPanel.Show<CityServiceWorldInfoPanel>(building.m_position, new InstanceID { Building = usBuildingId });
+
+                // Bring to front
+                MainPanel.Instance.SendToBack();
+            } 
         }
     }
 }

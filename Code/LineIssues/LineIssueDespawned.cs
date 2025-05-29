@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using SleepyCommon;
+using UnityEngine;
 
 namespace PublicTransportInfo
 {
@@ -6,6 +7,7 @@ namespace PublicTransportInfo
     {
         public Vector3 m_despawnedPosition;
 
+        // ----------------------------------------------------------------------------------------
         public LineIssueDespawned(ushort iLineId, TransportInfo.TransportType eType, ushort usVehicleId, Vector3 oDespawnPosition) : base(iLineId, eType, usVehicleId)
         {
             m_iLineId = iLineId;
@@ -37,25 +39,15 @@ namespace PublicTransportInfo
             // Nothing to do.
         }
 
-        public override Vector3 GetPosition()
-        {
-            return m_despawnedPosition;
-        }
-
         public override void ShowIssue()
         {
+            InstanceID target = new InstanceID { Vehicle = m_vehicleId };
+
             // Close the vehicle panel if open so we can move elsewhere.
             WorldInfoPanel.Hide<PublicTransportVehicleWorldInfoPanel>();
-            PublicTransportVehicleButton.cameraController.ClearTarget();
 
             // Zoom in on location where vehicle despawned.
-            ToolsModifierControl.cameraController.m_targetPosition = m_despawnedPosition;
-            ModSettings oSettings = ModSettings.GetSettings();
-            if (oSettings.ZoomInOnTarget)
-            {
-                ToolsModifierControl.cameraController.m_targetAngle.y = 45f;
-                ToolsModifierControl.cameraController.m_targetSize = 100f;
-            }
+            InstanceHelper.ShowInstance(target, m_despawnedPosition, ModSettings.GetSettings().ZoomInOnTarget);
         }
     }
 }

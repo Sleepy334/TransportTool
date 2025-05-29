@@ -72,3 +72,6 @@
 "chkDisableTransparency","Disable Panel Transparency"
 "txtDeleteresolvedDelay","Delete Resolved Delay (Seconds)"
 "chkActivatePublicTransportInfoView","Activate public transport info view when main panel visible"
+"tooltipHighlightDestinationOn","Highlight Destination: On"
+"tooltipHighlightDestinationOff","Highlight Destination: Off"
+"tooltipActivatePublicTransportInfoView","Activate public transport info view"

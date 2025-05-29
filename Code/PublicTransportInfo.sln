@@ -5,6 +5,8 @@ VisualStudioVersion = 17.0.32112.339
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PublicTransportInfo", "PublicTransportInfo.csproj", "{5AA2396D-8F35-4703-A03D-136988D7650D}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SleepyCommon", "..\..\SleepyCommon\SleepyCommon.shproj", "{C3EB1037-8F93-4EEE-AD86-57B0AEB83819}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,5 +23,9 @@ Global
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {581102C6-4D80-4BFB-9A7B-B051A62A7882}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\..\SleepyCommon\SleepyCommon.projitems*{5aa2396d-8f35-4703-a03d-136988d7650d}*SharedItemsImports = 5
+		..\..\SleepyCommon\SleepyCommon.projitems*{c3eb1037-8f93-4eee-ad86-57b0aeb83819}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

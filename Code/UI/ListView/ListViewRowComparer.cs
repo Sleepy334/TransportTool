@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace PublicTransportInfo
+namespace PublicTransportInfo.UI.ListView
 {
 	public class ListViewRowComparer : IComparer<UIComponent>
 	{

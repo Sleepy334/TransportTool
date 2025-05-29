@@ -1,4 +1,6 @@
 using ColossalFramework.UI;
+using SleepyCommon;
+using System.Reflection;
 using UnifiedUI.Helpers;
 using UnityEngine;
 
@@ -17,7 +19,7 @@ namespace PublicTransportInfo
         {
             get
             {
-                Debug.Log("Instance");
+                CDebug.Log("Instance");
                 if (s_instance == null)
                 {
                     s_instance = new UnifiedUIButton();
@@ -44,14 +46,14 @@ namespace PublicTransportInfo
         {
             if (m_button is null && ModSettings.GetSettings().AddUnifiedUIButton && DependencyUtils.IsUnifiedUIRunning())
             {
-                Texture2D? icon = TextureResources.LoadDllResource("BusImageInverted48x48.png", 32, 32);
+                Texture2D? icon = SleepyCommon.TextureResources.LoadDllResource(Assembly.GetExecutingAssembly(), "BusImageInverted48x48.png", 32, 32);
                 if (icon is null)
                 {
-                    Debug.Log("Failed to load icon from resources");
+                    CDebug.Log("Failed to load icon from resources");
                     return;
                 }
 
-                m_button = UUIHelpers.RegisterCustomButton("TransportTool", null, ITransportInfoMain.Title, icon, OnToggle, null, null);
+                m_button = UUIHelpers.RegisterCustomButton(TransportToolMod.Instance.ModName, null, TransportToolMod.Instance.Name, icon, OnToggle, null, null);
 
                 // Overlay a sprite over the button so we can change the icon
                 if (m_atlas == null)
@@ -103,7 +105,6 @@ namespace PublicTransportInfo
 
         public static void ShowWarningLevel(LineIssue.IssueLevel eLevel)
         {
-            Debug.Log($"ShowWarningLevel: {eLevel}");
             if (eLevel == LineIssue.IssueLevel.ISSUE_WARNING)
             {
                 SetIcon("BusImageWarning");

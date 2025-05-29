@@ -1,4 +1,5 @@
 ﻿using ColossalFramework.UI;
+using SleepyCommon;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -100,7 +101,7 @@ namespace PublicTransportInfo
             }
             catch (Exception e)
             {
-                Debug.Log("Unable to pad text", e);
+                CDebug.Log("Unable to pad text", e);
             }
             return fWidth;
         }

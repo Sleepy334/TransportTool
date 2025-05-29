@@ -72,3 +72,6 @@
 "chkDisableTransparency","Transparantie van paneel uitschakelen"
 "txtDeleteresolvedDelay","Opgeloste vertraging verwijderen (seconden)"
 "chkActivatePublicTransportInfoView","Activate public transport info view when main panel visible"
+"tooltipHighlightDestinationOn","Highlight Destination: On"
+"tooltipHighlightDestinationOff","Highlight Destination: Off"
+"tooltipActivatePublicTransportInfoView","Activate public transport info view"

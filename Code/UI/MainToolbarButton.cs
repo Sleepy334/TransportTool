@@ -1,7 +1,7 @@
 ﻿using ColossalFramework.UI;
+using SleepyCommon;
 using System;
 using System.Reflection;
-using UnifiedUI.GUI;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -60,7 +60,7 @@ namespace PublicTransportInfo
                     }
                     else
                     {
-                        Debug.LogError("AddToolButton - Failed to create toolbar button.");
+                        CDebug.LogError("AddToolButton - Failed to create toolbar button.");
                     }
                 }
             }
@@ -96,7 +96,7 @@ namespace PublicTransportInfo
                 }
                 else
                 {
-                    m_toggleButtonComponents.ToggleButton.tooltip = ITransportInfoMain.Title;
+                    m_toggleButtonComponents.ToggleButton.tooltip = TransportToolMod.Instance.Name;
                 }
             }
         }
@@ -148,7 +148,7 @@ namespace PublicTransportInfo
             if (toggleButton != null)
             {
                 toggleButton.atlas = PublicTransportInstance.LoadResources();
-                toggleButton.tooltip = ITransportInfoMain.Title;
+                toggleButton.tooltip = TransportToolMod.Instance.Name;
                 toggleButton.normalFgSprite = "BusImageInverted48x48";
                 toggleButton.focusedBgSprite = "ToolbarIconGroup6Focused";
                 toggleButton.hoveredBgSprite = "ToolbarIconGroup6Hovered";
@@ -159,7 +159,7 @@ namespace PublicTransportInfo
             }
             else
             {
-                Debug.Log("toggleButton is null.");
+                CDebug.Log("toggleButton is null.");
             }
 
             return new ToggleButtonComponents(null, tabStripPage, mainToolbarButtonTemplate, toggleButton, null);

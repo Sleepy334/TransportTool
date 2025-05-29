@@ -1,5 +1,6 @@
 ﻿using ColossalFramework;
 using ColossalFramework.UI;
+using SleepyCommon;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -7,6 +8,8 @@ namespace PublicTransportInfo
     public class LineIssueBlocked : LineIssueVehicle
     {
         IssueLevel m_eLevel = IssueLevel.ISSUE_NONE;
+
+        // ----------------------------------------------------------------------------------------
         public LineIssueBlocked(ushort iLineId, TransportInfo.TransportType eType, ushort usVehicleId) : 
             base(iLineId, eType, usVehicleId)
         {
@@ -93,44 +96,11 @@ namespace PublicTransportInfo
             return sTooltip;
         }
 
-        public override Vector3 GetPosition()
-        {
-            Vehicle vehicle = VehicleManager.instance.m_vehicles.m_buffer[m_vehicleId];
-            return vehicle.GetLastFramePosition();
-        }
-
         public override void Update()
         {
             // Set resolved if needed
             GetLevel();
         }
 
-        public override void ShowIssue()
-        {
-            // Close the vehicle panel if open so we can move elsewhere.
-            WorldInfoPanel.Hide<PublicTransportVehicleWorldInfoPanel>();
-            PublicTransportVehicleButton.cameraController.ClearTarget();
-
-            if (m_transportType == TransportInfo.TransportType.Metro) {
-                // Turn on public transport mode so you can see the underground vehicles
-                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
-                UIView.library.Hide("PublicTransportInfoViewPanel");
-            } 
-            else
-            {
-                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.None, InfoManager.SubInfoMode.Default);
-            }
-
-            ModSettings oSettings = ModSettings.GetSettings();
-            ushort usStuckVehicleId = m_vehicleId;
-            Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[usStuckVehicleId];
-            Vector3 oVehiclePosition = VehiclePosition.GetVehiclePosition(oVehicle);
-            InstanceID oInstanceId = new InstanceID { Vehicle = usStuckVehicleId };
-
-            PublicTransportVehicleButton.cameraController.SetTarget(oInstanceId, oVehiclePosition, oSettings.ZoomInOnTarget);
-
-            // Open vehicle details
-            WorldInfoPanel.Show<PublicTransportVehicleWorldInfoPanel>(oVehiclePosition, oInstanceId);
-        }
     }
 }

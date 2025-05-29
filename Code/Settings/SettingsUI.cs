@@ -1,6 +1,6 @@
 ﻿using ColossalFramework.UI;
 using ICities;
-using PublicTransportInfo.Settings;
+using SleepyCommon;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -49,14 +49,14 @@ namespace PublicTransportInfo
 			oButtonGroup.AddCheckbox(Localization.Get("btnAddUnifiedUI"), oSettings.AddUnifiedUIButton, OnUnifiedToolbarButtonChanged);
 
 			// Keyboard shortcut
-			UIHelper group = (UIHelper)helperGeneral.AddGroup(Localization.Get("groupKeyboardShortcuts"));
-			UIPanel panel = (UIPanel)group.self;
+			UIHelper groupKeyboardShortcuts = (UIHelper)helperGeneral.AddGroup(Localization.Get("groupKeyboardShortcuts"));
+			UIPanel panel = (UIPanel)groupKeyboardShortcuts.self;
 			UIKeymappingsPanel keymappings = panel.gameObject.AddComponent<UIKeymappingsPanel>();
 			keymappings.AddKeymapping(Localization.Get("keyOpenMainPanel"), ModSettings.Hotkey); // Automatically saved
 			
 			UIKeymappingsPanel keymappingsLineIssue = panel.gameObject.AddComponent<UIKeymappingsPanel>();
 			keymappingsLineIssue.AddKeymapping(Localization.Get("keyOpenIssuesPanel"), ModSettings.LineIssueHotkey); // Automatically saved
-		}
+        }
 
 		private void SetupMainPanelTab(UIHelper helperMainPanel)
 		{
@@ -70,15 +70,15 @@ namespace PublicTransportInfo
 
             // Bored Slider
             UIHelper oBoredGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupBoredThreshold"));
-			SettingsSlider oBoredSlider = SettingsSlider.Create(oBoredGroup, Localization.Get("sliderBored"), 0f, 255f, 1f, (float)oSettings.BoredThreshold, OnBoredValueChanged);
+			SettingsSlider oBoredSlider = SettingsSlider.CreateSettingsStyle(oBoredGroup, LayoutDirection.Horizontal, Localization.Get("sliderBored"), 400, 200, 0f, 255f, 1f, (float)oSettings.BoredThreshold, 0, OnBoredValueChanged);
 			UIPanel pnlBoredGroup = (UIPanel)oBoredGroup.self;
 			UILabel lblHint = pnlBoredGroup.AddUIComponent<UILabel>();
 			lblHint.text = Localization.Get("txtBoredHint");
 
 			// Tooltips
 			UIHelper oTooltipGroup = (UIHelper)helperMainPanel.AddGroup(Localization.Get("groupTooltips"));
-			SettingsSlider.Create(oTooltipGroup, Localization.Get("sliderFontSize"), 8f, 32f, 1f, (float)oSettings.TooltipFontSize, OnTooltipFontSizeChanged);
-			SettingsSlider.Create(oTooltipGroup, Localization.Get("sliderTooltipRowLimit"), 0f, 100f, 1f, (float)oSettings.TooltipRowLimit, OnTooltipRowLimitValueChanged);
+			SettingsSlider.CreateSettingsStyle(oTooltipGroup, LayoutDirection.Horizontal, Localization.Get("sliderFontSize"), 400, 200, 8f, 32f, 1f, (float)oSettings.TooltipFontSize, 0, OnTooltipFontSizeChanged);
+			SettingsSlider.CreateSettingsStyle(oTooltipGroup, LayoutDirection.Horizontal, Localization.Get("sliderTooltipRowLimit"), 400, 200, 0f, 100f, 1f, (float)oSettings.TooltipRowLimit, 0, OnTooltipRowLimitValueChanged);
 		}
 
 		private void SetupLineIssuesTab(UIHelper helperLineIssues)
@@ -87,27 +87,30 @@ namespace PublicTransportInfo
 
 			// General
             UIHelper groupGeneral = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupLineIssuesGeneral"));
-            SettingsSlider.Create(groupGeneral, Localization.Get("txtDeleteresolvedDelay"), 0f, 30f, 1f, (float)oSettings.DeleteResolvedDelay, OnDeleteResolvedChanged);
+            SettingsSlider.CreateSettingsStyle(groupGeneral, LayoutDirection.Horizontal, Localization.Get("txtDeleteresolvedDelay"), 400, 200, 0f, 30f, 1f, (float)oSettings.DeleteResolvedDelay, 0, OnDeleteResolvedChanged);
 
             // Issues
             UIHelper oFlagsGroup = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupIssues"));
 			oFlagsGroup.AddCheckbox(Localization.Get("chkFlagMoveSlowly"), oSettings.WarnVehicleMovesSlowly, OnWarnVehicleMovesSlowly);
-			m_oSlowSlider = SettingsSlider.Create(oFlagsGroup, Localization.Get("sliderSlowVehicleThreshold"), 1f, 255f, 1f, (float)oSettings.WarnVehicleMovingSlowlyThreshold, OnSlowValueChanged);
+			m_oSlowSlider = SettingsSlider.CreateSettingsStyle(oFlagsGroup, LayoutDirection.Horizontal, Localization.Get("sliderSlowVehicleThreshold"), 400, 200, 1f, 255f, 1f, (float)oSettings.WarnVehicleMovingSlowlyThreshold, 0, OnSlowValueChanged);
+            m_oSlowSlider.m_panel.padding.left = 30;
 
-			// Warnings group
-			UIHelper oWarnGroup = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupWarnings"));
+            // Warnings group
+            UIHelper oWarnGroup = (UIHelper)helperLineIssues.AddGroup(Localization.Get("groupWarnings"));
 			
 			UICheckBox oWarnDespawn = (UICheckBox)oWarnGroup.AddCheckbox(Localization.Get("chkWarnDespawn"), oSettings.WarnVehicleDespawed, OnWarnVehicleDespawed);
 			
 			oWarnGroup.AddCheckbox(Localization.Get("chkWarnBlocked"), oSettings.WarnVehicleStopsMoving, OnWarnVehicleStopsMoving);
-			m_oStuckSlider = SettingsSlider.Create(oWarnGroup, Localization.Get("sliderBlockedThreshold"), 1f, 255f, 1f, (float)oSettings.WarnVehicleBlockedThreshold, OnStuckValueChanged);
-			
-			oWarnGroup.AddCheckbox(Localization.Get("chkLineIssues"), oSettings.WarnLineIssues, OnWarnLineIssues);
+			m_oStuckSlider = SettingsSlider.CreateSettingsStyle(oWarnGroup, LayoutDirection.Horizontal, Localization.Get("sliderBlockedThreshold"), 400, 200, 1f, 255f, 1f, (float)oSettings.WarnVehicleBlockedThreshold, 0, OnStuckValueChanged);
+            m_oStuckSlider.m_panel.padding.left = 30;
+
+            oWarnGroup.AddCheckbox(Localization.Get("chkLineIssues"), oSettings.WarnLineIssues, OnWarnLineIssues);
 			
 			oWarnGroup.AddCheckbox(Localization.Get("chkBoredCount"), oSettings.WarnBoredCountExceedsThreshold, OnWarnBoredCount);
-			m_oBoredCountSlider = SettingsSlider.Create(oWarnGroup, Localization.Get("sliderBoredCountThreshold"), 1f, 500f, 1f, (float)oSettings.WarnBoredCountThreshold, OnWarnBoredCountThreshold);
+			m_oBoredCountSlider = SettingsSlider.CreateSettingsStyle(oWarnGroup, LayoutDirection.Horizontal, Localization.Get("sliderBoredCountThreshold"), 400, 200, 1f, 500f, 1f, (float)oSettings.WarnBoredCountThreshold, 0, OnWarnBoredCountThreshold);
+			m_oBoredCountSlider.m_panel.padding.left = 30;
 
-			m_playSound = (UICheckBox)oWarnGroup.AddCheckbox(Localization.Get("chkPlaySound"), oSettings.PlaySoundForWarnings, OnPlaySoundForWarnings);
+            m_playSound = (UICheckBox)oWarnGroup.AddCheckbox(Localization.Get("chkPlaySound"), oSettings.PlaySoundForWarnings, OnPlaySoundForWarnings);
 			UpdatePlaySoundEnabled();
 		}
 
@@ -272,7 +275,7 @@ namespace PublicTransportInfo
 			oSettings.MainToolbarButton = bIsChecked;
 			oSettings.Save();
 
-			if (PublicTransportLoader.isGameLoaded)
+			if (TransportToolMod.Instance.IsLoaded)
 			{
 				if (oSettings.MainToolbarButton)
 				{
@@ -291,7 +294,7 @@ namespace PublicTransportInfo
 			oSettings.AddUnifiedUIButton = bIsChecked;
 			oSettings.Save();
 
-			if (PublicTransportLoader.isGameLoaded)
+			if (TransportToolMod.Instance.IsLoaded)
 			{
 				if (UnifiedUIButton.Exists)
 				{

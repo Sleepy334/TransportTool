@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using HarmonyLib;
+using SleepyCommon;
 
 namespace PublicTransportInfo
 {
@@ -36,7 +37,7 @@ namespace PublicTransportInfo
                     sMessage += patchType.ToString() + "\r\n";
                     harmony.CreateClassProcessor(patchType).Patch();
                 }
-                Debug.Log(sMessage);
+                CDebug.Log(sMessage);
             }
         }
 
@@ -47,7 +48,7 @@ namespace PublicTransportInfo
                 harmony.UnpatchAll(HarmonyId);
                 s_patched = false;
 
-                UnityEngine.Debug.Log("TransportTool: Unpatching...");
+                CDebug.Log("TransportTool: Unpatching...");
             }
         }
 
@@ -61,14 +62,14 @@ namespace PublicTransportInfo
                 var info = Harmony.GetPatchInfo(method);
                 if (info.Owners?.Contains(harmony.Id) == true)
                 {
-                    Debug.Log($"Harmony patch method = {method.FullDescription()}");
+                    CDebug.Log($"Harmony patch method = {method.FullDescription()}");
                     if (info.Prefixes.Count != 0)
                     {
-                        Debug.Log("Harmony patch method has PreFix");
+                        CDebug.Log("Harmony patch method has PreFix");
                     }
                     if (info.Postfixes.Count != 0)
                     {
-                        Debug.Log("Harmony patch method has PostFix");
+                        CDebug.Log("Harmony patch method has PostFix");
                     }
                     i++;
                 }

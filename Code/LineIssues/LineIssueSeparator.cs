@@ -25,11 +25,6 @@ namespace PublicTransportInfo
             return "";
         }
 
-        public override Vector3 GetPosition()
-        {
-            return Vector3.zero;
-        }
-
         public override IssueType GetIssueType()
         {
             return IssueType.ISSUE_TYPE_NONE;

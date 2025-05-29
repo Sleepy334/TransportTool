@@ -1,6 +1,5 @@
 using ICities;
 using System.Diagnostics;
-using UnityEngine;
 
 namespace PublicTransportInfo
 {
@@ -12,7 +11,7 @@ namespace PublicTransportInfo
 
         public override void OnUpdate(float realTimeDelta, float simulationTimeDelta)
         {
-            if (!PublicTransportLoader.isGameLoaded)
+            if (!TransportToolMod.Instance.IsLoaded)
             {
                 return;
             }
@@ -50,7 +49,7 @@ namespace PublicTransportInfo
 
 #if DEBUG
                     long lStopTime = m_watch.ElapsedMilliseconds;
-                    //Debug.Log("Execution Time: " + (lStopTime - lStartTime) + "ms");
+                    //CDebug.Log("Execution Time: " + (lStopTime - lStartTime) + "ms");
 #endif
                 }
             }

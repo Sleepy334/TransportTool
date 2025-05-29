@@ -1,4 +1,5 @@
 ﻿using ColossalFramework;
+using SleepyCommon;
 using System;
 using System.IO;
 using System.Xml.Serialization;
@@ -157,9 +158,15 @@ namespace PublicTransportInfo
 
         public string PreferredLanguage
         {
-            get;
-            set;
-        } = Localization.SYSTEM_DEFAULT;
+            get
+            {
+                return Localization.PreferredLanguage;
+            }
+            set
+            {
+                Localization.PreferredLanguage = value;
+            }
+        }
 
         public bool ActivatePublicTransportInfoView
         {
@@ -167,6 +174,9 @@ namespace PublicTransportInfo
             set;
         } = true;
 
+        public bool HighlightCitizenDestination { get; set; } = true;
+        
+        // ----------------------------------------------------------------------------------------
         static ModSettings()
         {
             if (GameSettings.FindSettingsFileByName(SETTINGS_FILE_NAME) == null)
@@ -188,7 +198,7 @@ namespace PublicTransportInfo
         public static ModSettings Load()
         {
 #if DEBUG
-            Debug.Log("Loading settings: " + SettingsFile);
+            CDebug.Log("Loading settings: " + SettingsFile);
 #endif
             try
             {
@@ -208,7 +218,7 @@ namespace PublicTransportInfo
             }
             catch (Exception e)
             {
-                Debug.Log(e);
+                CDebug.Log(e);
             }
 
             return new ModSettings();
@@ -230,7 +240,7 @@ namespace PublicTransportInfo
             }
             catch (Exception ex)
             {
-                Debug.Log("Saving settings file failed.", ex);
+                CDebug.Log("Saving settings file failed.", ex);
             }
         }
 

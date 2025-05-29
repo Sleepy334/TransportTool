@@ -1,11 +1,15 @@
 using ColossalFramework.UI;
+using Epic.OnlineServices.Presence;
 using SleepyCommon;
 using System;
+using System.ComponentModel.Design;
+using System.Xml;
 using UnityEngine;
+using static PublicTransportInfo.MainPanel;
 
-namespace PublicTransportInfo
+namespace PublicTransportInfo.UI.ListViewRows
 {
-    public class UILineRow : UIPanel, IUIFastListRow
+    public class UILineRow : UIListRow<LineInfoBase>
     {
         public const float fROW_HEIGHT = 26;
 
@@ -19,10 +23,9 @@ namespace PublicTransportInfo
         private UILabelLiveTooltip? m_lblBusiest = null;
         private UILabelLiveTooltip? m_lblBored = null;
         private UISprite? m_spriteToolbar = null;
-        private LineInfoBase? m_data = null;
 
         private static UITextureAtlas? m_atlas = null;
-        private static ushort m_usHighlightLine = 0;
+        private static ushort s_usHighlightLine = 0;
 
         public override void Start()
         {
@@ -38,6 +41,7 @@ namespace PublicTransportInfo
             autoLayoutPadding = new RectOffset(2, 2, 2, 2);
             autoLayout = true;
             clipChildren = true;
+            fullRowSelect = true;
 
             UIPanel oIconContainer = AddUIComponent<UIPanel>();
             if (oIconContainer != null)
@@ -54,7 +58,6 @@ namespace PublicTransportInfo
                     m_pnlColor.height = MainPanel.iCOLUMN_WIDTH_COLOR;
                     m_pnlColor.width = MainPanel.iCOLUMN_WIDTH_COLOR;
                     m_pnlColor.CenterToParent();
-                    m_pnlColor.eventClick += new MouseEventHandler(OnItemClicked);
                 }
             }
 
@@ -70,8 +73,6 @@ namespace PublicTransportInfo
                 m_lblName.autoSize = false;
                 m_lblName.height = height;
                 m_lblName.width = MainPanel.iCOLUMN_WIDTH_NAME;
-                m_lblName.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblName.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblName.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblName.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -88,8 +89,6 @@ namespace PublicTransportInfo
                 m_lblStops.autoSize = false;
                 m_lblStops.height = height;
                 m_lblStops.width = MainPanel.iCOLUMN_WIDTH_STOPS;
-                m_lblStops.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblStops.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblStops.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblStops.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -106,8 +105,6 @@ namespace PublicTransportInfo
                 m_lblVehicles.autoSize = false;
                 m_lblVehicles.height = height;
                 m_lblVehicles.width = MainPanel.iCOLUMN_WIDTH_VEHICLES;
-                m_lblVehicles.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblVehicles.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblVehicles.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblVehicles.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -124,8 +121,6 @@ namespace PublicTransportInfo
                 m_lblPassengers.autoSize = false;
                 m_lblPassengers.height = height;
                 m_lblPassengers.width = MainPanel.iCOLUMN_WIDTH_PASSENGER;
-                m_lblPassengers.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblPassengers.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblPassengers.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblPassengers.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -142,8 +137,6 @@ namespace PublicTransportInfo
                 m_lblVehicleUsage.autoSize = false;
                 m_lblVehicleUsage.height = height;
                 m_lblVehicleUsage.width = MainPanel.iCOLUMN_WIDTH_VEHICLE_USAGE;
-                m_lblVehicleUsage.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblVehicleUsage.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblVehicleUsage.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblVehicleUsage.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -160,8 +153,6 @@ namespace PublicTransportInfo
                 m_lblWaiting.autoSize = false;
                 m_lblWaiting.height = height;
                 m_lblWaiting.width = MainPanel.iCOLUMN_WIDTH_WAITING;
-                m_lblWaiting.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblWaiting.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblWaiting.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblWaiting.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -178,8 +169,6 @@ namespace PublicTransportInfo
                 m_lblBusiest.autoSize = false;
                 m_lblBusiest.height = height;
                 m_lblBusiest.width = MainPanel.iCOLUMN_WIDTH_BUSIEST;
-                m_lblBusiest.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblBusiest.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblBusiest.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblBusiest.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -196,8 +185,6 @@ namespace PublicTransportInfo
                 m_lblBored.autoSize = false;
                 m_lblBored.height = height;
                 m_lblBored.width = MainPanel.iCOLUMN_WIDTH_BORED;
-                m_lblBored.eventClicked += new MouseEventHandler(OnItemClicked);
-                m_lblBored.eventTooltipEnter += new MouseEventHandler(OnTooltipEnter);
                 m_lblBored.eventMouseEnter += new MouseEventHandler(OnMouseEnter);
                 m_lblBored.eventMouseLeave += new MouseEventHandler(OnMouseLeave);
             }
@@ -218,58 +205,26 @@ namespace PublicTransportInfo
                 m_spriteToolbar.eventClick += new MouseEventHandler(OnWarningItemClicked);
             }
 
-            if (m_data != null)
-            {
-                Display(m_data, false);
-            }
+            base.AfterStart();
         }
 
-        public void Display(object data, bool isRowOdd)
+        protected override void Display()
         {
-            LineInfoBase? rowData = (LineInfoBase?)data;
-            if (rowData != null)
+            if (data != null)
             {
-                m_data = rowData;
+                m_pnlColor.color = data.m_color;
+                m_lblName.text = data.GetLineName();
+                m_lblStops.text = data.GetStopCount().ToString();
+                m_lblVehicles.text = data.m_iVehicleCount.ToString();
+                m_lblPassengers.text = data.m_iPassengers.ToString();
+                m_lblVehicleUsage.text = data.GetUsage().ToString();
+                m_lblWaiting.text = data.m_iWaiting.ToString();
+                m_lblBusiest.text = data.m_iBusiest.ToString();
+                m_lblBored.text = data.m_iBored.ToString();
 
-                if (m_pnlColor != null)
-                {
-                    m_pnlColor.color = rowData.m_color;
-                }
-                if (m_lblName != null)
-                {
-                    m_lblName.text = rowData.GetLineName();
-                }
-                if (m_lblStops != null)
-                {
-                    m_lblStops.text = rowData.GetStopCount().ToString();
-                }
-                if (m_lblVehicles != null)
-                {
-                    m_lblVehicles.text = rowData.m_iVehicleCount.ToString();
-                }
-                if (m_lblPassengers != null)
-                {
-                    m_lblPassengers.text = rowData.m_iPassengers.ToString();
-                }
-                if (m_lblVehicleUsage != null)
-                {
-                    m_lblVehicleUsage.text = rowData.GetUsage().ToString();
-                }
-                if (m_lblWaiting != null)
-                {
-                    m_lblWaiting.text = rowData.m_iWaiting.ToString();
-                }
-                if (m_lblBusiest != null)
-                {
-                    m_lblBusiest.text = rowData.m_iBusiest.ToString();
-                }
-                if (m_lblBored != null)
-                {
-                    m_lblBored.text = rowData.m_iBored.ToString();
-                }
                 if (m_spriteToolbar != null)
                 {
-                    switch (rowData.m_eLevel)
+                    switch (data.m_eLevel)
                     {
                         case LineIssue.IssueLevel.ISSUE_WARNING:
                             {
@@ -288,23 +243,55 @@ namespace PublicTransportInfo
                             }
                     }
 
-                    m_spriteToolbar.tooltip = rowData.m_lineIssueTooltip;
+                    m_spriteToolbar.tooltip = data.m_lineIssueTooltip;
                 }
             }
-            else
+        }
+
+        protected override void Clear()
+        {
+            m_lblName.text = "";
+            m_lblStops.text = "";
+            m_lblVehicles.text = "";
+            m_lblPassengers.text = "";
+            m_lblWaiting.text = "";
+            m_lblBusiest.text = "";
+            m_lblBored.text = "";
+        }
+
+        protected override string GetTooltipText(UIComponent component)
+        {
+            string sTooltip = "";
+            if (component == m_lblStops)
             {
-                m_data = null;
+                sTooltip = data.GetStopsTooltip();
             }
+            else if (component == m_lblVehicles)
+            {
+                sTooltip = data.GetVehicleTooltip();
+            }
+            else if (component == m_lblPassengers)
+            {
+                sTooltip = data.GetPassengersTooltip();
+            }
+            else if (component == m_lblWaiting)
+            {
+                sTooltip = data.GetWaitingTooltip();
+            }
+            else if (component == m_lblBusiest)
+            {
+                sTooltip = $"Stop:{data.m_iBusiestStopNumber}";
+            }
+            else if (component == m_lblBored)
+            {
+                sTooltip = data.GetBoredTooltip();
+            }
+
+            return sTooltip;
         }
 
-        public void Enabled(object data)
+        protected override void ClearTooltips()
         {
-        }
-
-        public void Disabled()
-        {
-            m_data = null;
-
             m_lblName.SetTooltip("");
             m_lblStops.SetTooltip("");
             m_lblVehicles.SetTooltip("");
@@ -314,145 +301,99 @@ namespace PublicTransportInfo
             m_lblBored.SetTooltip("");
         }
 
-        private void OnTooltipEnter(UIComponent component, UIMouseEventParameter eventParam)
+        protected override void OnMouseEnter(UIComponent component, UIMouseEventParameter eventParam)
         {
-            UILabelLiveTooltip? lblColumn = (UILabelLiveTooltip)component;
-            if (lblColumn != null)
+            base.OnMouseEnter(component, eventParam);
+
+            if (data is not null)
             {
-                string sStopsTooltip = "";
-                string sVehicleTooltip = "";
-                string sPassengerTooltip = "";
-                string sWaitingTooltip = "";
-                string sBusiestStopTooltip = "";
-                string sBoredTooltip = "";
-
-                if (m_data != null)
-                {
-                    sStopsTooltip = m_data.GetStopsTooltip();
-                    sVehicleTooltip = m_data.GetVehicleTooltip();
-                    sPassengerTooltip = m_data.GetPassengersTooltip();
-                    sWaitingTooltip = m_data.GetWaitingTooltip();
-                    sBusiestStopTooltip = $"Stop:{m_data.m_iBusiestStopNumber}";
-                    sBoredTooltip = m_data.GetBoredTooltip();
-                }
-
-                if (lblColumn == m_lblStops)
-                {
-                    lblColumn.SetTooltip(sStopsTooltip);
-                }
-                else if (lblColumn == m_lblVehicles)
-                {
-                    lblColumn.SetTooltip(sVehicleTooltip);
-                }
-                else if (lblColumn == m_lblPassengers)
-                {
-                    lblColumn.SetTooltip(sPassengerTooltip);
-                }
-                else if (lblColumn == m_lblWaiting)
-                {
-                    lblColumn.SetTooltip(sWaitingTooltip);
-                }
-                else if (lblColumn == m_lblBusiest)
-                {
-                    lblColumn.SetTooltip(sBusiestStopTooltip);
-                }
-                else if (lblColumn == m_lblBored)
-                {
-                    lblColumn.SetTooltip(sBoredTooltip);
-                }
+                HighlightLine((ushort)data.GetLineId());
             }
         }
 
-        public void Select(bool isRowOdd)
+        protected override void OnMouseLeave(UIComponent component, UIMouseEventParameter eventParam)
         {
-        }
-
-        public void Deselect(bool isRowOdd)
-        {
-        }
-
-        private void OnItemClicked(UIComponent component, UIMouseEventParameter eventParam)
-        {
-            if (DependencyUtils.IsCommuterDestinationsRunning() && (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl)))
-            {
-                ShowWorldInfoPanelCommuterDestinations();
-            }
-            else
-            {
-                ShowWorldInfoPanel();
-            }
-        }
-
-        public void ShowWorldInfoPanel()
-        {
-            try
-            {
-                // Hide the main panel before showing PTWI panel.
-                MainPanel.Instance.Hide();
-
-                // Shift camera to busiest stop
-                if (m_data != null)
-                {
-                    m_data.ShowBusiestStop();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Log(ex);
-            }
-        }
-
-        public void ShowWorldInfoPanelCommuterDestinations()
-        {
-            try
-            {
-                // Hide the main panel before showing PTWI panel.
-                MainPanel.Instance.Hide();
-
-                // Shift camera to busiest stop
-                if (m_data != null)
-                {
-                    m_data.ShowBusiestStopCommuterDestinations();
-                }
-            }
-            catch (Exception ex)
-            {
-                Debug.Log(ex);
-            }
-        }
-
-        protected void OnMouseEnter(UIComponent component, UIMouseEventParameter eventParam)
-        {
-            foreach (UIComponent c in components)
-            {
-                if (c is UILabel label)
-                {
-                    label.textColor = Color.yellow;
-                }
-            }
-
-            if (m_data != null)
-            {
-                HighlightLine((ushort)m_data.m_iLineId);
-            }
-        }
-
-        protected void OnMouseLeave(UIComponent component, UIMouseEventParameter eventParam)
-        {
-            foreach (UIComponent c in components)
-            {
-                if (c is UILabel label)
-                {
-                    label.textColor = Color.white;
-                }
-            }
-
+            base.OnMouseLeave(component, eventParam);
             ClearHighlightLine();
+        } 
+
+        private StopInfo GetStopInfo()
+        {
+            StopInfo info = MainPanel.Instance.GetStopInfo();
+            
+            if (data is not null)
+            {
+                // Update stop info
+                if (info.m_transportType == data.GetTransportType() &&
+                    info.m_currentLineId == data.GetLineId() &&
+                    info.m_currentStopId != 0)
+                {
+                    StopInfo newInfo = new StopInfo();
+
+                    newInfo.m_transportType = data.GetTransportType();
+                    newInfo.m_currentLineId = data.GetLineId();
+
+                    // Cycle through lines stops.
+                    ushort nextStopId = data.GetNextStop(info.m_currentStopId, out int stopNumber);
+                    if (nextStopId != 0)
+                    {
+                        newInfo.m_currentStopId = nextStopId;
+                        newInfo.m_stopNumber = stopNumber;
+                    }
+
+                    return newInfo;
+                }
+                else
+                {
+                    // Get lines busiest stop
+                    return data.GetStopInfo();
+                }
+            }
+
+            return info;
+        }
+
+        protected override void OnClicked(UIComponent component)
+        {
+            if (data is not null) 
+            {
+                StopInfo info = GetStopInfo();
+
+                if (info.m_currentStopId != 0)
+                {
+                    // Move to location
+                    InstanceHelper.ShowInstance(new InstanceID { NetNode = info.m_currentStopId });
+
+                    bool bCtrl = Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl);
+                    bool bShift = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+                    bool bHideInfo = false;
+                    if (bCtrl || bShift || data.IsWorldInfoPanelVisible())
+                    {
+                        // Hide main panel
+                        if (bCtrl)
+                        {
+                            MainPanel.Instance.Hide();
+                        }
+
+                        data.ShowStopWorldInfoPanel(info.m_currentStopId);
+                        bHideInfo = true;
+                    }
+
+                    // Update current stop info
+                    MainPanel.Instance.SetCurrentStop(info);
+
+                    if (bHideInfo)
+                    {
+                        MainPanel.Instance.HideInfo();
+                    }
+                }
+            }
         }
 
         private void OnWarningItemClicked(UIComponent component, UIMouseEventParameter eventParam)
         {
-            if (m_data != null && m_data.GetLineIssueDetector() != null && LineIssueManager.Instance != null)
+            if (data != null && data.GetLineIssueDetector() != null && LineIssueManager.Instance != null)
             {
                 if (LineIssueManager.Instance.HasVisibleLineIssues())
                 {
@@ -462,7 +403,7 @@ namespace PublicTransportInfo
             }
             else
             {
-                ShowWorldInfoPanel();
+                OnClicked(component); // Fall back to default handler
             }
 
             if (LineIssueManager.Instance != null)
@@ -475,17 +416,44 @@ namespace PublicTransportInfo
         {
             ClearHighlightLine();
 
-            m_usHighlightLine = lineId;
+            s_usHighlightLine = lineId;
 
-            TransportManagerUtils.HighlightLine(m_usHighlightLine);
+            TransportManagerUtils.HighlightLine(s_usHighlightLine);
         }
 
         private void ClearHighlightLine()
         {
-            if (m_usHighlightLine != 0)
+            if (s_usHighlightLine != 0)
             {
-                TransportManagerUtils.ClearLineHighlight(m_usHighlightLine);
-                m_usHighlightLine = 0;
+                TransportManagerUtils.ClearLineHighlight(s_usHighlightLine);
+                s_usHighlightLine = 0;
+            }
+        }
+
+        protected override Color GetTextColor(UIComponent component, bool highlightRow)
+        {
+            if (highlightRow)
+            {
+                if (fullRowSelect)
+                {
+                    return Color.yellow;
+                }
+                else if (component == m_MouseEnterComponent)
+                {
+                    return Color.yellow;
+                }
+            }
+
+            StopInfo info = MainPanel.Instance.GetStopInfo();
+            if (data is not null &&
+                data.GetTransportType() == info.m_transportType &&
+                data.GetLineId() == info.m_currentLineId)
+            {
+                return Color.cyan;
+            }
+            else
+            {
+                return Color.white;
             }
         }
     }

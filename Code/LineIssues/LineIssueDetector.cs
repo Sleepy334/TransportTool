@@ -1,7 +1,6 @@
 ﻿using ColossalFramework;
 using System;
-using System.Collections.Generic;
-using UnityEngine;
+using System.Collections.Generic; 
 
 namespace PublicTransportInfo
 {
@@ -10,6 +9,7 @@ namespace PublicTransportInfo
         public ushort m_iLineId; 
         public static ushort m_followingVehicle = 0;
 
+        // ----------------------------------------------------------------------------------------
         public LineIssueDetector(ushort usLineId)
         {
             m_iLineId = usLineId;

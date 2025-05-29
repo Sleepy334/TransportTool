@@ -1,4 +1,5 @@
-﻿using System;
+﻿using SleepyCommon;
+using System;
 using UnityEngine;
 
 namespace PublicTransportInfo
@@ -9,6 +10,7 @@ namespace PublicTransportInfo
         public DateTime m_CreationTime;
         private DateTime m_ResolvedTime;
 
+        // ----------------------------------------------------------------------------------------
         public enum IssueType
         {
             ISSUE_TYPE_NONE,
@@ -81,8 +83,6 @@ namespace PublicTransportInfo
         public abstract string GetIssueLocation();
         
         public abstract string GetIssueTooltip();
-
-        public abstract Vector3 GetPosition();
 
         public abstract void ShowIssue();
         

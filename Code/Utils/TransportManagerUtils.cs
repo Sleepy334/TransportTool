@@ -1,12 +1,27 @@
 ﻿using ColossalFramework;
+using ColossalFramework.UI;
+using SleepyCommon;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
+using static TransportInfo;
 
 namespace PublicTransportInfo
 {
     public class TransportManagerUtils
     {
+        public static string GetSafeLineName(TransportType type, int iLineId)
+        {
+            if (type == TransportType.CableCar)
+            {
+                return "Cable Car Line " + iLineId;
+            }
+            else
+            {
+                return GetSafeLineName(iLineId);
+            }
+        }
+
         public static string GetSafeLineName(int iLineId)
         {
             TransportLine oLine = TransportManager.instance.m_lines.m_buffer[iLineId];
@@ -58,7 +73,7 @@ namespace PublicTransportInfo
 
         public static void ChangeLineVisibility(int m_lineID, bool r)
         {
-            PublicTransportInfo.Debug.Log("ChangeLineVisibility" + m_lineID);
+            CDebug.Log("ChangeLineVisibility" + m_lineID);
             if (m_lineID < Singleton<TransportManager>.instance.m_lines.m_buffer.Length && m_lineID != 0)
             {
                 Singleton<SimulationManager>.instance.AddAction(() =>
@@ -147,7 +162,7 @@ namespace PublicTransportInfo
                         num7 = nextGridInstance;
                         if (++num8 > 65536)
                         {
-                            Debug.Log("Invalid list detected!\n" + Environment.StackTrace);
+                            CDebug.Log("Invalid list detected!\n" + Environment.StackTrace);
                             break;
                         }
                     }
@@ -369,6 +384,36 @@ namespace PublicTransportInfo
         {
             string sName = Singleton<VehicleManager>.instance.GetVehicleName(usVehicleId);
             return "Vehicle " + sName + " (id:" + usVehicleId + ") has not moved for " + iDays + " in-game days.";
+        }
+
+        public static UIComponent? GetPublicTransportWorldInfoPanel()
+        {
+            return UIView.library.Get(typeof(PublicTransportWorldInfoPanel).Name);
+        }
+
+        public static UIComponent? GetCityServiceWorldInfoPanel()
+        {
+            return UIView.library.Get(typeof(CityServiceWorldInfoPanel).Name);
+        }
+
+        public static bool IsPublicTransportWorldInfoPanelVisible()
+        {
+            UIComponent? panel = GetPublicTransportWorldInfoPanel();
+            if (panel != null)
+            {
+                return panel.isVisible;
+            }
+            return false;
+        }
+
+        public static bool IsCityServiceWorldInfoPanelVisible()
+        {
+            UIComponent? panel = GetCityServiceWorldInfoPanel();
+            if (panel != null)
+            {
+                return panel.isVisible;
+            }
+            return false;
         }
     }
 }

@@ -72,3 +72,6 @@
 "chkDisableTransparency","パネルの透過を無効化"
 "txtDeleteresolvedDelay","解決済みの遅延を削除 (秒)"
 "chkActivatePublicTransportInfoView","Activate public transport info view when main panel visible"
+"tooltipHighlightDestinationOn","Highlight Destination: On"
+"tooltipHighlightDestinationOff","Highlight Destination: Off"
+"tooltipActivatePublicTransportInfoView","Activate public transport info view"

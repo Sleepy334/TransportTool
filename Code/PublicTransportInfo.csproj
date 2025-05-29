@@ -43,6 +43,12 @@
     <Reference Include="ICities">
       <HintPath>..\..\..\..\..\..\..\Program Files (x86)\Steam\steamapps\common\Cities_Skylines\Cities_Data\Managed\ICities.dll</HintPath>
     </Reference>
+    <Reference Include="SleepyCommon" Condition="'$(Configuration)' == 'Release' OR '$(Configuration)' == 'TEST Release'">
+      <HintPath>..\..\SleepyCommon\bin\Release\net35\SleepyCommon.dll</HintPath>
+    </Reference>
+    <Reference Include="SleepyCommon" Condition="'$(Configuration)' == 'Debug' OR '$(Configuration)' == 'TEST Debug'">
+      <HintPath>..\..\SleepyCommon\bin\Debug\net35\SleepyCommon.dll</HintPath>
+    </Reference>
     <Reference Include="UnifiedUILib">
       <HintPath>..\..\References\UnifiedUILib.dll</HintPath>
     </Reference>
@@ -81,8 +87,14 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Renderers\" />
+  </ItemGroup>
+
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="mkdir &quot;%25LOCALAPPDATA%25\Colossal Order\Cities_Skylines\Addons\Mods\$(SolutionName)&quot;&#xD;&#xA;del &quot;%25LOCALAPPDATA%25\Colossal Order\Cities_Skylines\Addons\Mods\$(SolutionName)\$(TargetFileName)&quot;&#xD;&#xA;xcopy /y &quot;$(TargetPath)&quot; &quot;%25LOCALAPPDATA%25\Colossal Order\Cities_Skylines\Addons\Mods\$(SolutionName)&quot;" />
   </Target>
+
+  <Import Project="..\..\SleepyCommon\SleepyCommon.projitems" Label="Shared" />
 
 </Project>

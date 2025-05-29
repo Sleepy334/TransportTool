@@ -1,9 +1,8 @@
 ﻿using ColossalFramework.UI;
-using PublicTransportInfo;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace SleepyCommon
+namespace PublicTransportInfo.UI.ListView
 {
     public class ListViewHeader : UIPanel
     {

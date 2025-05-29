@@ -1,11 +1,10 @@
 ﻿using ColossalFramework.UI;
-using PublicTransportInfo;
 using System;
 using UnityEngine;
 
-namespace SleepyCommon
+namespace PublicTransportInfo.UI.ListView
 {
-    public class ListView : UIPanel
+    public class UIListView : UIPanel
     {
         public const int iSCROLL_BAR_WIDTH = 20;
         public const int iROW_HEIGHT = 22;
@@ -20,16 +19,16 @@ namespace SleepyCommon
         public delegate void ListViewColumnClickEvent();
         public ListViewColumnClickEvent? m_eventOnListViewColumnClick = null;
 
-        public ListView() : base() {
+        public UIListView() : base() {
             m_listPanel = null;
         }
 
-        public static ListView? Create<T>(UIComponent oParent, Color backgroundColor, float fTextScale, float fRowHeight, float fWidth, float fHeight)
+        public static UIListView? Create<T>(UIComponent oParent, Color backgroundColor, float fTextScale, float fRowHeight, float fWidth, float fHeight)
             where T : UIPanel, IUIFastListRow
         {
             try
             {
-                ListView listView = oParent.AddUIComponent<ListView>();
+                UIListView listView = oParent.AddUIComponent<UIListView>();
                 if (listView != null)
                 {
                     //listView.backgroundSprite = "InfoviewPanel";
@@ -161,12 +160,12 @@ namespace SleepyCommon
         {
             if (m_header != null)
             {
-                UnityEngine.Object.Destroy(m_header.gameObject);
+                Destroy(m_header.gameObject);
                 m_listPanel = null;
             }
             if (m_listPanel != null)
             {
-                UnityEngine.Object.Destroy(m_listPanel.gameObject);
+                Destroy(m_listPanel.gameObject);
                 m_listPanel = null;
             }
             base.OnDestroy();

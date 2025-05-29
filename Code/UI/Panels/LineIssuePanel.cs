@@ -1,4 +1,6 @@
 ﻿using ColossalFramework.UI;
+using PublicTransportInfo.UI.ListView;
+using PublicTransportInfo.UI.ListViewRows;
 using SleepyCommon;
 using System;
 using System.Collections;
@@ -19,7 +21,7 @@ namespace PublicTransportInfo
         public const int iCOLUMN_DESCRIPTION_WIDTH = 300;
 
         private UITitleBar? m_title = null;
-        private ListView? m_listIssues = null;
+        private UIListView? m_listIssues = null;
         private Coroutine? m_coroutine = null;
 
         public LineIssuePanel() : base()
@@ -29,7 +31,6 @@ namespace PublicTransportInfo
 
         public override void Start()
         {
-            Debug.Log("Start");
             base.Start();
             name = "LineIssuePanel";
             width = 740;
@@ -64,8 +65,7 @@ namespace PublicTransportInfo
 
             // Title Bar
             m_title = AddUIComponent<UITitleBar>();
-            m_title.SetOnclickHandler(OnCloseClick);
-            m_title.title = Localization.Get("titleLineIssuesPanel");
+            m_title.Setup(Localization.Get("titleLineIssuesPanel"), PublicTransportInstance.LoadResources(), OnCloseClick);
 
             UIPanel mainPanel = AddUIComponent<UIPanel>();
             if (mainPanel != null)
@@ -79,7 +79,7 @@ namespace PublicTransportInfo
             }
 
             // Issue list
-            m_listIssues = ListView.Create<UIIssueRow>(mainPanel, new Color32(81, 87, 89, 225), 0.8f, ListView.iROW_HEIGHT, width - 2*iMARGIN, height - m_title.height - 10);
+            m_listIssues = UIListView.Create<UIIssueRow>(mainPanel, new Color32(81, 87, 89, 225), 0.8f, UIListView.iROW_HEIGHT, width - 2*iMARGIN, height - m_title.height - 10);
             if (m_listIssues != null)
             {
                 m_listIssues.AddColumn(ListViewRowComparer.Columns.COLUMN_TIME, Localization.Get("listIssuesColumn1"), Localization.Get("listIssuesColumn1Tooltip"), iCOLUMN_WIDTH_TIME, 20, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
@@ -93,6 +93,20 @@ namespace PublicTransportInfo
             UpdatePanel();
         }
 
+        protected override void OnVisibilityChanged()
+        {
+            if (isVisible)
+            {
+                UpdatePanel();
+            }
+            else
+            {
+                m_listIssues?.Clear();
+            }
+
+            base.OnVisibilityChanged();
+        }
+
         private void FitToScreen()
         {
             Vector2 oScreenVector = UIView.GetAView().GetScreenResolution();
@@ -104,7 +118,7 @@ namespace PublicTransportInfo
 
         new public void Show()
         {
-            Debug.Log("Show");
+            CDebug.Log("Show");
             base.Show();
             UpdatePanel();
         }

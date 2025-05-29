@@ -13,6 +13,19 @@ namespace PublicTransportInfo
         {
         }
 
+        new public string tooltip
+        {
+            get
+            {
+                return m_tooltip;
+            }
+            set 
+            {
+                SetTooltip(value);
+            }
+
+        }
+
         public bool IsTooltipVisible()
         {
             return m_tooltipWindow != null && m_tooltipWindow.Visible;
@@ -27,6 +40,7 @@ namespace PublicTransportInfo
                 m_tooltipWindow.SetTooltip(m_tooltip);
             }
         }
+
         public void SetTooltipTextAnchor(TextAnchor textAnchor)
         {
             m_tooltipTextAnchor = textAnchor;

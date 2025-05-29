@@ -71,4 +71,7 @@
 "headerUsageTooltip","车辆使用率 %"
 "chkDisableTransparency","禁用面板透明"
 "txtDeleteresolvedDelay","删除已解决的延迟（秒）"
-"chkActivatePublicTransportInfoView","Activate public transport info view when main panel visible"
+"chkActivatePublicTransportInfoView","当打开主面板时激活公共传输信息视图"
+"tooltipHighlightDestinationOn","高亮目标：开启"
+"tooltipHighlightDestinationOff","高亮目标：关闭"
+"tooltipActivatePublicTransportInfoView","打开公共运输信息视图"

@@ -1,11 +1,12 @@
 ﻿using ColossalFramework.UI;
 using UnityEngine;
+using SleepyCommon;
+using System.Reflection;
 
 namespace PublicTransportInfo 
 {
     public class PublicTransportInstance : MonoBehaviour
     { 
-        
         private static UITextureAtlas? s_atlas = null;
         private static Font? s_ConstantWidthFont = null;
         
@@ -19,7 +20,7 @@ namespace PublicTransportInfo
 
         public static void Create() 
         {
-            if (PublicTransportLoader.isGameLoaded)
+            if (TransportToolMod.Instance.IsLoaded)
             {
                 if (ModSettings.GetSettings().MainToolbarButton)
                 {
@@ -36,7 +37,7 @@ namespace PublicTransportInfo
 
         public static void ShowToolbarButton()
         {
-            if (PublicTransportLoader.isGameLoaded)
+            if (TransportToolMod.Instance.IsLoaded)
             {
                 MainToolbarButton.Instance.Show();
             }
@@ -64,10 +65,10 @@ namespace PublicTransportInfo
                     "clear"
                 };
 
-                s_atlas = ResourceLoader.CreateTextureAtlas("TransportToolAtlas", spriteNames, "PublicTransportInfo.Resources.");
+                s_atlas = ResourceLoader.CreateTextureAtlas("TransportToolAtlas", spriteNames, Assembly.GetExecutingAssembly(), "PublicTransportInfo.Resources.");
                 if (s_atlas == null)
                 {
-                    PublicTransportInfo.Debug.Log("Loading of resources failed.");
+                    CDebug.Log("Loading of resources failed.");
                 }
 
                 UITextureAtlas defaultAtlas = ResourceLoader.GetAtlas("Ingame");

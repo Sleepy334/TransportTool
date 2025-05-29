@@ -3,7 +3,7 @@ using ColossalFramework.UI;
 
 using System;
 
-namespace SleepyCommon
+namespace PublicTransportInfo.UI.ListView
 {
     public interface IUIFastListRow
     {
@@ -14,10 +14,7 @@ namespace SleepyCommon
         /// </summary>
         /// <param name="data">What needs to be displayed</param>
         /// <param name="isRowOdd">Use this to display a different look for your odd rows</param>
-        void Display(object data, bool isRowOdd);
-
-        // Called when row transistions from no data to having data
-        void Enabled(object data);
+        void Display(int index, object data, bool isRowOdd);
 
         // Called when row transistions from having data to no data, can be used to clear tooltips etc...
         void Disabled();
@@ -76,7 +73,6 @@ namespace SleepyCommon
     /// </summary>
     public class UIFastList : UIComponent
     {
-        #region Private members
         private UIPanel m_panel;
         private UIScrollbar m_scrollbar;
         private FastList<IUIFastListRow> m_rows;
@@ -95,7 +91,6 @@ namespace SleepyCommon
         private bool m_updateContent = true;
         private bool m_autoHideScrollbar = false;
         private UIComponent m_lastMouseEnter;
-        #endregion
 
         /// <summary>
         /// Use this to create the UIFastList.
@@ -115,7 +110,6 @@ namespace SleepyCommon
             return list;
         }
 
-        #region Public accessors
         public bool autoHideScrollbar
         {
             get { return m_autoHideScrollbar; }
@@ -137,7 +131,7 @@ namespace SleepyCommon
             set
             {
                 m_color = value;
-                if (m_panel != null)
+                if (m_panel is not null)
                     m_panel.color = value;
             }
         }
@@ -153,7 +147,7 @@ namespace SleepyCommon
                 if (m_backgroundSprite != value)
                 {
                     m_backgroundSprite = value;
-                    if (m_panel != null)
+                    if (m_panel is not null)
                         m_panel.backgroundSprite = value;
                 }
             }
@@ -173,7 +167,7 @@ namespace SleepyCommon
                 {
                     m_canSelect = value;
 
-                    if (m_rows == null) return;
+                    if (m_rows is null) return;
                     for (int i = 0; i < m_rows.m_size; i++)
                     {
                         if (m_canSelect)
@@ -216,7 +210,7 @@ namespace SleepyCommon
         {
             get
             {
-                if (m_rowsData == null)
+                if (m_rowsData is null)
                 {
                     m_rowsData = new FastList<object>();
                 }
@@ -224,7 +218,7 @@ namespace SleepyCommon
             }
             set
             {
-                if (m_rowsData == null)
+                if (m_rowsData is null)
                 {
                     m_rowsData = value;
                     DisplayAt(0);
@@ -263,7 +257,7 @@ namespace SleepyCommon
             get { return m_selectedDataId; }
             set
             {
-                if (m_rowsData == null || m_rowsData.m_size == 0)
+                if (m_rowsData is null || m_rowsData.m_size == 0)
                 {
                     m_selectedDataId = -1;
                     return;
@@ -281,17 +275,17 @@ namespace SleepyCommon
 
                 if (m_selectedRowId >= 0)
                 {
-                    m_rows[m_selectedRowId].Deselect((oldId % 2) == 1);
+                    m_rows[m_selectedRowId].Deselect(oldId % 2 == 1);
                     m_selectedRowId = -1;
                 }
 
                 if (newRowId >= 0)
                 {
                     m_selectedRowId = newRowId;
-                    m_rows[m_selectedRowId].Select((m_selectedDataId % 2) == 1);
+                    m_rows[m_selectedRowId].Select(m_selectedDataId % 2 == 1);
                 }
 
-                if (eventSelectedIndexChanged != null && m_selectedDataId != oldId)
+                if (eventSelectedIndexChanged is not null && m_selectedDataId != oldId)
                     eventSelectedIndexChanged(this, m_selectedDataId);
             }
         }
@@ -314,31 +308,27 @@ namespace SleepyCommon
         /// </summary>
         public float stepSize
         {
-            get { return (m_stepSize > 0) ? m_stepSize : m_rowHeight; }
+            get { return m_stepSize > 0 ? m_stepSize : m_rowHeight; }
             set { m_stepSize = value; }
         }
-        #endregion
 
-        #region Events
         /// <summary>
         /// Called when the currently selected row changed
         /// </summary>
         public event PropertyChangedEventHandler<int> eventSelectedIndexChanged;
-        #endregion
 
-        #region Public methods
         /// <summary>
         /// Clear the list
         /// </summary>
-		
+
         public void Clear()
         {
-            if (m_rowsData != null)
+            if (m_rowsData is not null)
             {
                 m_rowsData.Clear();
             }
 
-            if (m_rows != null)
+            if (m_rows is not null)
             {
                 for (int i = 0; i < m_rows.m_size; i++)
                 {
@@ -354,10 +344,10 @@ namespace SleepyCommon
         /// This update the list even if the position remind the same
         /// </summary>
         /// <param name="pos">Index position in the list</param>
-		
+
         public void DisplayAt(float pos)
         {
-            if (m_rowsData == null || m_rowHeight <= 0) return;
+            if (m_rowsData is null || m_rowHeight <= 0) return;
 
             SetupControls();
 
@@ -367,35 +357,32 @@ namespace SleepyCommon
             {
                 int dataPos = Mathf.FloorToInt(m_pos + i);
                 float offset = rowHeight * (m_pos + i - dataPos);
+
                 if (dataPos < m_rowsData.m_size)
                 {
-                    if (!m_rows[i].enabled)
-                    {
-                        m_rows[i].Enabled(m_rowsData[dataPos]);
-                    }
-
                     if (m_updateContent)
                     {
-                        m_rows[i].Display(m_rowsData[dataPos], (dataPos % 2) == 1);
+                        m_rows[i].Display(i, m_rowsData[dataPos], dataPos % 2 == 1);
                     }
-
+                        
                     if (dataPos == m_selectedDataId && m_updateContent)
                     {
                         m_selectedRowId = i;
-                        m_rows[m_selectedRowId].Select((dataPos % 2) == 1);
+                        m_rows[m_selectedRowId].Select(dataPos % 2 == 1);
                     }
 
                     m_rows[i].enabled = true;
                 }
                 else
                 {
+                    
                     if (m_rows[i].enabled)
                     {
                         m_rows[i].Disabled();
                     }
+
                     m_rows[i].enabled = false;
                 }
-                    
 
                 m_rows[i].relativePosition = new Vector3(0, i * rowHeight - offset);
             }
@@ -407,14 +394,12 @@ namespace SleepyCommon
         /// <summary>
         /// Refresh the display
         /// </summary>
-		
+
         public void Refresh()
         {
             DisplayAt(m_pos);
         }
-        #endregion
 
-        #region Overrides
         public override void Start()
         {
             base.Start();
@@ -426,7 +411,7 @@ namespace SleepyCommon
         {
             base.OnSizeChanged();
 
-            if (m_panel == null) return;
+            if (m_panel is null) return;
 
             m_panel.size = size;
 
@@ -441,7 +426,7 @@ namespace SleepyCommon
         {
             base.OnMouseWheel(p);
 
-            if (rowsData != null && rowsData.m_size > 0)
+            if (rowsData is not null && rowsData.m_size > 0)
             {
                 if (m_stepSize > 0 && m_rowHeight > 0)
                 {
@@ -451,7 +436,7 @@ namespace SleepyCommon
                 {
                     listPosition = m_pos - p.wheelDelta;
                 }
-                    
+
 
                 if (selectOnMouseEnter)
                 {
@@ -459,9 +444,6 @@ namespace SleepyCommon
                 }
             }
         }
-        #endregion
-
-        #region Private methods
 
         protected void OnRowClicked(UIComponent component, UIMouseEventParameter p)
         {
@@ -480,11 +462,14 @@ namespace SleepyCommon
 
         private void CheckRows()
         {
-            if (m_panel == null || m_rowHeight <= 0) return;
+            if (m_panel is null || m_rowHeight <= 0)
+            {
+                return;
+            }
 
             int nbRows = Mathf.CeilToInt(height / m_rowHeight) + 1;
 
-            if (m_rows == null)
+            if (m_rows is null)
             {
                 m_rows = new FastList<IUIFastListRow>();
                 m_rows.SetCapacity(nbRows);
@@ -496,8 +481,15 @@ namespace SleepyCommon
                 for (int i = m_rows.m_size; i < nbRows; i++)
                 {
                     m_rows.Add(m_panel.AddUIComponent(m_rowType) as IUIFastListRow);
-                    if (m_canSelect && !selectOnMouseEnter) m_rows[i].eventClick += OnRowClicked;
-                    else if (m_canSelect) m_rows[i].eventMouseEnter += OnRowClicked;
+
+                    if (m_canSelect && !selectOnMouseEnter)
+                    {
+                        m_rows[i].eventClick += OnRowClicked;
+                    }
+                    else if (m_canSelect)
+                    {
+                        m_rows[i].eventMouseEnter += OnRowClicked;
+                    }
                 }
             }
             else if (m_rows.m_size > nbRows)
@@ -514,7 +506,7 @@ namespace SleepyCommon
 
         private void UpdateScrollbar()
         {
-            if (m_rowsData == null || m_rowHeight <= 0) return;
+            if (m_rowsData is null || m_rowHeight <= 0) return;
 
             if (m_autoHideScrollbar)
             {
@@ -529,6 +521,11 @@ namespace SleepyCommon
                 }
 
                 m_scrollbar.isVisible = isVisible;
+            }
+            else if (!m_scrollbar.isVisible)
+            {
+                // We hide the scroll bar till we can update it below
+                m_scrollbar.isVisible = true;
             }
 
             //float H = m_rowHeight * m_rowsData.m_size;    (commenting out as never used)
@@ -548,18 +545,27 @@ namespace SleepyCommon
             if (m_lock || m_rowHeight <= 0) return;
 
             m_lock = true;
-
-            float pos = m_pos * (height - m_scrollbar.scrollSize) / (m_rowsData.m_size - height / m_rowHeight);
-            if (pos != m_scrollbar.value)
-                m_scrollbar.value = pos;
-
-            m_lock = false;
+            try
+            {
+                float pos = m_pos * (height - m_scrollbar.scrollSize) / (m_rowsData.m_size - height / m_rowHeight);
+                if (pos != m_scrollbar.value)
+                {
+                    m_scrollbar.value = pos;
+                }
+            }
+            finally 
+            { 
+                m_lock = false; 
+            }
         }
 
 
         private void SetupControls()
         {
-            if (m_panel != null) return;
+            if (m_panel is not null)
+            {
+                return;
+            }
 
             // Panel 
             m_panel = AddUIComponent<UIPanel>();
@@ -580,6 +586,7 @@ namespace SleepyCommon
             m_scrollbar.minValue = 0;
             m_scrollbar.value = 0;
             m_scrollbar.incrementAmount = 50;
+            m_scrollbar.isVisible = false;
 
             UISlicedSprite tracSprite = m_scrollbar.AddUIComponent<UISlicedSprite>();
             tracSprite.relativePosition = Vector2.zero;
@@ -607,11 +614,15 @@ namespace SleepyCommon
                 if (m_lock || m_rowHeight <= 0) return;
 
                 m_lock = true;
-
-                listPosition = m_scrollbar.value * (m_rowsData.m_size - height / m_rowHeight) / (height - m_scrollbar.scrollSize - 1f);
-                m_lock = false;
+                try
+                {
+                    listPosition = m_scrollbar.value * (m_rowsData.m_size - height / m_rowHeight) / (height - m_scrollbar.scrollSize - 1f);
+                }
+                finally
+                {
+                    m_lock = false;
+                }
             };
         }
-        #endregion
     }
 }
