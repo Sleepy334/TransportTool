@@ -44,19 +44,17 @@ namespace PublicTransportInfo
 
         public override void ShowIssue()
         {
-            InstanceID target = new InstanceID { TransportLine = (ushort)m_iLineId };
-
             // Close the vehicle panel if open so we can move elsewhere.
             WorldInfoPanel.Hide<PublicTransportVehicleWorldInfoPanel>();
 
             // Move camera to correct position
-            InstanceHelper.ShowInstance(target, ModSettings.GetSettings().ZoomInOnTarget);
+            InstanceHelper.ShowInstance(new InstanceID { NetNode = m_usStop }, ModSettings.GetSettings().ZoomInOnTarget);
 
             // Open transport line panel
             if (Input.GetKey(KeyCode.LeftControl) || Input.GetKey(KeyCode.RightControl))
             {
                 Vector3 oStopPosition = Singleton<NetManager>.instance.m_nodes.m_buffer[m_usStop].m_position;
-                WorldInfoPanel.Show<PublicTransportWorldInfoPanel>(oStopPosition, target);
+                WorldInfoPanel.Show<PublicTransportWorldInfoPanel>(oStopPosition, new InstanceID { TransportLine = (ushort)m_iLineId });
             }
         }
 

@@ -63,7 +63,8 @@ namespace PublicTransportInfo
             {
                 Vehicle oVehicle = VehicleManager.instance.m_vehicles.m_buffer[m_vehicleId];
                 Vector3 oVehiclePosition = VehiclePosition.GetVehiclePosition(oVehicle);
-                WorldInfoPanel.Show<PublicTransportWorldInfoPanel>(oVehiclePosition, target);
+
+                WorldInfoPanel.Show<PublicTransportVehicleWorldInfoPanel>(oVehiclePosition, target);
             }
         }
     }
