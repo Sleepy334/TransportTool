@@ -40,7 +40,7 @@ namespace PublicTransportInfo
         public ushort m_usBusiestStopId;
         public int m_iBusiestStopNumber;
         public LineIssue.IssueLevel m_eLevel;
-        public string m_lineIssueTooltip;
+        public string m_lineIssueTooltip = string.Empty;
 
         protected List<LineData> m_stopPassengerCount;
         protected List<VehicleData> m_vehicleDatas;

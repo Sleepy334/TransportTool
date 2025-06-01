@@ -140,10 +140,10 @@ namespace PublicTransportInfo
                     m_ListView.width = tabPanel.width;
                     m_ListView.height = tabPanel.height;
                     m_ListView.AddColumn(Columns.COLUMN_COLOR, "", "", iCOLUMN_WIDTH_COLOR, iHEADER_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
-                    m_ListView.AddColumn(Columns.COLUMN_NAME, Localization.Get("headerLineName"), Localization.Get("headerStopsTooltip"), iCOLUMN_WIDTH_NAME, iHEADER_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
-                    m_ListView.AddColumn(Columns.COLUMN_STOPS, Localization.Get("headerStops"), Localization.Get("headerVehicleTooltip"), iCOLUMN_WIDTH_STOPS, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
-                    m_ListView.AddIconColumn(Columns.COLUMN_VEHICLES, "InfoIconPublicTransport", Localization.Get("headerPassengersTooltip"), iCOLUMN_WIDTH_VEHICLES, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
-                    m_ListView.AddColumn(Columns.COLUMN_PASSENGERS, Localization.Get("OverviewPassengers"), Localization.Get("headerUsageTooltip"), iCOLUMN_WIDTH_PASSENGER, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_NAME, Localization.Get("headerLineName"), Localization.Get("headerLineNameTooltip"), iCOLUMN_WIDTH_NAME, iHEADER_HEIGHT, UIHorizontalAlignment.Left, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_STOPS, Localization.Get("headerStops"), Localization.Get("headerStopsTooltip"), iCOLUMN_WIDTH_STOPS, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddIconColumn(Columns.COLUMN_VEHICLES, "InfoIconPublicTransport", Localization.Get("headerVehicleTooltip"), iCOLUMN_WIDTH_VEHICLES, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
+                    m_ListView.AddColumn(Columns.COLUMN_PASSENGERS, Localization.Get("OverviewPassengers"), Localization.Get("headerPassengersTooltip"), iCOLUMN_WIDTH_PASSENGER, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
                     m_ListView.AddColumn(Columns.COLUMN_VEHICLE_USAGE, Localization.Get("VehicleUsage"), Localization.Get("headerUsageTooltip"), iCOLUMN_WIDTH_VEHICLE_USAGE, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
                     m_ListView.AddColumn(Columns.COLUMN_WAITING, Localization.Get("OverviewWaiting"), Localization.Get("headerWaitingTooltip"), iCOLUMN_WIDTH_WAITING, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);
                     m_ListView.AddColumn(Columns.COLUMN_BUSIEST, Localization.Get("headerBusiest"), Localization.Get("headerBusiestTooltip"), iCOLUMN_WIDTH_BUSIEST, iHEADER_HEIGHT, UIHorizontalAlignment.Center, UIAlignAnchor.TopLeft);

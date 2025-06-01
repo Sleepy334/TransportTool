@@ -1,4 +1,5 @@
 using ColossalFramework;
+using ColossalFramework.UI;
 using SleepyCommon;
 using System.Collections.Generic;
 using UnityEngine;
@@ -46,6 +47,13 @@ namespace PublicTransportInfo
         {
             // Close the vehicle panel if open so we can move elsewhere.
             WorldInfoPanel.Hide<PublicTransportVehicleWorldInfoPanel>();
+
+            if (m_transportType == TransportInfo.TransportType.Metro)
+            {
+                // Turn on public transport mode so you can see the underground vehicles
+                Singleton<InfoManager>.instance.SetCurrentMode(InfoManager.InfoMode.Transport, InfoManager.SubInfoMode.Default);
+                UIView.library.Hide("PublicTransportInfoViewPanel");
+            }
 
             // Move camera to correct position
             InstanceHelper.ShowInstance(new InstanceID { NetNode = m_usStop }, ModSettings.GetSettings().ZoomInOnTarget);
